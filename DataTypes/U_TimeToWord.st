@@ -1,0 +1,6 @@
+TYPE U_TimeToWord :
+UNION
+    wTag: ARRAY [0..1] OF WORD;
+    tTag: TIME;
+END_UNION
+END_TYPE

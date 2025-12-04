@@ -1,0 +1,8 @@
+Регистр,Тип,Переменная,Описание
+242-243,REAL,stDumper.MotorRotation[1].VFD.qrOutFrequency,Поворот 1 - выходная частота
+244-245,REAL,stDumper.MotorRotation[1].VFD.rActualFrequency,Поворот 1 - фактическая частота
+246-247,REAL,stDumper.MotorRotation[1].VFD.wMotorCurrent.rTag,Поворот 1 - ток
+248-249,REAL,stDumper.MotorRotation[2].VFD.qrOutFrequency,Поворот 2 - выходная частота
+250-251,REAL,stDumper.MotorRotation[2].VFD.rActualFrequency,Поворот 2 - фактическая частота
+252-253,REAL,stDumper.MotorRotation[2].VFD.wMotorCurrent.rTag,Поворот 2 - ток
+254-269,-,РЕЗЕРВ,Резерв для поворота отвала

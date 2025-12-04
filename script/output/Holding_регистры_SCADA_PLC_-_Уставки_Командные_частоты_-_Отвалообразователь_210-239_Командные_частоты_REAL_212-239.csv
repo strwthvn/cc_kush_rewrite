@@ -1,0 +1,6 @@
+Регистр,Тип,Переменная,Описание
+212-213,REAL,stDumper.MotorConveyor[1].VFD.cmdSetFrequency,Конвейер 1 - командная частота
+214-215,REAL,stDumper.MotorConveyor[2].VFD.cmdSetFrequency,Конвейер 2 - командная частота
+216-217,REAL,stDumper.MotorRotation[1].VFD.cmdSetFrequency,Поворот 1 - командная частота
+218-219,REAL,stDumper.MotorRotation[2].VFD.cmdSetFrequency,Поворот 2 - командная частота
+220-239,-,РЕЗЕРВ,Резерв для отвалообразователя

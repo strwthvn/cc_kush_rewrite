@@ -1,0 +1,6 @@
+TYPE U_ByteToWord :
+UNION
+    wTag: WORD;
+    bTag: ARRAY [0..1] OF BYTE;
+END_UNION
+END_TYPE

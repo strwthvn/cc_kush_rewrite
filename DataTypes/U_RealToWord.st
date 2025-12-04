@@ -1,0 +1,6 @@
+TYPE U_RealToWord :
+UNION
+    wTag: ARRAY [0..1] OF WORD;
+    rTag: REAL;
+END_UNION
+END_TYPE

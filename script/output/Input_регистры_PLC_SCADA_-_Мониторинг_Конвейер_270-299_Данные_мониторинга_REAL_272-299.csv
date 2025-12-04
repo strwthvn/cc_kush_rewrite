@@ -1,0 +1,10 @@
+Регистр,Тип,Переменная,Описание
+272-273,REAL,stConveyor.MotorConveyor[1].VFD.qrOutFrequency,Конвейер 1 - выходная частота
+274-275,REAL,stConveyor.MotorConveyor[1].VFD.rActualFrequency,Конвейер 1 - фактическая частота
+276-277,REAL,stConveyor.MotorConveyor[1].VFD.wMotorCurrent.rTag,Конвейер 1 - ток
+278-279,REAL,stConveyor.MotorConveyor[2].VFD.qrOutFrequency,Конвейер 2 - выходная частота
+280-281,REAL,stConveyor.MotorConveyor[2].VFD.rActualFrequency,Конвейер 2 - фактическая частота
+282-283,REAL,stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag,Конвейер 2 - ток
+284,INT,eConveyorStage,Стадия конвейера (E_StageWithPreStartAlarm)
+285,INT,eConveyorStageToSCADA,Стадия конвейера для SCADA
+286-299,-,РЕЗЕРВ,Резерв для конвейера

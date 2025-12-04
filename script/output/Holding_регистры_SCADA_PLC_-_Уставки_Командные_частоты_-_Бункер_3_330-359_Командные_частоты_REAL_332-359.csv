@@ -1,0 +1,8 @@
+Регистр,Тип,Переменная,Описание
+332-333,REAL,stBunker[3].MotorVibrator[1].VFD.cmdSetFrequency,Бункер 3 вибратор 1 - команда
+334-335,REAL,stBunker[3].MotorVibrator[2].VFD.cmdSetFrequency,Бункер 3 вибратор 2 - команда
+336-337,REAL,stBunker[3].MotorVibrator[3].VFD.cmdSetFrequency,Бункер 3 вибратор 3 - команда
+338-339,REAL,stBunker[3].MotorVibrator[4].VFD.cmdSetFrequency,Бункер 3 вибратор 4 - команда
+340-341,REAL,stBunker[3].MotorVibFeeder[1].VFD.cmdSetFrequency,Бункер 3 вибропитатель 1 - команда
+342-343,REAL,stBunker[3].MotorVibFeeder[2].VFD.cmdSetFrequency,Бункер 3 вибропитатель 2 - команда
+344-359,-,РЕЗЕРВ,Резерв для бункера 3

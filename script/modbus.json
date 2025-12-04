@@ -1,0 +1,8 @@
+{
+  "register_type": "Holding / Input",
+  "section": "Section name",
+  "address": "BOOL n.n (WORD.BIT) / INT n / REAL | TIME n and n+1",
+  "data_type": "BOOL / INT / REAL / TIME",
+  "variable": "variable in program",
+  "description": "Description from comments"
+}

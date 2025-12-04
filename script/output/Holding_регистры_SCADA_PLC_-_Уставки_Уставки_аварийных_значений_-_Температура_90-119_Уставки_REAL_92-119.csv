@@ -1,0 +1,6 @@
+Регистр,Тип,Переменная,Описание
+92-93,REAL,MOTOR_VIBFEEDER_TEMP_POINTS.LL_Value,Вибропитатель - температура LL
+94-95,REAL,MOTOR_VIBFEEDER_TEMP_POINTS.L_Value,Вибропитатель - температура L
+96-97,REAL,MOTOR_VIBFEEDER_TEMP_POINTS.H_Value,Вибропитатель - температура H
+98-99,REAL,MOTOR_VIBFEEDER_TEMP_POINTS.HH_Value,Вибропитатель - температура HH
+100-119,-,РЕЗЕРВ,Резерв для уставок температуры

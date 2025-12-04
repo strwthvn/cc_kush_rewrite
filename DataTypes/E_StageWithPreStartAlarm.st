@@ -1,0 +1,8 @@
+TYPE E_StageWithPreStartAlarm :
+(
+	IDLE,
+	PRESTART_ALARM,
+	STARTING,
+	WORK,
+	ERROR);
+END_TYPE

@@ -1,0 +1,10 @@
+Регистр,Тип,Переменная,Описание
+32-33,REAL,VFD_FREQUENCY_MAX,Максимальная частота ЧРП
+34-35,REAL,VFD_FREQUENCY_STEP,Шаг изменения частоты
+36-37,REAL,VFD_FREQUENCY_INACCURANCY,Погрешность частоты
+38-39,REAL,VFD_FREQUENCY_SYNC_TOLERANCE,Допуск синхронизации моторов
+40-41,REAL,MOTOR_FREQUENCY_CONVEYOR,Частота мотора конвейера
+42-43,REAL,MOTOR_FREQUENCY_DUMPER_CONVEYOR,Частота мотора конвейера отвала
+44-45,REAL,MOTOR_FREQUENCY_DUMPER_ROTATION,Частота мотора поворота отвала
+46-47,REAL,CONVEYOR_DEAFULT_SPEED,Скорость конвейера по умолчанию
+48-59,-,РЕЗЕРВ,Резерв для будущих уставок ЧРП

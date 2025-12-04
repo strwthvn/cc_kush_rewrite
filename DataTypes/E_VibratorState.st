@@ -1,0 +1,7 @@
+TYPE E_VibratorState :
+(
+	IDLE,
+	ACTIVE_WORK,
+	PAUSE_VIBRATOR,
+	PAUSE_FB);
+END_TYPE

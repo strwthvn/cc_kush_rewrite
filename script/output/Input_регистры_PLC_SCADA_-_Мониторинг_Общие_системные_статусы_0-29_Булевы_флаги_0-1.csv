@@ -1,0 +1,33 @@
+Бит,Переменная,Описание
+0.0,xStateAutoWorking,Автоматический режим работает
+0.1,xStateEmergencyStop,Аварийный останов
+0.2,xStateErrorCheckReady,Готовность к пуску (отсутствие ошибок)
+0.3,xStateErrorAcceptIdle,Ошибка задания пропорции
+0.4,stCommonSignals.fbEmergencyStopBtn.qxSignal,Кнопка аварийного останова
+0.5,stCommonSignals.fbRemoteModeBtn.qxSignal,Режим дистанционный (1) / местный (0)
+0.6,stCommonSignals.fbRealyCurrentControl.qxSignal,Реле контроля фаз
+0.7,stCommonSignals.fbQF1.qxSignal,Автомат QF1
+0.8,stCommonSignals.fb9QF1.qxSignal,Автомат 9QF1
+0.9,stCommonSignals.fb10QF1.qxSignal,Автомат 10QF1
+0.10,stCommonSignals.fb11QF1.qxSignal,Автомат 11QF1
+0.11,stCommonSignals.qx6KM1,Контактор 6KM1
+0.12,SIMULATION,Режим симуляции
+0.13,РЕЗЕРВ,Резерв
+0.14,РЕЗЕРВ,Резерв
+0.15,РЕЗЕРВ,Резерв
+1.0,РЕЗЕРВ,Резерв
+1.1,РЕЗЕРВ,Резерв
+1.2,РЕЗЕРВ,Резерв
+1.3,РЕЗЕРВ,Резерв
+1.4,РЕЗЕРВ,Резерв
+1.5,РЕЗЕРВ,Резерв
+1.6,РЕЗЕРВ,Резерв
+1.7,РЕЗЕРВ,Резерв
+1.8,РЕЗЕРВ,Резерв
+1.9,РЕЗЕРВ,Резерв
+1.10,РЕЗЕРВ,Резерв
+1.11,РЕЗЕРВ,Резерв
+1.12,РЕЗЕРВ,Резерв
+1.13,РЕЗЕРВ,Резерв
+1.14,РЕЗЕРВ,Резерв
+1.15,РЕЗЕРВ,Резерв

@@ -1,0 +1,30 @@
+Регистр,Тип,Переменная,Описание
+152-153,REAL,stBunker[3].rWeight,Вес в бункере 3
+154-155,REAL,stBunker[3].rProportionActual,Фактическая пропорция бункера 3
+156-157,REAL,stBunker[3].rMotorVibFeederCommonFrequency,Общая частота вибропитателей
+158-159,REAL,stBunker[3].cmdDumpingPrecent,Процент высыпания
+160-161,REAL,stBunker[3].MotorVibrator[1].VFD.qrOutFrequency,Вибратор 1 - выходная частота
+162-163,REAL,stBunker[3].MotorVibrator[1].VFD.rActualFrequency,Вибратор 1 - фактическая частота
+164-165,REAL,stBunker[3].MotorVibrator[1].VFD.wMotorCurrent.rTag,Вибратор 1 - ток
+166-167,REAL,stBunker[3].MotorVibrator[2].VFD.qrOutFrequency,Вибратор 2 - выходная частота
+168-169,REAL,stBunker[3].MotorVibrator[2].VFD.rActualFrequency,Вибратор 2 - фактическая частота
+170-171,REAL,stBunker[3].MotorVibrator[2].VFD.wMotorCurrent.rTag,Вибратор 2 - ток
+172-173,REAL,stBunker[3].MotorVibrator[3].VFD.qrOutFrequency,Вибратор 3 - выходная частота
+174-175,REAL,stBunker[3].MotorVibrator[3].VFD.rActualFrequency,Вибратор 3 - фактическая частота
+176-177,REAL,stBunker[3].MotorVibrator[3].VFD.wMotorCurrent.rTag,Вибратор 3 - ток
+178-179,REAL,stBunker[3].MotorVibrator[4].VFD.qrOutFrequency,Вибратор 4 - выходная частота
+180-181,REAL,stBunker[3].MotorVibrator[4].VFD.rActualFrequency,Вибратор 4 - фактическая частота
+182-183,REAL,stBunker[3].MotorVibrator[4].VFD.wMotorCurrent.rTag,Вибратор 4 - ток
+184-185,REAL,stBunker[3].MotorVibFeeder[1].VFD.qrOutFrequency,Вибропитатель 1 - выходная частота
+186-187,REAL,stBunker[3].MotorVibFeeder[1].VFD.rActualFrequency,Вибропитатель 1 - факт. частота
+188-189,REAL,stBunker[3].MotorVibFeeder[1].VFD.wMotorCurrent.rTag,Вибропитатель 1 - ток
+190-191,REAL,stBunker[3].MotorVibFeeder[2].VFD.qrOutFrequency,Вибропитатель 2 - выходная частота
+192-193,REAL,stBunker[3].MotorVibFeeder[2].VFD.rActualFrequency,Вибропитатель 2 - факт. частота
+194-195,REAL,stBunker[3].MotorVibFeeder[2].VFD.wMotorCurrent.rTag,Вибропитатель 2 - ток
+196-197,REAL,stBunker[3].MotorVibFeeder[1].rTempBearing[1],Вибропитатель 1 - температура 1
+198-199,REAL,stBunker[3].MotorVibFeeder[1].rTempBearing[2],Вибропитатель 1 - температура 2
+200-201,REAL,stBunker[3].MotorVibFeeder[2].rTempBearing[1],Вибропитатель 2 - температура 1
+202-203,REAL,stBunker[3].MotorVibFeeder[2].rTempBearing[2],Вибропитатель 2 - температура 2
+204,INT,eBunkerStage[3],Стадия бункера 3 (E_StageWithPreStartAlarm)
+205,INT,eBunkerStageToSCADA[3],Стадия бункера 1 для SCADA
+206-209,-,РЕЗЕРВ,Резерв для бункера 3

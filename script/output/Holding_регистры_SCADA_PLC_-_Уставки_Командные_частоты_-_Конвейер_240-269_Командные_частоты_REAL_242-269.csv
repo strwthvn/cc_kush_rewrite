@@ -1,0 +1,4 @@
+Регистр,Тип,Переменная,Описание
+242-243,REAL,stConveyor.MotorConveyor[1].VFD.cmdSetFrequency,Конвейер 1 - командная частота
+244-245,REAL,stConveyor.MotorConveyor[2].VFD.cmdSetFrequency,Конвейер 2 - командная частота
+246-269,-,РЕЗЕРВ,Резерв для конвейера
