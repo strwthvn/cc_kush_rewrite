@@ -426,27 +426,6 @@
         "section": "Команды - Отвалообразователь (210-239)",
         "address": "210.3",
         "data_type": "BOOL",
-        "variable": "stDumper.cmdTurnLeft",
-        "description": "Команда поворота влево"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "210.4",
-        "data_type": "BOOL",
-        "variable": "stDumper.cmdTurnRight",
-        "description": "Команда поворота вправо"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "210.5",
-        "data_type": "BOOL",
-        "variable": "stDumper.cmdStopRotation",
-        "description": "Команда остановка поворота"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "210.6",
-        "data_type": "BOOL",
         "variable": "stDumper.cmdReset",
         "description": "Сброс ошибок"
       },
@@ -477,6 +456,27 @@
         "data_type": "BOOL",
         "variable": "stDumper.cmdSetModeAuto",
         "description": "Установить режим Авто"
+      },
+      {
+        "section": "Команды - Отвалообразователь (210-239)",
+        "address": "211.0",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdTurnLeft",
+        "description": "Команда поворота влево"
+      },
+      {
+        "section": "Команды - Отвалообразователь (210-239)",
+        "address": "211.1",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdTurnRight",
+        "description": "Команда поворота вправо"
+      },
+      {
+        "section": "Команды - Отвалообразователь (210-239)",
+        "address": "211.2",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdStopRotation",
+        "description": "Команда остановка поворота"
       },
       {
         "section": "Команды - Отвалообразователь (210-239)",
@@ -1101,6 +1101,27 @@
       },
       {
         "section": "Бункер 1 (30-89)",
+        "address": "30.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].xStateRemoteAuto",
+        "description": "Режим работы: Автоматический"
+      },
+      {
+        "section": "Бункер 1 (30-89)",
+        "address": "30.13",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].xStateRemoteManual",
+        "description": "Режим работы: Ручной"
+      },
+      {
+        "section": "Бункер 1 (30-89)",
+        "address": "30.14",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].xStateRemoteRepair",
+        "description": "Режим работы: Ремонт"
+      },
+      {
+        "section": "Бункер 1 (30-89)",
         "address": "32-33",
         "data_type": "REAL",
         "variable": "stBunker[1].rWeight",
@@ -1346,6 +1367,27 @@
       },
       {
         "section": "Бункер 2 (90-149)",
+        "address": "90.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].xStateRemoteAuto",
+        "description": "Режим работы: Автоматический"
+      },
+      {
+        "section": "Бункер 2 (90-149)",
+        "address": "90.13",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].xStateRemoteManual",
+        "description": "Режим работы: Ручной"
+      },
+      {
+        "section": "Бункер 2 (90-149)",
+        "address": "90.14",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].xStateRemoteRepair",
+        "description": "Режим работы: Ремонт"
+      },
+      {
+        "section": "Бункер 2 (90-149)",
         "address": "92-93",
         "data_type": "REAL",
         "variable": "stBunker[2].rWeight",
@@ -1588,6 +1630,27 @@
         "data_type": "BOOL",
         "variable": "stBunker[3].fbBtnEmergencyStop.qxSignal",
         "description": "Кнопка \"Аварийная остановка\" NC"
+      },
+      {
+        "section": "Бункер 3 (150-209)",
+        "address": "150.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].xStateRemoteAuto",
+        "description": "Режим работы: Автоматический"
+      },
+      {
+        "section": "Бункер 3 (150-209)",
+        "address": "150.13",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].xStateRemoteManual",
+        "description": "Режим работы: Ручной"
+      },
+      {
+        "section": "Бункер 3 (150-209)",
+        "address": "150.14",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].xStateRemoteRepair",
+        "description": "Режим работы: Ремонт"
       },
       {
         "section": "Бункер 3 (150-209)",
@@ -1969,6 +2032,27 @@
       },
       {
         "section": "Отвалообразователь - Конвейер (210-239)",
+        "address": "211.12",
+        "data_type": "BOOL",
+        "variable": "stDumper.xStateRemoteAuto",
+        "description": "Режим работы: Автоматический"
+      },
+      {
+        "section": "Отвалообразователь - Конвейер (210-239)",
+        "address": "211.13",
+        "data_type": "BOOL",
+        "variable": "stDumper.xStateRemoteManual",
+        "description": "Режим работы: Ручной"
+      },
+      {
+        "section": "Отвалообразователь - Конвейер (210-239)",
+        "address": "211.14",
+        "data_type": "BOOL",
+        "variable": "stDumper.xStateRemoteRepair",
+        "description": "Режим работы: Ремонт"
+      },
+      {
+        "section": "Отвалообразователь - Конвейер (210-239)",
         "address": "212-213",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[1].VFD.qrOutFrequency",
@@ -2274,6 +2358,27 @@
         "data_type": "BOOL",
         "variable": "stConveyor.fbYS1.qxSignal",
         "description": "Контроль продольного разрыва ленты (1 - норма, 0 - тревога)"
+      },
+      {
+        "section": "Конвейер (270-299)",
+        "address": "271.12",
+        "data_type": "BOOL",
+        "variable": "stConveyor.xStateRemoteAuto",
+        "description": "Режим работы: Автоматический"
+      },
+      {
+        "section": "Конвейер (270-299)",
+        "address": "271.13",
+        "data_type": "BOOL",
+        "variable": "stConveyor.xStateRemoteManual",
+        "description": "Режим работы: Ручной"
+      },
+      {
+        "section": "Конвейер (270-299)",
+        "address": "271.14",
+        "data_type": "BOOL",
+        "variable": "stConveyor.xStateRemoteRepair",
+        "description": "Режим работы: Ремонт"
       },
       {
         "section": "Конвейер (270-299)",
