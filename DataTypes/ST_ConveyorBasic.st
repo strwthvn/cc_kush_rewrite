@@ -24,6 +24,7 @@ STRUCT
 	cmdSetModeRepair, // Установить режим "Ремонт"
 	cmdSetModeManual, // Установить режим "Ручной"
 	cmdSetModeAuto : BOOL; // Установить режим "Авто"
+	cmdBuildCircuitOn, cmdBuildCircuitOff  : BOOL; // Команда собрать/разобрать схему
 	
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
 END_STRUCT

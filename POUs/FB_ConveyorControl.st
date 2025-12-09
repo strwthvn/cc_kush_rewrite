@@ -344,6 +344,11 @@ ELSE
 
 END_IF;
 
+// Передача состояний режима управления
+Conveyor.xStateRemoteAuto := Conveyor.eStateRemote := E_StateRemote.Auto;
+Conveyor.xStateRemoteManual := Conveyor.eStateRemote := E_StateRemote.Manual;
+Conveyor.xStateRemoteRepair := Conveyor.eStateRemote := E_StateRemote.Repair;
+
 // ========================================
 // ПРОВЕРКА СИНХРОНИЗАЦИИ МОТОРОВ КОНВЕЙЕРА
 // ========================================

@@ -24,6 +24,24 @@ VAR
 	xFrequenciesSynchronized : BOOL; // Частоты синхронизированы в пределах допуска
 	xConditionToProceed : BOOL; // Общее условие для продолжения разгона
 
+	// Подстадии запуска (для последовательного включения тормозов и VFD)
+	nStartingSubstage : INT := 0;
+	// 0 - RELEASE_BRAKE: Отпускание тормозов
+	// 1 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормозов
+	// 2 - START_VFD: Запуск VFD
+	// 3 - RAMPING: Разгон частоты до рабочей
+
+	// Подстадии остановки (для последовательного выключения VFD и тормозов)
+	nStoppingSubstage : INT := 0;
+	// 0 - Нормальная работа
+	// 1 - STOP_VFD: Остановка VFD
+	// 2 - WAIT_VFD_STOP: Ожидание остановки VFD
+	// 3 - ACTIVATE_BRAKE: Активация тормозов
+	// 4 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормозов
+
+	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
+	xCircuitBuilt : BOOL := FALSE;
+
 	simInit : BOOL;
 	i : INT;
 END_VAR
@@ -132,15 +150,13 @@ FOR i := 1 TO 2 BY 1 DO
 		xEnableFeedback := TRUE
 	);
 
-	Dumper.MotorConveyor[i].qxKM_Power := Dumper.MotorConveyor[i].Device.qxPower;
-
 	// ЧРП
 	Dumper.MotorConveyor[i].VFD.Device(
 		ixFeedback := Dumper.MotorConveyor[i].VFD.fbStateIsWorking.qxSignal,
 		xEnableFeedback := TRUE
 	);
 
-	Dumper.MotorConveyor[i].VFD.qxStart := Dumper.MotorConveyor[i].VFD.Device.qxPower;
+	// VFD.qxStart теперь управляется напрямую в алгоритме (TRUE = ПУСК, FALSE = СТОП)
 
 	// Диагностика тока
 	Dumper.MotorConveyor[i].VFD.fbRangeDiagnostic(
@@ -232,15 +248,13 @@ FOR i := 1 TO 2 BY 1 DO
 		xEnableFeedback := TRUE
 	);
 
-	Dumper.MotorRotation[i].qxKM_Power := Dumper.MotorRotation[i].Device.qxPower;
-
 	// ЧРП
 	Dumper.MotorRotation[i].VFD.Device(
 		ixFeedback := Dumper.MotorRotation[i].VFD.fbStateIsWorking.qxSignal,
 		xEnableFeedback := TRUE
 	);
 
-	Dumper.MotorRotation[i].VFD.qxStart := Dumper.MotorRotation[i].VFD.Device.qxPower;
+	// VFD.qxStart теперь управляется напрямую в алгоритме (TRUE = ПУСК, FALSE = СТОП)
 
 	// Диагностика тока
 	Dumper.MotorRotation[i].VFD.fbRangeDiagnostic(
@@ -256,7 +270,7 @@ FOR i := 1 TO 2 BY 1 DO
 	Dumper.MotorRotation[i].VFD.fbAnalogInput(
 		xSimulation := SIMULATION,
 		iADC_Code := Dumper.MotorRotation[i].VFD.nActualFrequencyADC,
-		refEngValue := Dumper.MotorRotation[i].VFD.Frequency.qrCurrentFrequency,
+		refEngValue := Dumper.MotorRotation[i].VFD.rActualFrequency,
 		refSimValue := Dumper.MotorRotation[i].VFD.rSimulatedFrequency,
 		rAlarm_LL := VFD_CURRENT_ALARM_LL,
 		rAlarm_L := VFD_CURRENT_ALARM_L,
@@ -273,7 +287,7 @@ FOR i := 1 TO 2 BY 1 DO
 	// Аналоговый выход ЧРП (задание частоты)
 	Dumper.MotorRotation[i].VFD.fbAnalogOutput(
 		xEnable := Dumper.MotorRotation[i].VFD.Device.qxActive,
-		rEngValue := Dumper.MotorRotation[i].VFD.qrOutFrequency,
+		rEngValue := Dumper.MotorRotation[i].VFD.Frequency.qrCurrentFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,
 		rCurrent_Max := VFD_CURRENT_MAX,
@@ -372,11 +386,9 @@ Dumper.xStateWarning := NOT Dumper.fbZQWarning[1].qxSignal
 // Сброс в начальное состояние
 IF xReset THEN
 	STAGE := E_StageWithPreStartAlarm.IDLE;
-	// Сброс команд запуска
-	Dumper.MotorConveyor[1].Device.xStartCommand := FALSE;
-	Dumper.MotorConveyor[2].Device.xStartCommand := FALSE;
-	Dumper.MotorConveyor[1].VFD.Device.xStartCommand := FALSE;
-	Dumper.MotorConveyor[2].VFD.Device.xStartCommand := FALSE;
+	// Сброс команд запуска VFD (FALSE = СТОП)
+	Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+	Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
 	// Сброс целевых частот
 	rTargetFreqConv1 := 0.0;
 	rTargetFreqConv2 := 0.0;
@@ -384,20 +396,8 @@ IF xReset THEN
 	rTargetFreqRot2 := 0.0;
 END_IF
 
-// Аварийная остановка - переход в ERROR
-IF xStop AND STAGE <> E_StageWithPreStartAlarm.IDLE THEN
-	STAGE := E_StageWithPreStartAlarm.ERROR;
-	// Сброс команд запуска
-	Dumper.MotorConveyor[1].Device.xStartCommand := FALSE;
-	Dumper.MotorConveyor[2].Device.xStartCommand := FALSE;
-	Dumper.MotorConveyor[1].VFD.Device.xStartCommand := FALSE;
-	Dumper.MotorConveyor[2].VFD.Device.xStartCommand := FALSE;
-	// Сброс целевых частот
-	rTargetFreqConv1 := 0.0;
-	rTargetFreqConv2 := 0.0;
-	rTargetFreqRot1 := 0.0;
-	rTargetFreqRot2 := 0.0;
-END_IF
+// Штатная остановка - запускается при получении команды xStop
+// Обрабатывается через подстадии в режиме WORK
 
 // ========================================
 // АВТОМАТ ПУСКА ОТВАЛООБРАЗОВАТЕЛЯ
@@ -411,6 +411,14 @@ CASE STAGE OF
 		rTargetFreqRot1 := 0.0;
 		rTargetFreqRot2 := 0.0;
 
+		// Сброс подстадий запуска и остановки
+		nStartingSubstage := 0;
+		nStoppingSubstage := 0;
+
+		// Тормоза активны (удерживают механизм)
+		Dumper.qxBreakerConveyor := FALSE;
+		Dumper.qxBreakerRotation := FALSE;
+
 		IF xStart THEN
 			STAGE := PRESTART_ALARM;
 		END_IF;
@@ -421,40 +429,159 @@ CASE STAGE OF
 		END_IF;
 
 	E_StageWithPreStartAlarm.STARTING:
-		// Команда ПУСК на контакторы
-		Dumper.MotorConveyor[1].Device.xStartCommand := TRUE;
-		Dumper.MotorConveyor[2].Device.xStartCommand := TRUE;
+		// Последовательный запуск: Тормоза → Обратная связь → VFD → Разгон
+		CASE nStartingSubstage OF
+			0: // RELEASE_BRAKE - Отпускание тормозов
+				// Включить сигнал тормоза (1 = тормоз отпущен)
+				Dumper.qxBreakerConveyor := TRUE;
+				Dumper.qxBreakerRotation := TRUE;
 
-		// Команда ПУСК на частотный преобразователь
-		Dumper.MotorConveyor[1].VFD.Device.xStartCommand := Dumper.MotorConveyor[1].Device.qxActive;
-		Dumper.MotorConveyor[2].VFD.Device.xStartCommand := Dumper.MotorConveyor[2].Device.qxActive;
+				// Переход к следующей подстадии
+				nStartingSubstage := 1;
 
-		// Задание целевой частоты (переменные будут переданы в FB_FrequencyControl выше)
-		rTargetFreqConv1 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
-		rTargetFreqConv2 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+			1: // WAIT_BRAKE_FEEDBACK - Ожидание обратной связи тормозов
+				// Получить обратную связь реле тормоза
+				IF Dumper.fbBreakerConveyor.qxSignal THEN
+					// Обратная связь получена, переходим к запуску VFD
+					nStartingSubstage := 2;
+				END_IF;
 
-		// Переход в режим WORK при достижении целевой частоты
-		IF Dumper.MotorConveyor[1].VFD.rActualFrequency >= MOTOR_FREQUENCY_DUMPER_CONVEYOR - VFD_FREQUENCY_INACCURANCY
-			AND Dumper.MotorConveyor[2].VFD.rActualFrequency >= MOTOR_FREQUENCY_DUMPER_CONVEYOR - VFD_FREQUENCY_INACCURANCY
-		THEN
-			STAGE := E_StageWithPreStartAlarm.WORK;
-		END_IF;
+			2: // START_VFD - Запуск VFD (контакторы управляются отдельно через cmdBuildCircuitOn/Off)
+				// Команда ПУСК на частотный преобразователь (TRUE = ПУСК)
+				Dumper.MotorConveyor[1].VFD.qxStart := TRUE;
+				Dumper.MotorConveyor[2].VFD.qxStart := TRUE;
+
+				// Установка целевой частоты
+				// (FB_FrequencyControl автоматически выберет плавный или прямой пуск через irStep)
+				rTargetFreqConv1 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+				rTargetFreqConv2 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+
+				// Если оба VFD запущены (обратная связь), переходим к следующей подстадии
+				IF Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+					AND Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
+				THEN
+					IF VFD_SMOOTH_SET_FREQUENCY THEN
+						// Плавный пуск: переходим к разгону
+						nStartingSubstage := 3;
+					ELSE
+						// Прямой пуск: сразу в режим WORK (частота уже установлена через большой шаг)
+						STAGE := E_StageWithPreStartAlarm.WORK;
+						nStartingSubstage := 0;
+					END_IF;
+				END_IF;
+
+			3: // RAMPING - Разгон частоты до рабочей
+				// Команды запуска VFD остаются активными (TRUE = ПУСК)
+				Dumper.MotorConveyor[1].VFD.qxStart := TRUE;
+				Dumper.MotorConveyor[2].VFD.qxStart := TRUE;
+
+				// Задание целевой частоты (передается в FB_FrequencyControl)
+				rTargetFreqConv1 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+				rTargetFreqConv2 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+
+				// Переход в режим WORK при достижении целевой частоты
+				// Используется регулирование частоты с синхронизацией
+				IF Dumper.MotorConveyor[1].VFD.rActualFrequency >= MOTOR_FREQUENCY_DUMPER_CONVEYOR - VFD_FREQUENCY_INACCURANCY
+					AND Dumper.MotorConveyor[2].VFD.rActualFrequency >= MOTOR_FREQUENCY_DUMPER_CONVEYOR - VFD_FREQUENCY_INACCURANCY
+				THEN
+					STAGE := E_StageWithPreStartAlarm.WORK;
+					nStartingSubstage := 0; // Сброс для следующего запуска
+				END_IF;
+		END_CASE;
 
 	E_StageWithPreStartAlarm.WORK:
-		// Нормальная работа
+		// Нормальная работа или штатная остановка через подстадии
+		CASE nStoppingSubstage OF
+			0: // Нормальная работа
+				IF xStop THEN
+					// Начать штатную остановку
+					nStoppingSubstage := 1;
+				END_IF;
+
+			1: // STOP_VFD - Остановка VFD
+				// Установить целевую частоту 0
+				// (FB_FrequencyControl автоматически выберет плавную или прямую остановку через irStep)
+				rTargetFreqConv1 := 0.0;
+				rTargetFreqConv2 := 0.0;
+				rTargetFreqRot1 := 0.0;
+				rTargetFreqRot2 := 0.0;
+
+				IF VFD_SMOOTH_SET_FREQUENCY THEN
+					// Плавная остановка: ждем снижения частоты до 0, затем отключаем VFD
+					IF Dumper.MotorConveyor[1].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
+						AND Dumper.MotorConveyor[2].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
+					THEN
+						// Частота достигла 0, отключаем VFD
+						Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+						Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+						nStoppingSubstage := 2;
+					END_IF;
+				ELSE
+					// Прямая остановка: сразу отключаем VFD (частота мгновенно стала 0 через большой шаг)
+					Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+					Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+					nStoppingSubstage := 2;
+				END_IF;
+
+			2: // WAIT_VFD_STOP - Ожидание остановки VFD
+				// Проверить обратную связь VFD о выключении
+				IF NOT Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+					AND NOT Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
+				THEN
+					// VFD выключены, переход к активации тормозов
+					nStoppingSubstage := 3;
+				END_IF;
+
+			3: // ACTIVATE_BRAKE - Активация тормозов
+				// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
+				Dumper.qxBreakerConveyor := FALSE;
+				Dumper.qxBreakerRotation := FALSE;
+
+				// Переход к ожиданию обратной связи тормозов
+				nStoppingSubstage := 4;
+
+			4: // WAIT_BRAKE_FEEDBACK - Ожидание обратной связи тормозов
+				// Проверить обратную связь тормоза (должен стать FALSE = тормоз активен)
+				IF NOT Dumper.fbBreakerConveyor.qxSignal THEN
+					// Обратная связь получена, переход в IDLE
+					STAGE := E_StageWithPreStartAlarm.IDLE;
+					nStoppingSubstage := 0;
+				END_IF;
+		END_CASE;
 
 	E_StageWithPreStartAlarm.ERROR:
-		// Состояние ошибки - ожидание сброса
-		// Все команды запуска уже сброшены выше
+		// Состояние ошибки - аварийная остановка и ожидание сброса
+		// (используется при серьезных неисправностях, не для штатной остановки)
+
+		// Аварийная остановка: команда СТОП на VFD (FALSE = СТОП)
+		Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+		Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+
+		// Сброс целевых частот
+		rTargetFreqConv1 := 0.0;
+		rTargetFreqConv2 := 0.0;
+		rTargetFreqRot1 := 0.0;
+		rTargetFreqRot2 := 0.0;
+
+		// Активировать тормоза
+		Dumper.qxBreakerConveyor := FALSE;
+		Dumper.qxBreakerRotation := FALSE;
+
+		// Сброс подстадий для следующего запуска
+		nStartingSubstage := 0;
+		nStoppingSubstage := 0;
+
+		// Контакторы управляются отдельно через импульсные команды
+		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
 END_CASE;
 
 // ========================================
 // ПРОВЕРКА СИНХРОНИЗАЦИИ МОТОРОВ КОНВЕЙЕРА
 // ========================================
 
-// Проверка что оба ЧРП конвейера готовы и запущены
-xVFDsReady := Dumper.MotorConveyor[1].VFD.Device.qxActive
-           AND Dumper.MotorConveyor[2].VFD.Device.qxActive;
+// Проверка что оба ЧРП конвейера готовы и запущены (обратная связь)
+xVFDsReady := Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+           AND Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal;
 
 // Проверка синхронизации текущих частот (разница не превышает допуск)
 xFrequenciesSynchronized := ABS(Dumper.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency
@@ -472,43 +599,65 @@ xConditionToProceed := xVFDsReady AND xFrequenciesSynchronized;
 // Моторы конвейера
 Dumper.MotorConveyor[1].VFD.Frequency(
 	irMaxFrequency := VFD_FREQUENCY_MAX,
-	irStep := VFD_FREQUENCY_STEP,
+	// Если плавный пуск - используем шаг, иначе - большой шаг для мгновенной установки
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
 	rTargetFrequency := rTargetFreqConv1,
 	xPulse := PULSE_RTRIG.Q,
 	xConditionToProceed := xConditionToProceed // Синхронизация с мотором 2
 );
-Dumper.MotorConveyor[1].VFD.qrOutFrequency := Dumper.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency;
+// qrCurrentFrequency передается напрямую в fbAnalogOutput.rEngValue
 
 Dumper.MotorConveyor[2].VFD.Frequency(
 	irMaxFrequency := VFD_FREQUENCY_MAX,
-	irStep := VFD_FREQUENCY_STEP,
+	// Если плавный пуск - используем шаг, иначе - большой шаг для мгновенной установки
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
 	rTargetFrequency := rTargetFreqConv2,
 	xPulse := PULSE_RTRIG.Q,
 	xConditionToProceed := xConditionToProceed // Синхронизация с мотором 1
 );
-Dumper.MotorConveyor[2].VFD.qrOutFrequency := Dumper.MotorConveyor[2].VFD.Frequency.qrCurrentFrequency;
+// qrCurrentFrequency передается напрямую в fbAnalogOutput.rEngValue
 
 // Моторы поворота
 Dumper.MotorRotation[1].VFD.Frequency(
 	irMaxFrequency := VFD_FREQUENCY_MAX,
-	irStep := VFD_FREQUENCY_STEP,
+	// Если плавный пуск - используем шаг, иначе - большой шаг для мгновенной установки
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
 	rTargetFrequency := rTargetFreqRot1,
 	xPulse := PULSE_RTRIG.Q,
 	xConditionToProceed := TRUE
 );
-Dumper.MotorRotation[1].VFD.qrOutFrequency := Dumper.MotorRotation[1].VFD.Frequency.qrCurrentFrequency;
+// qrCurrentFrequency передается напрямую в fbAnalogOutput.rEngValue
 
 Dumper.MotorRotation[2].VFD.Frequency(
 	irMaxFrequency := VFD_FREQUENCY_MAX,
-	irStep := VFD_FREQUENCY_STEP,
+	// Если плавный пуск - используем шаг, иначе - большой шаг для мгновенной установки
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
 	rTargetFrequency := rTargetFreqRot2,
 	xPulse := PULSE_RTRIG.Q,
 	xConditionToProceed := TRUE
 );
-Dumper.MotorRotation[2].VFD.qrOutFrequency := Dumper.MotorRotation[2].VFD.Frequency.qrCurrentFrequency;
+// qrCurrentFrequency передается напрямую в fbAnalogOutput.rEngValue
 
 // Вывод текущей стадии
 eStage := STAGE;
+
+// ========================================
+// УПРАВЛЕНИЕ КОНТАКТОРАМИ
+// ========================================
+
+// Обработка импульсных команд сборки/разборки схемы
+// cmdBuildCircuitOn - собрать схему (включить контакторы)
+// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
+IF Dumper.eStateRemote = E_StateRemote.Manual THEN
+	IF Dumper.cmdBuildCircuitOn THEN
+		xCircuitBuilt := TRUE;
+	ELSIF Dumper.cmdBuildCircuitOff THEN
+		xCircuitBuilt := FALSE;
+	END_IF;
+END_IF;
+// Моторы конвейера - управление контакторами через состояние схемы
+Dumper.MotorConveyor[1].qxKM_Power := xCircuitBuilt;
+Dumper.MotorConveyor[2].qxKM_Power := xCircuitBuilt;
 
 // ========================================
 // ПЕРЕДАЧА СОСТОЯНИЙ ДЛЯ SCADA
@@ -549,5 +698,10 @@ ELSE
 	eStageToSCADA := E_ScadaStatesDevice.READY;
 
 END_IF;
+
+// Передача состояний режима управления
+Dumper.xStateRemoteAuto := Dumper.eStateRemote = E_StateRemote.Auto;
+Dumper.xStateRemoteManual := Dumper.eStateRemote = E_StateRemote.Manual;
+Dumper.xStateRemoteRepair := Dumper.eStateRemote = E_StateRemote.Repair;
 
 END_FUNCTION_BLOCK

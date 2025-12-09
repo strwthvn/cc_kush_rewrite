@@ -9,6 +9,7 @@ VAR
 	fbDumper : FB_DumperControl;
 	stDumper : ST_Dumper;
 	xStartDumper : BOOL := FALSE; // Команда запуска отвалообразователя
+	xManualStopDumper : BOOL; // Ручная остановка отвалообразователя
 	eDumperStage : E_StageWithPreStartAlarm; // Стадия отвалообразователя
 	eDumperStageToSCADA : E_ScadaStatesDevice; // Состояние для SCADA отвалообразователя
 
@@ -17,10 +18,12 @@ VAR
 	fbConveyor : FB_ConveyorControl;
 	stConveyor : ST_ConveyorPrefabricated;
 	xStartConveyor : BOOL := FALSE; // Команда запуска конвейера
+	xManualStopConveyor : BOOL; // Команда остановки сборного конвейера
 	eConveyorStage : E_StageWithPreStartAlarm; // Стадия конвейера
 	eConveyorStageToSCADA : E_ScadaStatesDevice; // Состояние для SCADA конвейера
 
 	xStartBunker : ARRAY[1..3] OF BOOL := [FALSE, FALSE, FALSE]; // Команды запуска бункеров
+	xManualStopBunker : ARRAY[1..3] OF BOOL; // Команды остановки бункеров
 	eBunkerStage : ARRAY[1..3] OF E_StageWithPreStartAlarm; // Стадии бункеров
 	eBunkerStageToSCADA : ARRAY[1..3] OF E_ScadaStatesDevice; // Состояния для SCADA бункеров
 
@@ -133,7 +136,7 @@ END_FOR
 fbBunker[1](
 	Bunker := stBunker[1],
 	xStart := xStartBunker[1],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess,
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1],
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eBunkerStage[1],
 	eStageToSCADA => eBunkerStageToSCADA[1]
@@ -142,7 +145,7 @@ fbBunker[1](
 fbBunker[2](
 	Bunker := stBunker[2],
 	xStart := xStartBunker[2],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess,
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2],
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eBunkerStage[2],
 	eStageToSCADA => eBunkerStageToSCADA[2]
@@ -151,7 +154,7 @@ fbBunker[2](
 fbBunker[3](
 	Bunker := stBunker[3],
 	xStart := xStartBunker[3],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess,
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3],
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eBunkerStage[3],
 	eStageToSCADA => eBunkerStageToSCADA[3]
@@ -161,7 +164,7 @@ fbBunker[3](
 fbDumper(
 	Dumper := stDumper,
 	xStart := xStartDumper,
-	xStop := fbEmergencyStopProcess.qxStateStopProcess,
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopDumper,
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eDumperStage,
 	eStageToSCADA => eDumperStageToSCADA
@@ -171,7 +174,7 @@ fbDumper(
 fbConveyor(
 	Conveyor := stConveyor,
 	xStart := xStartConveyor,
-	xStop := fbEmergencyStopProcess.qxStateStopProcess,
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopConveyor,
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eConveyorStage,
 	eStageToSCADA => eConveyorStageToSCADA
@@ -201,6 +204,95 @@ fbSimulation(
 	Conveyor := stConveyor,
 	Bunker := stBunker
 );
+
+// == РУЧНОЙ РЕЖИМ - ДИСТАНЦИЯ ==
+
+// ОТВАЛООБРАЗОВАТЕЛЬ
+
+// Запуск отвалообразователя в ручном режиме
+IF 	stDumper.cmdSetModeManual THEN stDumper.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stDumper.cmdStartConveyor // Команда на запуск в ручном режиме
+	AND eDumperStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
+	AND eDumperStage <> E_StageWithPreStartAlarm.STARTING AND eDumperStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
+	//AND NOT FC_Dumper_GetErrorCommon(Dumper:=stDumper) // Не имеет ошибок
+	THEN
+		xStartDumper := TRUE;
+END_IF;
+IF eDumperStage = E_StageWithPreStartAlarm.STARTING AND xStartDumper THEN xStartDumper := FALSE; END_IF;
+
+// Остановка отвалообразователя в ручном режиме
+IF 	stDumper.cmdSetModeManual THEN stDumper.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stDumper.cmdStopConveyor // Команда на остановку в ручном режиме
+	AND	(eDumperStage = E_StageWithPreStartAlarm.WORK // В статусе работы
+		OR eDumperStage = E_StageWithPreStartAlarm.STARTING 
+		OR eDumperStage = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
+	THEN
+		xManualStopDumper := TRUE;
+END_IF;
+IF eDumperStage <> E_StageWithPreStartAlarm.WORK AND xManualStopDumper THEN xManualStopDumper := FALSE; END_IF;
+
+// СБОРНЫЙ КОНВЕЙЕР
+
+// Запуск сборочного конвейера в ручном режиме
+IF 	stConveyor.cmdSetModeManual THEN stConveyor.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stConveyor.cmdStartConveyor // Команда на запуск в ручном режиме
+	AND eConveyorStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
+	AND eConveyorStage <> E_StageWithPreStartAlarm.STARTING AND eConveyorStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
+	//AND NOT FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) // Не имеет ошибок
+	THEN
+		xStartConveyor := TRUE;
+END_IF;
+IF eConveyorStage = E_StageWithPreStartAlarm.STARTING AND xStartConveyor THEN xStartConveyor := FALSE; END_IF;
+
+// Остановка сборочного конвейера в ручном режиме
+IF 	stConveyor.cmdSetModeManual THEN stConveyor.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stConveyor.cmdStopConveyor // Команда на остановку в ручном режиме
+	AND	(eConveyorStage = E_StageWithPreStartAlarm.WORK // В статусе работы
+		OR eConveyorStage = E_StageWithPreStartAlarm.STARTING 
+		OR eConveyorStage = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
+	THEN
+		xManualStopConveyor := TRUE;
+END_IF;
+IF eConveyorStage <> E_StageWithPreStartAlarm.WORK AND xManualStopConveyor THEN xManualStopConveyor := FALSE; END_IF;
+
+// БУНКЕР
+
+FOR i := 1 TO 3 DO
+	// Запуск бункера в ручном режиме
+	IF 	stBunker[i].cmdSetModeManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
+	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+		AND stBunker[i].cmdStartFeeder // Команда на запуск в ручном режиме
+		AND eBunkerStage[i] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
+		AND eBunkerStage[i] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[i] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
+		//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) // Не имеет ошибок
+		THEN
+			xStartBunker[i] := TRUE;
+	END_IF;
+	IF eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING AND xStartBunker[i] THEN xStartBunker[i] := FALSE; END_IF;
+
+	// Остановка бункера в ручном режиме
+	IF 	stBunker[i].cmdSetModeManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
+	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+		AND stBunker[i].cmdStartFeeder // Команда на остановку в ручном режиме
+		AND	(eBunkerStage[i] = E_StageWithPreStartAlarm.WORK // В статусе работы
+			OR eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING 
+			OR eBunkerStage[i] = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
+		THEN
+			xManualStopBunker[i] := TRUE;
+	END_IF;
+	IF eBunkerStage[i] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[i] THEN xManualStopBunker[i] := FALSE; END_IF;
+END_FOR;
+
+// Процессы аварийных остановок в ручном режиме 
+	// F FC_Dumper_GetErrorCommon(Dumper:=stDumper) THEN FC_Dumper_EmergencyStop(Dumper:=stDumper); END_IF;
+	// F FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) THEN FC_Conveyor_EmergencyStop(Conveyor:=stConveyor); END_IF;
+	FOR i := 1 TO 3 DO 
+		// IF FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) THEN FC_Bunker_EmergencyStop(Bunker:=stBunker[i]); END_IF;
+	END_FOR
 
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
 CASE AUTO_STEP OF
@@ -526,14 +618,15 @@ CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL_PAUSE := REAL_TO_TIME(rTempT
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 0, xValue => stDumper.cmdStartConveyor);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 1, xValue => stDumper.cmdStopConveyor);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 2, xValue => stDumper.cmdEmergencyStop);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 3, xValue => stDumper.cmdTurnLeft);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 4, xValue => stDumper.cmdTurnRight);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 5, xValue => stDumper.cmdStopRotation);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 6, xValue => stDumper.cmdReset);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 3, xValue => stDumper.cmdReset);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 7, xValue => DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 8, xValue => stDumper.cmdSetModeRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 9, xValue => stDumper.cmdSetModeManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 10, xValue => stDumper.cmdSetModeAuto);
+
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 0, xValue => stDumper.cmdTurnLeft);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 1, xValue => stDumper.cmdTurnRight);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 2, xValue => stDumper.cmdStopRotation);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 212, rValue => stDumper.MotorConveyor[1].VFD.cmdSetFrequency);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 214, rValue => stDumper.MotorConveyor[2].VFD.cmdSetFrequency);
@@ -818,8 +911,6 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 220, rValue := stDumper.MotorConveyor[2].VFD.rActualFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 222, rValue := stDumper.MotorConveyor[2].VFD.wMotorCurrent.rTag);
 
-
-
 GLOBAL.awModbusInputRegisters[230] := TO_WORD(eDumperStageToSCADA);
 
 // Отвалообразователь - Поворот (240-269)
@@ -878,5 +969,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 
 
 GLOBAL.awModbusInputRegisters[290] := TO_WORD(eConveyorStageToSCADA);
+
+
 
 END_PROGRAM
