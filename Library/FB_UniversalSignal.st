@@ -35,7 +35,7 @@ VAR
     _ton_FeedbackTimeout : TON;
     _xFeedbackTimeout : BOOL;
 
-    // Фильтрация дребезга
+    // Фильтрация дребезга входного сигнала
     _ton_StabilityFilter : TON;
     _xFilteredSignal : BOOL;
     _rt_SignalChange : R_TRIG;
@@ -45,8 +45,13 @@ VAR
     _xRattlingDetected : BOOL;
     _xDetectionActive : BOOL;
 
-    // Обработанный сигнал
+    // Фильтрация дребезга сигнала обратной связи
+    _ton_FeedbackStabilityFilter : TON;
+    _xFilteredFeedback : BOOL;
+
+    // Обработанные сигналы
     _xProcessedSignal : BOOL;
+    _xProcessedFeedback : BOOL;
 END_VAR
 
 // =====================================
@@ -93,6 +98,21 @@ ELSE
 END_IF
 
 // =====================================
+// ОБРАБОТКА СИГНАЛА ОБРАТНОЙ СВЯЗИ
+// =====================================
+
+// Применение фильтра дребезга к сигналу обратной связи (если включено)
+IF xEnableFeedback AND xEnableRattlingFilter THEN
+    // Фильтрация дребезга сигнала обратной связи
+    _ton_FeedbackStabilityFilter(IN := ixFeedback, PT := tStabilityTime);
+    _xFilteredFeedback := _ton_FeedbackStabilityFilter.Q;
+    _xProcessedFeedback := _xFilteredFeedback;
+ELSE
+    // Без фильтрации - прямая передача сигнала
+    _xProcessedFeedback := ixFeedback;
+END_IF
+
+// =====================================
 // ДЕТЕКТИРОВАНИЕ ФРОНТОВ
 // =====================================
 _rt_Signal(CLK := _xProcessedSignal);
@@ -114,8 +134,8 @@ IF xEnableFeedback THEN
         _xFeedbackReceived := FALSE;
     END_IF
 
-    // Задание флага получения обратной связи
-    IF _xWaitingFeedback AND ixFeedback THEN
+    // Задание флага получения обратной связи (используется отфильтрованный сигнал)
+    IF _xWaitingFeedback AND _xProcessedFeedback THEN
         _xFeedbackReceived := TRUE;
         _xWaitingFeedback := FALSE;
     END_IF
