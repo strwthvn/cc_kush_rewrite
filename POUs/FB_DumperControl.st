@@ -527,6 +527,12 @@ CASE STAGE OF
 		// Нормальная работа или штатная остановка через подстадии
 		CASE nStoppingSubstage OF
 			0: // Нормальная работа
+				// Обновление целевой частоты конвейера в ручном режиме
+				IF Dumper.eStateRemote = E_StateRemote.Manual THEN
+					rTargetFreqConv1 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+					rTargetFreqConv2 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
+				END_IF;
+
 				IF xStop THEN
 					// Начать штатную остановку
 					nStoppingSubstage := 1;

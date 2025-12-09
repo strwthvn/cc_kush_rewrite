@@ -357,6 +357,12 @@ CASE STAGE OF
 	E_StageWithPreStartAlarm.WORK:
 		CASE nStoppingSubstage OF
 			0: // Нормальная работа
+				// Обновление целевой частоты конвейера в ручном режиме
+				IF Conveyor.eStateRemote = E_StateRemote.Manual THEN
+					rTargetFreqConv1 := MOTOR_FREQUENCY_CONVEYOR;
+					rTargetFreqConv2 := MOTOR_FREQUENCY_CONVEYOR;
+				END_IF;
+
 				// Проверка команды остановки
 				IF xStop THEN
 					nStoppingSubstage := 1;
