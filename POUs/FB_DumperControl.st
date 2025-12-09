@@ -42,6 +42,9 @@ VAR
 	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
 	xCircuitBuilt : BOOL := FALSE;
 
+	// Таймер ожидания полного запуска секции
+	fbTimerStarting : TON;
+
 	simInit : BOOL;
 	i : INT;
 END_VAR
@@ -365,7 +368,12 @@ Dumper.xStateStarting := STAGE = E_StageWithPreStartAlarm.STARTING OR STAGE = PR
 // ========================================
 
 // Проверка ошибок оборудования
-Dumper.xStateFailure := FC_Dumper_GetErrorCommon(Dumper := Dumper);
+
+IF FC_Dumper_GetErrorCommon(Dumper := Dumper) OR fbTimerStarting.Q THEN
+	Dumper.xStateFailure := TRUE;
+END_IF;
+
+
 
 // Проверка предупреждений:
 // 1. Датчики схода ленты ZQ - уровень Warning
@@ -385,15 +393,7 @@ Dumper.xStateWarning := NOT Dumper.fbZQWarning[1].qxSignal
 
 // Сброс в начальное состояние
 IF xReset THEN
-	STAGE := E_StageWithPreStartAlarm.IDLE;
-	// Сброс команд запуска VFD (FALSE = СТОП)
-	Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
-	Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
-	// Сброс целевых частот
-	rTargetFreqConv1 := 0.0;
-	rTargetFreqConv2 := 0.0;
-	rTargetFreqRot1 := 0.0;
-	rTargetFreqRot2 := 0.0;
+	Dumper.xStateFailure := FALSE;
 END_IF
 
 // Штатная остановка - запускается при получении команды xStop
@@ -415,6 +415,9 @@ CASE STAGE OF
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
 
+		// Сброс таймера запуска
+		fbTimerStarting(IN := FALSE);
+
 		// Тормоза активны (удерживают механизм)
 		Dumper.qxBreakerConveyor := FALSE;
 		Dumper.qxBreakerRotation := FALSE;
@@ -424,11 +427,30 @@ CASE STAGE OF
 		END_IF;
 
 	PRESTART_ALARM:
-		IF Dumper.fbPreStartAlarm.qxComplete THEN
+		// Проверка команды остановки во время предпусковой сигнализации
+		IF xStop THEN
+			// Прервать предпусковую сигнализацию и вернуться в IDLE
+			STAGE := E_StageWithPreStartAlarm.IDLE;
+		ELSIF Dumper.fbPreStartAlarm.qxComplete THEN
 			STAGE := E_StageWithPreStartAlarm.STARTING;
 		END_IF;
 
 	E_StageWithPreStartAlarm.STARTING:
+		// Проверка команды остановки во время запуска
+		IF xStop THEN
+			// Прервать запуск и перейти к процедуре остановки
+			STAGE := E_StageWithPreStartAlarm.WORK;
+			nStartingSubstage := 0;
+			nStoppingSubstage := 1; // Начать процедуру остановки
+			fbTimerStarting(IN := FALSE); // Сброс таймера
+		END_IF;
+
+		// Таймер ожидания полного запуска секции
+		fbTimerStarting(
+			IN := TRUE,
+			PT := TIME_AFTER_START_DUMPER
+		);
+
 		// Последовательный запуск: Тормоза → Обратная связь → VFD → Разгон
 		CASE nStartingSubstage OF
 			0: // RELEASE_BRAKE - Отпускание тормозов
@@ -467,6 +489,7 @@ CASE STAGE OF
 						// Прямой пуск: сразу в режим WORK (частота уже установлена через большой шаг)
 						STAGE := E_StageWithPreStartAlarm.WORK;
 						nStartingSubstage := 0;
+						fbTimerStarting(IN := FALSE); // Сброс таймера
 					END_IF;
 				END_IF;
 
@@ -486,6 +509,7 @@ CASE STAGE OF
 				THEN
 					STAGE := E_StageWithPreStartAlarm.WORK;
 					nStartingSubstage := 0; // Сброс для следующего запуска
+					fbTimerStarting(IN := FALSE); // Сброс таймера
 				END_IF;
 		END_CASE;
 
@@ -540,13 +564,10 @@ CASE STAGE OF
 				// Переход к ожиданию обратной связи тормозов
 				nStoppingSubstage := 4;
 
-			4: // WAIT_BRAKE_FEEDBACK - Ожидание обратной связи тормозов
-				// Проверить обратную связь тормоза (должен стать FALSE = тормоз активен)
-				IF NOT Dumper.fbBreakerConveyor.qxSignal THEN
-					// Обратная связь получена, переход в IDLE
-					STAGE := E_StageWithPreStartAlarm.IDLE;
-					nStoppingSubstage := 0;
-				END_IF;
+			4: // Переход в IDLE
+
+				STAGE := E_StageWithPreStartAlarm.IDLE;
+				nStoppingSubstage := 0;
 		END_CASE;
 
 	E_StageWithPreStartAlarm.ERROR:
@@ -570,6 +591,9 @@ CASE STAGE OF
 		// Сброс подстадий для следующего запуска
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
+
+		// Сброс таймера запуска
+		fbTimerStarting(IN := FALSE);
 
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)

@@ -13,6 +13,14 @@ VAR
 	// Состояния
 	STAGE : E_StageWithPreStartAlarm := E_StageWithPreStartAlarm.IDLE;
 
+	// Подстадии запуска
+	nStartingSubstage : INT := 0;
+	// 0 - RELEASE_BRAKE, 1 - WAIT_BRAKE_FEEDBACK, 2 - START_VFD, 3 - RAMPING
+
+	// Подстадии остановки
+	nStoppingSubstage : INT := 0;
+	// 0 - Normal work, 1 - STOP_VFD, 2 - WAIT_VFD_STOP, 3 - ACTIVATE_BRAKE, 4 - WAIT_BRAKE_FEEDBACK
+
 	// Целевые частоты для моторов
 	rTargetFreqConv1 : REAL := 0.0;
 	rTargetFreqConv2 : REAL := 0.0;
@@ -21,6 +29,9 @@ VAR
 	xVFDsReady : BOOL; // Оба ЧРП конвейера готовы и запущены
 	xFrequenciesSynchronized : BOOL; // Частоты синхронизированы в пределах допуска
 	xConditionToProceed : BOOL; // Общее условие для продолжения разгона
+
+	// Состояние схемы контакторов
+	xCircuitBuilt : BOOL := FALSE;
 
 	simInit : BOOL;
 	i : INT;
@@ -88,16 +99,14 @@ FOR i := 1 TO 2 BY 1 DO
 		ixFeedback := Conveyor.MotorConveyor[i].fbStateKM.qxSignal,
 		xEnableFeedback := TRUE
 	);
-
-	Conveyor.MotorConveyor[i].qxKM_Power := Conveyor.MotorConveyor[i].Device.qxPower;
+	// Контакторы управляются в секции "УПРАВЛЕНИЕ КОНТАКТОРАМИ" через cmdBuildCircuitOn/Off
 
 	// ЧРП
 	Conveyor.MotorConveyor[i].VFD.Device(
 		ixFeedback := Conveyor.MotorConveyor[i].VFD.fbStateIsWorking.qxSignal,
 		xEnableFeedback := TRUE
 	);
-
-	Conveyor.MotorConveyor[i].VFD.qxStart := Conveyor.MotorConveyor[i].VFD.Device.qxPower;
+	// VFD.qxStart теперь управляется напрямую в алгоритме (TRUE = ПУСК, FALSE = СТОП)
 
 	// Диагностика тока
 	Conveyor.MotorConveyor[i].VFD.fbRangeDiagnostic(
@@ -128,7 +137,7 @@ FOR i := 1 TO 2 BY 1 DO
 
 	// Аналоговый выход ЧРП (задание частоты)
 	Conveyor.MotorConveyor[i].VFD.fbAnalogOutput(
-		xEnable := Conveyor.MotorConveyor[i].VFD.Device.qxActive,
+		xEnable := Conveyor.MotorConveyor[i].VFD.fbStateIsWorking.qxSignal,
 		rEngValue := Conveyor.MotorConveyor[i].VFD.Frequency.qrCurrentFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,
@@ -190,6 +199,12 @@ Conveyor.fbYE1(
 	xEnableRattlingFilter := TRUE
 );
 
+// Обратная связь тормоза конвейера
+Conveyor.fbBreakerConveyor(
+	ixSignal := , // Обратная связь реле тормоза
+	xEnableRattlingFilter := TRUE
+);
+
 // ========================================
 // ПРЕДПУСКОВАЯ СИГНАЛИЗАЦИЯ
 // ========================================
@@ -212,7 +227,10 @@ Conveyor.xStateStarting := STAGE = E_StageWithPreStartAlarm.STARTING OR STAGE = 
 // ========================================
 
 // Проверка ошибок оборудования
-Conveyor.xStateFailure := FC_Conveyor_GetErrorCommon(Conveyor := Conveyor);
+IF FC_Conveyor_GetErrorCommon(Conveyor := Conveyor) THEN
+	Conveyor.xStateFailure := TRUE;
+END_IF;
+
 
 // Проверка предупреждений:
 // 1. Датчики схода ленты ZQ - уровень Warning
@@ -230,28 +248,7 @@ Conveyor.xStateWarning := NOT Conveyor.fbZQWarning[1].qxSignal
 
 // Сброс в начальное состояние
 IF xReset THEN
-	STAGE := E_StageWithPreStartAlarm.IDLE;
-	// Сброс команд запуска
-	Conveyor.MotorConveyor[1].Device.xStartCommand := FALSE;
-	Conveyor.MotorConveyor[2].Device.xStartCommand := FALSE;
-	Conveyor.MotorConveyor[1].VFD.Device.xStartCommand := FALSE;
-	Conveyor.MotorConveyor[2].VFD.Device.xStartCommand := FALSE;
-	// Сброс целевых частот
-	rTargetFreqConv1 := 0.0;
-	rTargetFreqConv2 := 0.0;
-END_IF
-
-// Аварийная остановка - переход в ERROR
-IF xStop AND STAGE <> E_StageWithPreStartAlarm.IDLE THEN
-	STAGE := E_StageWithPreStartAlarm.ERROR;
-	// Сброс команд запуска
-	Conveyor.MotorConveyor[1].Device.xStartCommand := FALSE;
-	Conveyor.MotorConveyor[2].Device.xStartCommand := FALSE;
-	Conveyor.MotorConveyor[1].VFD.Device.xStartCommand := FALSE;
-	Conveyor.MotorConveyor[2].VFD.Device.xStartCommand := FALSE;
-	// Сброс целевых частот
-	rTargetFreqConv1 := 0.0;
-	rTargetFreqConv2 := 0.0;
+	xStateFailure := FALSE;
 END_IF
 
 // ========================================
@@ -260,9 +257,16 @@ END_IF
 
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
+		// Установка тормозов в активное состояние (FALSE = тормоз активен)
+		Conveyor.qxBreakerConveyor := FALSE;
+
 		// Сброс целевой частоты
 		rTargetFreqConv1 := 0.0;
 		rTargetFreqConv2 := 0.0;
+
+		// Сброс подстадий
+		nStartingSubstage := 0;
+		nStoppingSubstage := 0;
 
 		IF xStart THEN
 			STAGE := PRESTART_ALARM;
@@ -274,31 +278,116 @@ CASE STAGE OF
 		END_IF;
 
 	E_StageWithPreStartAlarm.STARTING:
-		// Команда ПУСК на контакторы
-		Conveyor.MotorConveyor[1].Device.xStartCommand := TRUE;
-		Conveyor.MotorConveyor[2].Device.xStartCommand := TRUE;
+		CASE nStartingSubstage OF
+			0: // RELEASE_BRAKE - Отпускание тормозов
+				// Отпускаем тормоз конвейера (TRUE = тормоз отпущен)
+				Conveyor.qxBreakerConveyor := TRUE;
+				nStartingSubstage := 1;
 
-		// Команда ПУСК на частотный преобразователь
-		Conveyor.MotorConveyor[1].VFD.Device.xStartCommand := Conveyor.MotorConveyor[1].Device.qxActive;
-		Conveyor.MotorConveyor[2].VFD.Device.xStartCommand := Conveyor.MotorConveyor[2].Device.qxActive;
+			1: // WAIT_BRAKE_FEEDBACK - Ожидание обратной связи тормоза
+				IF Conveyor.fbBreakerConveyor.qxSignal THEN
+					nStartingSubstage := 2;
+				END_IF;
 
-		// Задание целевой частоты (переменные будут переданы в FB_FrequencyControl ниже)
-		rTargetFreqConv1 := MOTOR_FREQUENCY_CONVEYOR;
-		rTargetFreqConv2 := MOTOR_FREQUENCY_CONVEYOR;
+			2: // START_VFD - Запуск VFD
+				// Команда ПУСК на ЧРП (TRUE = ПУСК)
+				Conveyor.MotorConveyor[1].VFD.qxStart := TRUE;
+				Conveyor.MotorConveyor[2].VFD.qxStart := TRUE;
 
-		// Переход в режим WORK при достижении целевой частоты
-		IF Conveyor.MotorConveyor[1].VFD.rActualFrequency >= MOTOR_FREQUENCY_CONVEYOR - VFD_FREQUENCY_INACCURANCY
-			AND Conveyor.MotorConveyor[2].VFD.rActualFrequency >= MOTOR_FREQUENCY_CONVEYOR - VFD_FREQUENCY_INACCURANCY
-		THEN
-			STAGE := E_StageWithPreStartAlarm.WORK;
-		END_IF;
+				// Задание целевой частоты
+				rTargetFreqConv1 := MOTOR_FREQUENCY_CONVEYOR;
+				rTargetFreqConv2 := MOTOR_FREQUENCY_CONVEYOR;
+
+				// Ждем запуска ЧРП
+				IF Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+					AND Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
+				THEN
+					IF VFD_SMOOTH_SET_FREQUENCY THEN
+						nStartingSubstage := 3; // Плавный разгон
+					ELSE
+						STAGE := E_StageWithPreStartAlarm.WORK; // Прямой пуск
+						nStartingSubstage := 0;
+					END_IF;
+				END_IF;
+
+			3: // RAMPING - Разгон частоты до рабочей
+				// Продолжаем удерживать команду ПУСК на ЧРП
+				Conveyor.MotorConveyor[1].VFD.qxStart := TRUE;
+				Conveyor.MotorConveyor[2].VFD.qxStart := TRUE;
+
+				// Задание целевой частоты
+				rTargetFreqConv1 := MOTOR_FREQUENCY_CONVEYOR;
+				rTargetFreqConv2 := MOTOR_FREQUENCY_CONVEYOR;
+
+				// Переход в режим WORK при достижении целевой частоты
+				IF Conveyor.MotorConveyor[1].VFD.rActualFrequency >= MOTOR_FREQUENCY_CONVEYOR - VFD_FREQUENCY_INACCURANCY
+					AND Conveyor.MotorConveyor[2].VFD.rActualFrequency >= MOTOR_FREQUENCY_CONVEYOR - VFD_FREQUENCY_INACCURANCY
+				THEN
+					STAGE := E_StageWithPreStartAlarm.WORK;
+					nStartingSubstage := 0;
+				END_IF;
+		END_CASE;
 
 	E_StageWithPreStartAlarm.WORK:
-		// Нормальная работа
+		CASE nStoppingSubstage OF
+			0: // Нормальная работа
+				// Проверка команды остановки
+				IF xStop THEN
+					nStoppingSubstage := 1;
+				END_IF;
+
+			1: // STOP_VFD - Остановка VFD
+				// Задаем частоту 0
+				rTargetFreqConv1 := 0.0;
+				rTargetFreqConv2 := 0.0;
+
+				IF VFD_SMOOTH_SET_FREQUENCY THEN
+					// Плавная остановка: ждем снижения частоты до нуля
+					IF Conveyor.MotorConveyor[1].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
+						AND Conveyor.MotorConveyor[2].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
+					THEN
+						// Частоты снижены до нуля, снимаем команду ПУСК с ЧРП (FALSE = СТОП)
+						Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+						Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+						nStoppingSubstage := 2;
+					END_IF;
+				ELSE
+					// Прямая остановка: сразу снимаем команду ПУСК с ЧРП (FALSE = СТОП)
+					Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+					Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+					nStoppingSubstage := 2;
+				END_IF;
+
+			2: // WAIT_VFD_STOP - Ожидание остановки VFD
+				// Ждем подтверждения остановки ЧРП
+				IF NOT Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+					AND NOT Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
+				THEN
+					nStoppingSubstage := 3;
+				END_IF;
+
+			3: // ACTIVATE_BRAKE - Активация тормозов
+				// Активируем тормоз конвейера (FALSE = тормоз активен)
+				Conveyor.qxBreakerConveyor := FALSE;
+				nStoppingSubstage := 4;
+
+			4: // Переход в IDLE
+
+				STAGE := E_StageWithPreStartAlarm.IDLE;
+				nStoppingSubstage := 0;
+		END_CASE;
 
 	E_StageWithPreStartAlarm.ERROR:
-		// Состояние ошибки - ожидание сброса
-		// Все команды запуска уже сброшены выше
+		// Аварийная остановка - снимаем команды с VFD и активируем тормоза
+		Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+		Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+
+		// Активируем тормоз конвейера (FALSE = тормоз активен)
+		Conveyor.qxBreakerConveyor := FALSE;
+
+		// Сброс целевых частот
+		rTargetFreqConv1 := 0.0;
+		rTargetFreqConv2 := 0.0;
 END_CASE;
 
 // Вывод текущей стадии
@@ -354,8 +443,8 @@ Conveyor.xStateRemoteRepair := Conveyor.eStateRemote := E_StateRemote.Repair;
 // ========================================
 
 // Проверка что оба ЧРП конвейера готовы и запущены
-xVFDsReady := Conveyor.MotorConveyor[1].VFD.Device.qxActive
-           AND Conveyor.MotorConveyor[2].VFD.Device.qxActive;
+xVFDsReady := Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+           AND Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal;
 
 // Проверка синхронизации текущих частот (разница не превышает допуск)
 xFrequenciesSynchronized := ABS(Conveyor.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency
@@ -373,20 +462,35 @@ xConditionToProceed := xVFDsReady AND xFrequenciesSynchronized;
 // Моторы конвейера
 Conveyor.MotorConveyor[1].VFD.Frequency(
 	irMaxFrequency := VFD_FREQUENCY_MAX,
-	irStep := VFD_FREQUENCY_STEP,
+	// Если плавный пуск - малый шаг, иначе - большой шаг (мгновенно)
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
 	rTargetFrequency := rTargetFreqConv1,
 	xPulse := PULSE_RTRIG.Q,
 	xConditionToProceed := xConditionToProceed // Синхронизация с мотором 2
 );
-Conveyor.MotorConveyor[1].VFD.qrOutFrequency := Conveyor.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency;
 
 Conveyor.MotorConveyor[2].VFD.Frequency(
 	irMaxFrequency := VFD_FREQUENCY_MAX,
-	irStep := VFD_FREQUENCY_STEP,
+	// Если плавный пуск - малый шаг, иначе - большой шаг (мгновенно)
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
 	rTargetFrequency := rTargetFreqConv2,
 	xPulse := PULSE_RTRIG.Q,
 	xConditionToProceed := xConditionToProceed // Синхронизация с мотором 1
 );
-Conveyor.MotorConveyor[2].VFD.qrOutFrequency := Conveyor.MotorConveyor[2].VFD.Frequency.qrCurrentFrequency;
+
+// ========================================
+// УПРАВЛЕНИЕ КОНТАКТОРАМИ
+// ========================================
+
+// Обработка импульсных команд сборки/разборки схемы
+IF Conveyor.cmdBuildCircuitOn THEN
+	xCircuitBuilt := TRUE;
+ELSIF Conveyor.cmdBuildCircuitOff THEN
+	xCircuitBuilt := FALSE;
+END_IF;
+
+// Моторы конвейера - управление контакторами через состояние схемы
+Conveyor.MotorConveyor[1].qxKM_Power := xCircuitBuilt;
+Conveyor.MotorConveyor[2].qxKM_Power := xCircuitBuilt;
 
 END_FUNCTION_BLOCK

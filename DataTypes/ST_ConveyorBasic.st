@@ -13,8 +13,12 @@ STRUCT
 	fbGS1 : FB_UniversalSignal; // Контроль заштыбовки
 	fbQR : ARRAY[1..2] OF FB_UniversalSignal; // Измерение скорости вращения барабана
 	fbYS1 : FB_UniversalSignal; // Контроль продольного разрыва ленты
+	// Обратная связь тормоза
+	fbBreakerConveyor : FB_UniversalSignal; // Тормоз конвейера (обр связь)
 
 	// DO
+	// Тормоз
+	qxBreakerConveyor : BOOL; // (1 - Тормоз отпущен, 0 - Тормоз активен)
 	// == Светозвуковое оповещение ==
 	xHLA : BOOL; // Световая сигнализация
 	xSoundAlarm : BOOL; // Звуковая сигнализация
@@ -25,7 +29,10 @@ STRUCT
 	cmdSetModeManual, // Установить режим "Ручной"
 	cmdSetModeAuto : BOOL; // Установить режим "Авто"
 	cmdBuildCircuitOn, cmdBuildCircuitOff  : BOOL; // Команда собрать/разобрать схему
-	
+
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
+	xStateRemoteAuto : BOOL; // Режим "Авто" активен
+	xStateRemoteManual : BOOL; // Режим "Ручной" активен
+	xStateRemoteRepair : BOOL; // Режим "Ремонт" активен
 END_STRUCT
 END_TYPE
