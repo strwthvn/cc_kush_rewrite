@@ -32,6 +32,27 @@
       },
       {
         "section": "Общие системные переменные и уставки (0-29)",
+        "address": "210.8",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdSetModeRepair",
+        "description": "Установить режим Ремонт"
+      },
+      {
+        "section": "Общие системные переменные и уставки (0-29)",
+        "address": "210.9",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdSetModeManual",
+        "description": "Установить режим Ручной"
+      },
+      {
+        "section": "Общие системные переменные и уставки (0-29)",
+        "address": "210.10",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdSetModeAuto",
+        "description": "Установить режим Авто"
+      },
+      {
+        "section": "Общие системные переменные и уставки (0-29)",
         "address": "2-3",
         "data_type": "REAL",
         "variable": "ICUR_PRECENT",
@@ -431,13 +452,6 @@
       },
       {
         "section": "Команды - Отвалообразователь (210-239)",
-        "address": "210.7",
-        "data_type": "BOOL",
-        "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE",
-        "description": "Опция на включение ППЗ в алгоритм"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
         "address": "210.8",
         "data_type": "BOOL",
         "variable": "stDumper.cmdSetModeRepair",
@@ -479,32 +493,11 @@
         "description": "Команда остановка поворота"
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "212-213",
-        "data_type": "REAL",
-        "variable": "stDumper.MotorConveyor[1].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "214-215",
-        "data_type": "REAL",
-        "variable": "stDumper.MotorConveyor[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "216-217",
-        "data_type": "REAL",
-        "variable": "stDumper.MotorRotation[1].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Отвалообразователь (210-239)",
-        "address": "218-219",
-        "data_type": "REAL",
-        "variable": "stDumper.MotorRotation[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "section": "Настройка - Отвалообразователь (210-239)",
+        "address": "212.0",
+        "data_type": "BOOL",
+        "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE",
+        "description": "Опция на включение ППЗ в алгоритм"
       },
       {
         "section": "Команды - Конвейер (240-269)",
@@ -535,25 +528,11 @@
         "description": "Сброс ошибок"
       },
       {
-        "section": "Команды - Конвейер (240-269)",
-        "address": "240.4",
+        "section": "Настройка - Конвейер (240-269)",
+        "address": "242.0",
         "data_type": "BOOL",
         "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE",
         "description": "Опция на включение ППЗ в алгоритм"
-      },
-      {
-        "section": "Команды - Конвейер (240-269)",
-        "address": "242-243",
-        "data_type": "REAL",
-        "variable": "stConveyor.MotorConveyor[1].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Конвейер (240-269)",
-        "address": "244-245",
-        "data_type": "REAL",
-        "variable": "stConveyor.MotorConveyor[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
       },
       {
         "section": "Команды - Конвейер (240-269)",
@@ -634,37 +613,9 @@
       },
       {
         "section": "Команды - Бункер 1 (270-299)",
-        "address": "272-273",
-        "data_type": "REAL",
-        "variable": "stBunker[1].MotorVibrator[1].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 1 (270-299)",
-        "address": "274-275",
-        "data_type": "REAL",
-        "variable": "stBunker[1].MotorVibrator[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 1 (270-299)",
-        "address": "276-277",
-        "data_type": "REAL",
-        "variable": "stBunker[1].MotorVibrator[3].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 1 (270-299)",
         "address": "278-279",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[4].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 1 (270-299)",
-        "address": "280-281",
-        "data_type": "REAL",
-        "variable": "stBunker[1].MotorVibFeeder[1].VFD.cmdSetFrequency",
         "description": "Ручное задание частоты"
       },
       {
@@ -753,37 +704,9 @@
       },
       {
         "section": "Команды - Бункер 2 (300-329)",
-        "address": "302-303",
-        "data_type": "REAL",
-        "variable": "stBunker[2].MotorVibrator[1].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 2 (300-329)",
-        "address": "304-305",
-        "data_type": "REAL",
-        "variable": "stBunker[2].MotorVibrator[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 2 (300-329)",
-        "address": "306-307",
-        "data_type": "REAL",
-        "variable": "stBunker[2].MotorVibrator[3].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 2 (300-329)",
         "address": "308-309",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[4].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 2 (300-329)",
-        "address": "310-311",
-        "data_type": "REAL",
-        "variable": "stBunker[2].MotorVibFeeder[1].VFD.cmdSetFrequency",
         "description": "Ручное задание частоты"
       },
       {
@@ -872,37 +795,9 @@
       },
       {
         "section": "Команды - Бункер 3 (330-359)",
-        "address": "332-333",
-        "data_type": "REAL",
-        "variable": "stBunker[3].MotorVibrator[1].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 3 (330-359)",
-        "address": "334-335",
-        "data_type": "REAL",
-        "variable": "stBunker[3].MotorVibrator[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 3 (330-359)",
-        "address": "336-337",
-        "data_type": "REAL",
-        "variable": "stBunker[3].MotorVibrator[3].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 3 (330-359)",
         "address": "338-339",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[4].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
-      },
-      {
-        "section": "Команды - Бункер 3 (330-359)",
-        "address": "340-341",
-        "data_type": "REAL",
-        "variable": "stBunker[3].MotorVibFeeder[1].VFD.cmdSetFrequency",
         "description": "Ручное задание частоты"
       },
       {
