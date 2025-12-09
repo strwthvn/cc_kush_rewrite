@@ -1,9 +1,14 @@
-TYPE E_StateMechanism :
+TYPE E_ScadaStatesDevice :
 (
-    NotReady    := 0,       // Неготов
-    Ready       := 1,       // Готов
-    Working     := 2,       // В работе
-    Warning     := 3,       // Предупреждение
-    Error       := 4        // Ошибка
+	NOT_READY,
+	READY,
+	STARTING,
+	WORK,
+	WORK_WITH_WARNING,
+	WORK_WITH_ERROR,
+	WARNING,
+	ERROR
 );
 END_TYPE
+
+// TODO : Включить в алгоритм FB_DumperControl и FB_ConveyorControl

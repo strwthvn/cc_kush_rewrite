@@ -24,8 +24,7 @@ STRUCT
 	cmdSetModeRepair, // Установить режим "Ремонт"
 	cmdSetModeManual, // Установить режим "Ручной"
 	cmdSetModeAuto : BOOL; // Установить режим "Авто"
-
-	// Генерация состояний
+	
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
 END_STRUCT
 END_TYPE

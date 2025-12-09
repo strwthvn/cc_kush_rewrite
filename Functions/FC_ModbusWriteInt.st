@@ -10,7 +10,8 @@ VAR
     pTargetRegister : POINTER TO WORD;
 END_VAR
     // Вычислить адрес целевого регистра и записать значение
-    pTargetRegister := pRegisters + iRegisterIndex;
+    pTargetRegister := pRegisters + iRegisterIndex*2;
     pTargetRegister^ := INT_TO_WORD(iValue);
     FC_ModbusWriteInt := TRUE;
+
 END_FUNCTION

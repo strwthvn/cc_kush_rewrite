@@ -14,12 +14,13 @@ END_VAR
     uConverter.rTag := rValue;
 
     // Запись первого регистра (младшее слово)
-    pTargetRegister := pRegisters + iRegisterIndex;
-    pTargetRegister^ := uConverter.wTag[0];
+    pTargetRegister := pRegisters + iRegisterIndex*2;
+    pTargetRegister^:= uConverter.wTag[1];
 
     // Запись второго регистра (старшее слово)
-    pTargetRegister := pTargetRegister + 1;
-    pTargetRegister^ := uConverter.wTag[1];
+    pTargetRegister := pTargetRegister + 2;
+    pTargetRegister^ := uConverter.wTag[0];
 
     FC_ModbusWriteReal := TRUE;
+
 END_FUNCTION

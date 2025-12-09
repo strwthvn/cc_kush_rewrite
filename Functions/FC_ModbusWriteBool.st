@@ -14,7 +14,7 @@ END_VAR
     // Проверка диапазона индекса бита
     IF iBitIndex >= 0 AND iBitIndex <= 15 THEN
         // Вычислить адрес целевого регистра
-        pTargetRegister := pRegisters + iRegisterIndex;
+        pTargetRegister := pRegisters + iRegisterIndex*2;
 
         wMask := SHL(1, iBitIndex);  // Создать маску для бита
 
@@ -30,4 +30,5 @@ END_VAR
     ELSE
         FC_ModbusWriteBool := FALSE;  // Ошибка: неверный индекс бита
     END_IF
+
 END_FUNCTION

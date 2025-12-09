@@ -14,15 +14,16 @@ VAR
     pTargetRegister : POINTER TO WORD;
 END_VAR
     // Чтение первого регистра (младшее слово)
-    pTargetRegister := pRegisters + iRegisterIndex;
-    uConverter.wTag[0] := pTargetRegister^;
+    pTargetRegister := pRegisters + iRegisterIndex*2;
+    uConverter.wTag[1] := pTargetRegister^;
 
     // Чтение второго регистра (старшее слово)
-    pTargetRegister := pTargetRegister + 1;
-    uConverter.wTag[1] := pTargetRegister^;
+    pTargetRegister := pTargetRegister + 2;
+    uConverter.wTag[0] := pTargetRegister^;
 
     // Преобразовать в REAL
     rValue := uConverter.rTag;
 
     FC_ModbusReadReal := TRUE;
+
 END_FUNCTION

@@ -25,7 +25,7 @@ STRUCT
 	fbBtnRemoteMode : FB_UniversalSignal; // Кнопка режима
 
 	// == АСУТП ==
-	cmdEmergencyStop, cmdTurnLeft, cmdTurnRight, cmdReset : BOOL;
+	cmdEmergencyStop, cmdTurnLeft, cmdTurnRight, cmdReset, cmdStopRotation : BOOL;
 
 	// == Генерация состояний ==
 	xStateWarning : BOOL; // Программное предупреждение

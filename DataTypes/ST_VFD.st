@@ -16,7 +16,8 @@ STRUCT
 
 	// Команды AO
 	qrOutFrequency : REAL; // Выходная частота
-
+	rSimulatedFrequency : REAL; // Частота для режима симуляции модуля AI
+	
 	// RS-485
 	wMotorCurrent : U_RealToWord; // Ток эл. двигателя
 	uActualFrequency : U_RealToWord; // Актуальная частота (чтение через ModbusRTU)

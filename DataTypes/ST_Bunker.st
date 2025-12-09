@@ -40,13 +40,15 @@ STRUCT
 	cmdSetModeRepair, // Установить режим "Ремонт"
 	cmdSetModeManual, // Установить режим "Ручной"
 	cmdSetModeAuto : BOOL; // Установить режим "Авто"
-
-	cmdAddVib1, cmdAddVib2, cmdAddVib3, cmdAddVib4 : BOOL; // Добавление моторов вибраторов в работу. По умолчанию 0.
+	cmdAddVib1 : BOOL; // Включить управление вибратора 1 
+	cmdAddVib2 : BOOL; // Включить управление вибратора 2
+	cmdAddVib3 : BOOL; // Включить управление вибратора 3
+	cmdAddVib4 : BOOL; // Включить управление вибратора 4
 
 	// == Генерация состояний ==
 	eLightColor : E_LightColor; // Текущий сигнал светофора
-	wLightColor : WORD; // Передача сигнала светофора по ModbusTCP
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
+	wLightColor : WORD; // Передача сигнала светофора по ModbusTCP
 	
 	xStateWarning : BOOL; // Программное предупреждение
 	xStateFailure : BOOL; // Программная ошибка

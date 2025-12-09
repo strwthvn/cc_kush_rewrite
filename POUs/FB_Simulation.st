@@ -1,4 +1,4 @@
-FUNCTION_BLOCK FB_Simulation
+ FUNCTION_BLOCK FB_Simulation
 VAR_INPUT
 	xEnable : BOOL; // Включение симуляции
 	xReset : BOOL; // Сброс всех переменных (симуляция отсутствия ошибок)
