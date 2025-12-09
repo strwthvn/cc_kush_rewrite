@@ -27,12 +27,18 @@ VAR
 	tonVFD_Conv1, tonVFD_Conv2 : TON;
 	tonVFD_Rot1, tonVFD_Rot2 : TON;
 
+	// Таймеры обратной связи тормозов отвалообразователя
+	tonBreaker_DumperConv, tonBreaker_DumperRot : TON;
+
 	// === Таймеры сборного конвейера ===
 	// Таймеры обратной связи контакторов (KM)
 	tonKM_PrefConv1, tonKM_PrefConv2 : TON;
 
 	// Таймеры обратной связи ЧРП (IsWorking)
 	tonVFD_PrefConv1, tonVFD_PrefConv2 : TON;
+
+	// Таймер обратной связи тормоза сборного конвейера
+	tonBreaker_PrefConv : TON;
 
 	// === Таймеры бункеров ===
 	// Таймеры обратной связи вибропитателей [бункер 1..3][мотор 1..2]
@@ -111,6 +117,10 @@ IF _xInitRequired THEN
 
 	// Контроль продольного разрыва ленты - норма = 1
 	Dumper.fbYS1.ixSignal := TRUE;
+
+	// Тормоза - в начале активны (NOT released)
+	Dumper.fbBreakerConveyor.ixSignal := FALSE;
+	Dumper.fbBreakerRotation.ixSignal := FALSE;
 
 	// ========================================
 	// ИНИЦИАЛИЗАЦИЯ СИМУЛЯЦИИ СБОРНОГО КОНВЕЙЕРА
@@ -276,6 +286,15 @@ IF xEnable THEN
 	tonVFD_Rot2(IN := Dumper.MotorRotation[2].VFD.qxStart, PT := tFeedbackDelay);
 	Dumper.MotorRotation[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot2.Q;
 
+	// Обратная связь тормозов отвалообразователя
+	// Тормоз отпущен (TRUE) когда на выходе активен сигнал
+	// Тормоз активен (FALSE) когда выход отключен
+	tonBreaker_DumperConv(IN := Dumper.qxBreakerConveyor, PT := tFeedbackDelay);
+	Dumper.fbBreakerConveyor.ixSignal := tonBreaker_DumperConv.Q;
+
+	tonBreaker_DumperRot(IN := Dumper.qxBreakerRotation, PT := tFeedbackDelay);
+	Dumper.fbBreakerRotation.ixSignal := tonBreaker_DumperRot.Q;
+
 	// ========================================
 	// СИМУЛЯЦИЯ СБОРНОГО КОНВЕЙЕРА
 	// ========================================
@@ -312,6 +331,10 @@ IF xEnable THEN
 
 	tonVFD_PrefConv2(IN := Conveyor.MotorConveyor[2].VFD.qxStart, PT := tFeedbackDelay);
 	Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv2.Q;
+
+	// Обратная связь тормоза сборного конвейера
+	tonBreaker_PrefConv(IN := Conveyor.qxBreakerConveyor, PT := tFeedbackDelay);
+	Conveyor.fbBreakerConveyor.ixSignal := tonBreaker_PrefConv.Q;
 
 	// ========================================
 	// СИМУЛЯЦИЯ БУНКЕРОВ
