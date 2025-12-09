@@ -33,6 +33,9 @@ VAR
 	// Состояние схемы контакторов
 	xCircuitBuilt : BOOL := FALSE;
 
+	// Таймер ожидания полного запуска секции
+	fbTimerStarting : TON;
+
 	simInit : BOOL;
 	i : INT;
 END_VAR
@@ -227,7 +230,7 @@ Conveyor.xStateStarting := STAGE = E_StageWithPreStartAlarm.STARTING OR STAGE = 
 // ========================================
 
 // Проверка ошибок оборудования
-IF FC_Conveyor_GetErrorCommon(Conveyor := Conveyor) THEN
+IF FC_Conveyor_GetErrorCommon(Conveyor := Conveyor) OR fbTimerStarting.Q THEN
 	Conveyor.xStateFailure := TRUE;
 END_IF;
 
@@ -248,7 +251,7 @@ Conveyor.xStateWarning := NOT Conveyor.fbZQWarning[1].qxSignal
 
 // Сброс в начальное состояние
 IF xReset THEN
-	xStateFailure := FALSE;
+	Conveyor.xStateFailure := FALSE;
 END_IF
 
 // ========================================
@@ -268,16 +271,37 @@ CASE STAGE OF
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
 
+		// Сброс таймера запуска
+		fbTimerStarting(IN := FALSE);
+
 		IF xStart THEN
 			STAGE := PRESTART_ALARM;
 		END_IF;
 
 	E_StageWithPreStartAlarm.PRESTART_ALARM:
-		IF Conveyor.fbPreStartAlarm.qxComplete THEN
+		// Проверка команды остановки во время предпусковой сигнализации
+		IF xStop THEN
+			// Прервать предпусковую сигнализацию и вернуться в IDLE
+			STAGE := E_StageWithPreStartAlarm.IDLE;
+		ELSIF Conveyor.fbPreStartAlarm.qxComplete THEN
 			STAGE := E_StageWithPreStartAlarm.STARTING;
 		END_IF;
 
 	E_StageWithPreStartAlarm.STARTING:
+		// Проверка команды остановки во время запуска
+		IF xStop THEN
+			// Прервать запуск и перейти к процедуре остановки
+			STAGE := E_StageWithPreStartAlarm.WORK;
+			nStartingSubstage := 0;
+			nStoppingSubstage := 1; // Начать процедуру остановки
+			fbTimerStarting(IN := FALSE); // Сброс таймера
+		END_IF;
+
+		// Таймер ожидания полного запуска секции
+		fbTimerStarting(
+			IN := TRUE,
+			PT := TIME_AFTER_START_CONVEYOR
+		);
 		CASE nStartingSubstage OF
 			0: // RELEASE_BRAKE - Отпускание тормозов
 				// Отпускаем тормоз конвейера (TRUE = тормоз отпущен)
@@ -307,6 +331,7 @@ CASE STAGE OF
 					ELSE
 						STAGE := E_StageWithPreStartAlarm.WORK; // Прямой пуск
 						nStartingSubstage := 0;
+						fbTimerStarting(IN := FALSE); // Сброс таймера
 					END_IF;
 				END_IF;
 
@@ -325,6 +350,7 @@ CASE STAGE OF
 				THEN
 					STAGE := E_StageWithPreStartAlarm.WORK;
 					nStartingSubstage := 0;
+					fbTimerStarting(IN := FALSE); // Сброс таймера
 				END_IF;
 		END_CASE;
 
@@ -388,6 +414,13 @@ CASE STAGE OF
 		// Сброс целевых частот
 		rTargetFreqConv1 := 0.0;
 		rTargetFreqConv2 := 0.0;
+
+		// Сброс подстадий для следующего запуска
+		nStartingSubstage := 0;
+		nStoppingSubstage := 0;
+
+		// Сброс таймера запуска
+		fbTimerStarting(IN := FALSE);
 END_CASE;
 
 // Вывод текущей стадии
@@ -434,9 +467,9 @@ ELSE
 END_IF;
 
 // Передача состояний режима управления
-Conveyor.xStateRemoteAuto := Conveyor.eStateRemote := E_StateRemote.Auto;
-Conveyor.xStateRemoteManual := Conveyor.eStateRemote := E_StateRemote.Manual;
-Conveyor.xStateRemoteRepair := Conveyor.eStateRemote := E_StateRemote.Repair;
+Conveyor.xStateRemoteAuto := Conveyor.eStateRemote = E_StateRemote.Auto;
+Conveyor.xStateRemoteManual := Conveyor.eStateRemote = E_StateRemote.Manual;
+Conveyor.xStateRemoteRepair := Conveyor.eStateRemote = E_StateRemote.Repair;
 
 // ========================================
 // ПРОВЕРКА СИНХРОНИЗАЦИИ МОТОРОВ КОНВЕЙЕРА
@@ -483,10 +516,13 @@ Conveyor.MotorConveyor[2].VFD.Frequency(
 // ========================================
 
 // Обработка импульсных команд сборки/разборки схемы
-IF Conveyor.cmdBuildCircuitOn THEN
-	xCircuitBuilt := TRUE;
-ELSIF Conveyor.cmdBuildCircuitOff THEN
-	xCircuitBuilt := FALSE;
+// Только в ручном режиме
+IF Conveyor.eStateRemote = E_StateRemote.Manual THEN
+	IF Conveyor.cmdBuildCircuitOn THEN
+		xCircuitBuilt := TRUE;
+	ELSIF Conveyor.cmdBuildCircuitOff THEN
+		xCircuitBuilt := FALSE;
+	END_IF;
 END_IF;
 
 // Моторы конвейера - управление контакторами через состояние схемы
