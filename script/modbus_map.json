@@ -615,15 +615,15 @@
         "section": "Команды - Бункер 1 (270-299)",
         "address": "278-279",
         "data_type": "REAL",
-        "variable": "stBunker[1].MotorVibrator[4].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "variable": "BUNKER_1_FREQ_VIBRATOR",
+        "description": "Ручное задание частоты вибратора"
       },
       {
         "section": "Команды - Бункер 1 (270-299)",
         "address": "282-283",
         "data_type": "REAL",
-        "variable": "stBunker[1].MotorVibFeeder[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "variable": "BUNKER_1_FREQ_VIBFEEDER",
+        "description": "Ручное задание частоты вибропитателя"
       },
       {
         "section": "Команды - Бункер 1 (270-299)",
@@ -706,15 +706,15 @@
         "section": "Команды - Бункер 2 (300-329)",
         "address": "308-309",
         "data_type": "REAL",
-        "variable": "stBunker[2].MotorVibrator[4].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "variable": "BUNKER_2_FREQ_VIBRATOR",
+        "description": "Ручное задание частоты вибратора"
       },
       {
         "section": "Команды - Бункер 2 (300-329)",
         "address": "312-313",
         "data_type": "REAL",
-        "variable": "stBunker[2].MotorVibFeeder[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "variable": "BUNKER_2_FREQ_VIBFEEDER",
+        "description": "Ручное задание частоты вибропитателя"
       },
       {
         "section": "Команды - Бункер 2 (300-329)",
@@ -797,15 +797,15 @@
         "section": "Команды - Бункер 3 (330-359)",
         "address": "338-339",
         "data_type": "REAL",
-        "variable": "stBunker[3].MotorVibrator[4].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "variable": "BUNKER_3_FREQ_VIBRATOR",
+        "description": "Ручное задание частоты вибратора"
       },
       {
         "section": "Команды - Бункер 3 (330-359)",
         "address": "342-343",
         "data_type": "REAL",
-        "variable": "stBunker[3].MotorVibFeeder[2].VFD.cmdSetFrequency",
-        "description": "Ручное задание частоты"
+        "variable": "BUNKER_3_FREQ_VIBFEEDER",
+        "description": "Ручное задание частоты вибропитателя"
       },
       {
         "section": "Команды - Бункер 3 (330-359)",
