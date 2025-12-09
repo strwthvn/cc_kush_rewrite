@@ -202,48 +202,6 @@ fbSimulation(
 	Bunker := stBunker
 );
 
-// == РУЧНОЙ РЕЖИМ - ДИСТАНЦИЯ ==
-
-// Запуск отвалообразователя в ручном режиме
-IF 	stDumper.cmdSetModeManual THEN stDumper.eStateRemote := E_StateRemote.Manual; END_IF;
-IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-	AND stDumper.cmdStartConveyor // Команда на запуск в ручном режиме
-	AND eDumperStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
-	AND eDumperStage <> E_StageWithPreStartAlarm.STARTING AND eDumperStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	//AND NOT FC_Dumper_GetErrorCommon(Dumper:=stDumper) // Не имеет ошибок
-	THEN
-		xStartDumper := TRUE;
-END_IF;
-
-// Запуск конвейера в ручном режиме
-IF 	stConveyor.cmdSetModeManual THEN stConveyor.eStateRemote := E_StateRemote.Manual; END_IF;
-IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-	AND stConveyor.cmdStartConveyor // Команда на запуск в ручном режиме
-	AND eConveyorStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
-	AND eConveyorStage <> E_StageWithPreStartAlarm.STARTING AND eConveyorStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	// AND NOT FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) // Не имеет ошибок
-	THEN
-		xStartConveyor := TRUE;
-END_IF;
-
-// Запуск бункера в ручном режиме
-FOR i := 1 TO 3 DO
-	IF 	stBunker[i].cmdSetModeManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
-	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-		AND stBunker[i].cmdStartFeeder // Команда на запуск в ручном режиме
-		// AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) // Не имеет ошибок
-		THEN
-			xStartBunker[i] := TRUE;
-	END_IF;
-END_FOR
-
-// Процессы аварийных остановок в ручном режиме 
-	// F FC_Dumper_GetErrorCommon(Dumper:=stDumper) THEN FC_Dumper_EmergencyStop(Dumper:=stDumper); END_IF;
-	// F FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) THEN FC_Conveyor_EmergencyStop(Conveyor:=stConveyor); END_IF;
-	FOR i := 1 TO 3 DO 
-		// IF FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) THEN FC_Bunker_EmergencyStop(Bunker:=stBunker[i]); END_IF;
-	END_FOR
-
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
 CASE AUTO_STEP OF
 

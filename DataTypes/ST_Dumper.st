@@ -18,6 +18,12 @@ STRUCT
 	// DI
 	// Концевой выключатель крайнего положения
 	fbEndSwitchRight, fbEndSwitchLeft : FB_UniversalSignal; // Концевой выключатель крайнего положения
+	// Обратная связь тормозов
+	fbBreakerConveyor, fbBreakerRotation : FB_UniversalSignal; // Тормоз конвейера и поворота (обр связь)
+	
+	// DO
+	// Тормоза
+	qxBreakerConveyor, qxBreakerRotation : BOOL; // (1 - Тормоз отпущен, 0 - Тормоз активен)
 
 	// == ПМУ ==
 	fbBtnStart, fbBtnStop, fbBtnEmergencyStop : FB_UniversalSignal; // Кнопки ПМУ

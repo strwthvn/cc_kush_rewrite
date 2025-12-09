@@ -85,6 +85,15 @@ Dumper.fbBtnRemoteMode(
 	tStabilityTime := T#100MS
 );
 
+// Сигналы тормозоов (Обратная связь)
+Dumper.fbBreakerConveyor(
+	ixSignal := , // Физ. сигнал
+	xEnableRattlingFilter := TRUE);
+
+Dumper.fbBreakerRotation(
+	ixSignal := , // Физ. сигнал
+	xEnableRattlingFilter := TRUE);
+
 // Двигатели конвейера
 FOR i := 1 TO 2 BY 1 DO
 	Dumper.MotorConveyor[i].fbStateKM(
