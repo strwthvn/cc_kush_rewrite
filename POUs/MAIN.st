@@ -623,10 +623,15 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 8, xValue => stDumper.cmdSetModeRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 9, xValue => stDumper.cmdSetModeManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 10, xValue => stDumper.cmdSetModeAuto);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 11, xValue => stDumper.cmdBuildCircuitOn);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 12, xValue => stDumper.cmdBuildCircuitOff);
+
 
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 0, xValue => stDumper.cmdTurnLeft);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 1, xValue => stDumper.cmdTurnRight);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 2, xValue => stDumper.cmdStopRotation);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 11, xValue => stDumper.cmdBuildCircuitOnRotation);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 211, iBitIndex := 12, xValue => stDumper.cmdBuildCircuitOffRotation);
 
 // Настройка - Отвалообразователь (210-239)
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 212, iBitIndex := 0, xValue => DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE);
@@ -640,6 +645,8 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 240, iBitIndex := 8, xValue => stConveyor.cmdSetModeRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 240, iBitIndex := 9, xValue => stConveyor.cmdSetModeManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 240, iBitIndex := 10, xValue => stConveyor.cmdSetModeAuto);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 240, iBitIndex := 11, xValue => stConveyor.cmdBuildCircuitOn);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 240, iBitIndex := 12, xValue => stConveyor.cmdBuildCircuitOff);
 
 // Настройка - Конвейер (240-269)
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 242, iBitIndex := 0, xValue => CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE);
@@ -657,6 +664,8 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 270, iBitIndex := 8, xValue => stBunker[1].cmdSetModeRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 270, iBitIndex := 9, xValue => stBunker[1].cmdSetModeManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 270, iBitIndex := 10, xValue => stBunker[1].cmdSetModeAuto);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 270, iBitIndex := 11, xValue => stBunker[1].cmdBuildCircuitOn);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 270, iBitIndex := 12, xValue => stBunker[1].cmdBuildCircuitOff);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 278, rValue => BUNKER_1_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 282, rValue => BUNKER_1_FREQ_VIBFEEDER);
@@ -674,6 +683,8 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 8, xValue => stBunker[2].cmdSetModeRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 9, xValue => stBunker[2].cmdSetModeManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 10, xValue => stBunker[2].cmdSetModeAuto);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 11, xValue => stBunker[2].cmdBuildCircuitOn);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 12, xValue => stBunker[2].cmdBuildCircuitOff);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 308, rValue => BUNKER_2_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 312, rValue => BUNKER_2_FREQ_VIBFEEDER);
@@ -691,6 +702,8 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 8, xValue => stBunker[3].cmdSetModeRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 9, xValue => stBunker[3].cmdSetModeManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 10, xValue => stBunker[3].cmdSetModeAuto);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 11, xValue => stBunker[3].cmdBuildCircuitOn);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 12, xValue => stBunker[3].cmdBuildCircuitOff);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 338, rValue => BUNKER_3_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 342, rValue => BUNKER_3_FREQ_VIBFEEDER);
