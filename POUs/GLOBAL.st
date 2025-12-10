@@ -150,6 +150,11 @@ VAR_GLOBAL RETAIN
 	BUNKER_1_FREQ_VIBFEEDER : REAL := 30.0;
 	BUNKER_2_FREQ_VIBFEEDER : REAL := 30.0;
 	BUNKER_3_FREQ_VIBFEEDER : REAL := 30.0;
+
+	// Ручное задание частоты вибраторов бункера (работает в ручном режиме управления)
+	BUNKER_1_FREQ_VIBRATOR : REAL := 30.0;
+	BUNKER_2_FREQ_VIBRATOR : REAL := 30.0;
+	BUNKER_3_FREQ_VIBRATOR : REAL := 30.0;
 	
 	// Светофор бункера
 	BUNKER_WEIGHT_LIGHT_RED : BOOL; // Уставка веса бункера для красного светофора

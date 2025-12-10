@@ -1,9 +1,11 @@
 FUNCTION_BLOCK FB_VibratorControl
 VAR_INPUT
 	MotorVibrator : REFERENCE TO ARRAY [1..4] OF ST_Motor; // Массив моторов вибраторов
+	Bunker : REFERENCE TO ST_Bunker; // Ссылка на бункер для доступа к режиму управления
 	xEnable : BOOL; // Разрешение работы блока (TRUE - автоматический режим)
 	xManualStart : BOOL; // Сигнал ручного запуска моторов
-	rWorkingFrequency : REAL := 50.0; // Частота работы мотора (Гц)
+	rWorkingFrequency : REAL := 50.0; // Частота работы мотора в автоматическом режиме (Гц)
+	irManualFrequency : REAL := 30.0; // Частота работы мотора в ручном режиме (Гц)
 	tActiveTime : TIME := T#10S; // Время активной работы вибратора
 	tPauseVibrator : TIME := T#5S; // Время паузы вибратора между циклами
 	tPauseFB : TIME := T#30S; // Время паузы ФБ между подходами
@@ -36,34 +38,9 @@ END_VAR
 _rtManualStart(CLK := xManualStart);
 
 // ========================================
-// УПРАВЛЕНИЕ КОНТАКТОРАМИ МОТОРОВ
+// ПРИМЕЧАНИЕ: Управление контакторами перенесено в FB_BunkerControl
 // ========================================
-// Контакторы включены при наличии Enable ИЛИ при ручном запуске
-FOR i := 1 TO 4 BY 1 DO
-	// Условия для запуска (QF включен, нет ошибок)
-	MotorVibrator[i].Device.xStartCondition := MotorVibrator[i].fbStateQF.qxSignal;
-	MotorVibrator[i].Device.xStopCondition := TRUE;
-
-	// Команда запуска контактора
-	IF xEnable OR xManualStart THEN
-		// Enable = TRUE: контакторы всегда включены
-		// Enable = FALSE + ManualStart = TRUE: контакторы включаются для ручного запуска
-		MotorVibrator[i].Device.xStartCommand := TRUE;
-		MotorVibrator[i].Device.xStopCommand := FALSE;
-	ELSE
-		// Enable = FALSE + ManualStart = FALSE: контакторы выключены
-		MotorVibrator[i].Device.xStartCommand := FALSE;
-		MotorVibrator[i].Device.xStopCommand := TRUE;
-	END_IF
-
-	// Применение выходов контактора
-	MotorVibrator[i].qxKM_Power := MotorVibrator[i].Device.qxPower;
-
-	// Условия для ЧРП
-	MotorVibrator[i].VFD.Device.xStartCondition := MotorVibrator[i].VFD.fbStateRdyToStart.qxSignal
-	                                             AND NOT MotorVibrator[i].VFD.fbStateFailure.qxSignal;
-	MotorVibrator[i].VFD.Device.xStopCondition := TRUE;
-END_FOR
+// Здесь управляем только VFD (частотой и командами ПУСК/СТОП)
 
 // ========================================
 // РУЧНОЙ РЕЖИМ УПРАВЛЕНИЯ
@@ -80,16 +57,19 @@ IF xManualStart THEN
 		nCurrentCycle := 0;
 	END_IF
 
-	// Ручной запуск моторов (контакторы уже управляются выше)
-	// При ручном запуске даём ПУСК на ЧРП после того как контактор активен
+	// Ручной запуск моторов (контакторы управляются в FB_BunkerControl)
 	FOR i := 1 TO 4 BY 1 DO
-		// ПУСК на ЧРП когда контактор активен (Device.qxActive)
-		MotorVibrator[i].VFD.Device.xStartCommand := MotorVibrator[i].Device.qxActive;
-		MotorVibrator[i].VFD.Device.xStopCommand := FALSE;
+		// ПУСК на ЧРП
+		MotorVibrator[i].VFD.qxStart := TRUE;
 
-		// Прямая установка частоты
-		MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
-		MotorVibrator[i].VFD.qxStart := MotorVibrator[i].VFD.Device.qxPower;
+		// Выбор частоты в зависимости от режима управления бункера
+		IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+			// Ручной режим - используем ручную частоту
+			MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+		ELSE
+			// Автоматический режим - используем рабочую частоту
+			MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+		END_IF;
 	END_FOR
 
 ELSE
@@ -99,12 +79,9 @@ ELSE
 
 	IF NOT xEnable THEN
 		// Если Enable выключен - остановить все ЧРП и сбросить состояние
-		// (контакторы уже управляются выше)
 		FOR i := 1 TO 4 BY 1 DO
-			MotorVibrator[i].VFD.Device.xStartCommand := FALSE;
-			MotorVibrator[i].VFD.Device.xStopCommand := TRUE;
+			MotorVibrator[i].VFD.qxStart := FALSE;
 			MotorVibrator[i].VFD.qrOutFrequency := 0.0;
-			MotorVibrator[i].VFD.qxStart := MotorVibrator[i].VFD.Device.qxPower;
 		END_FOR
 
 		// Сброс состояния
@@ -133,15 +110,19 @@ ELSE
 				tonPauseVibrator(IN := FALSE);
 				tonPauseFB(IN := FALSE);
 
-				// Запуск всех моторов (контакторы уже включены, т.к. Enable = TRUE)
+				// Запуск всех моторов
 				FOR i := 1 TO 4 BY 1 DO
-					// ПУСК на ЧРП когда контактор активен
-					MotorVibrator[i].VFD.Device.xStartCommand := MotorVibrator[i].Device.qxActive;
-					MotorVibrator[i].VFD.Device.xStopCommand := FALSE;
+					// ПУСК на ЧРП
+					MotorVibrator[i].VFD.qxStart := TRUE;
 
-					// Прямая установка частоты (без плавного разгона)
-					MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
-					MotorVibrator[i].VFD.qxStart := MotorVibrator[i].VFD.Device.qxPower;
+					// Выбор частоты в зависимости от режима управления бункера
+					IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+						// Ручной режим - используем ручную частоту
+						MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+					ELSE
+						// Автоматический режим - используем рабочую частоту
+						MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+					END_IF;
 				END_FOR
 
 				// Переход в паузу после окончания времени активной работы
@@ -164,12 +145,10 @@ ELSE
 				tonPauseVibrator(IN := TRUE, PT := tPauseVibrator);
 				tonPauseFB(IN := FALSE);
 
-				// Остановка всех ЧРП (контакторы остаются включёнными, т.к. Enable = TRUE)
+				// Остановка всех ЧРП
 				FOR i := 1 TO 4 BY 1 DO
-					MotorVibrator[i].VFD.Device.xStartCommand := FALSE;
-					MotorVibrator[i].VFD.Device.xStopCommand := TRUE;
+					MotorVibrator[i].VFD.qxStart := FALSE;
 					MotorVibrator[i].VFD.qrOutFrequency := 0.0;
-					MotorVibrator[i].VFD.qxStart := MotorVibrator[i].VFD.Device.qxPower;
 				END_FOR
 
 				// Переход обратно в активную работу после паузы
@@ -184,12 +163,10 @@ ELSE
 				tonPauseVibrator(IN := FALSE);
 				tonPauseFB(IN := TRUE, PT := tPauseFB);
 
-				// Остановка всех ЧРП (контакторы остаются включёнными, т.к. Enable = TRUE)
+				// Остановка всех ЧРП
 				FOR i := 1 TO 4 BY 1 DO
-					MotorVibrator[i].VFD.Device.xStartCommand := FALSE;
-					MotorVibrator[i].VFD.Device.xStopCommand := TRUE;
+					MotorVibrator[i].VFD.qxStart := FALSE;
 					MotorVibrator[i].VFD.qrOutFrequency := 0.0;
-					MotorVibrator[i].VFD.qxStart := MotorVibrator[i].VFD.Device.qxPower;
 				END_FOR
 
 				// Переход в IDLE после паузы и сброс счётчика
@@ -206,10 +183,10 @@ END_IF
 // ФОРМИРОВАНИЕ ВЫХОДОВ
 // ========================================
 
-// Проверка работы хотя бы одного мотора
+// Проверка работы хотя бы одного мотора (по обратной связи VFD)
 xAnyMotorActive := FALSE;
 FOR i := 1 TO 4 BY 1 DO
-	IF MotorVibrator[i].VFD.Device.qxActive THEN
+	IF MotorVibrator[i].VFD.fbStateIsWorking.qxSignal THEN
 		xAnyMotorActive := TRUE;
 	END_IF
 END_FOR

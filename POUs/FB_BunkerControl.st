@@ -4,7 +4,8 @@ VAR_INPUT
 	xStart : BOOL; // Команда запуска вибропитателей
 	xStop : BOOL; // Команда останова (аварийная)
 	xReset : BOOL; // Сброс ошибок
-	irManualFrequency : REAL; // Частота для ручного режима управления
+	irManualFrequency : REAL; // Частота вибропитателей для ручного режима управления
+	irManualFrequencyVibrator : REAL; // Частота вибраторов для ручного режима управления
 END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия запуска вибропитателей
@@ -385,15 +386,17 @@ FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBRATOR BY 1 DO
 END_FOR;
 
 fbVibratorControl(
-	MotorVibrator:= Bunker.MotorVibrator, 
-	xEnable:= xStateAutoWorking, 
-	xManualStart:= , 
-	rWorkingFrequency:= 50 * EFFICIENCY_LIMIT_RATE, 
-	tActiveTime:= VIBRATOR_SETTINGS.TIME_ACTIVE, 
-	tPauseVibrator:= VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR, 
-	tPauseFB:= VIBRATOR_SETTINGS.TIME_PAUSE_FB, 
-	nCycleCount:= VIBRATOR_SETTINGS.COUNT_CYCLE, 
-	xMotorsWorking=> , 
+	MotorVibrator:= Bunker.MotorVibrator,
+	Bunker:= Bunker,
+	xEnable:= xStateAutoWorking,
+	xManualStart:= ,
+	rWorkingFrequency:= 50 * EFFICIENCY_LIMIT_RATE,
+	irManualFrequency:= irManualFrequencyVibrator,
+	tActiveTime:= VIBRATOR_SETTINGS.TIME_ACTIVE,
+	tPauseVibrator:= VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR,
+	tPauseFB:= VIBRATOR_SETTINGS.TIME_PAUSE_FB,
+	nCycleCount:= VIBRATOR_SETTINGS.COUNT_CYCLE,
+	xMotorsWorking=> ,
 	tTimeToNext=> );
 
 fbPneumoControl(
