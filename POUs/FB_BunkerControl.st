@@ -560,9 +560,9 @@ ELSE
 END_IF;
 
 // Передача состояний режима управления
-Bunker.xStateRemoteAuto := Bunker.eStateRemote := E_StateRemote.Auto;
-Bunker.xStateRemoteManual := Bunker.eStateRemote := E_StateRemote.Manual;
-Bunker.xStateRemoteRepair := Bunker.eStateRemote := E_StateRemote.Repair;
+Bunker.xStateRemoteAuto := Bunker.eStateRemote = E_StateRemote.Auto;
+Bunker.xStateRemoteManual := Bunker.eStateRemote = E_StateRemote.Manual;
+Bunker.xStateRemoteRepair := Bunker.eStateRemote = E_StateRemote.Repair;
 
 // ========================================
 // УПРАВЛЕНИЕ КОНТАКТОРАМИ

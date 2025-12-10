@@ -41,6 +41,7 @@ VAR
 
 	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
 	xCircuitBuilt : BOOL := FALSE;
+	xCircuitBuiltRotation : BOOL := FALSE;
 
 	// Таймер ожидания полного запуска секции
 	fbTimerStarting : TON;
@@ -54,6 +55,9 @@ VAR
 	// 2 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормоза
 	// 3 - START_VFD: Запуск VFD поворота
 	// 4 - WORKING: Моторы поворота работают
+	// 5 - STOP_VFD: Остановка VFD поворота
+	// 6 - WAIT_VFD_STOP: Ожидание остановки VFD
+	// 7 - ACTIVATE_BRAKE: Активация тормоза
 
 	simInit : BOOL;
 	i : INT;
@@ -685,76 +689,94 @@ eStage := STAGE;
 // УПРАВЛЕНИЕ КОНТАКТОРАМИ
 // ========================================
 
-// Обработка импульсных команд сборки/разборки схемы
+// Обработка импульсных команд сборки/разборки схемы конвейера
 // cmdBuildCircuitOn - собрать схему (включить контакторы)
 // cmdBuildCircuitOff - разобрать схему (выключить контакторы)
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 	IF Dumper.cmdBuildCircuitOn THEN
 		xCircuitBuilt := TRUE;
+		Dumper.cmdBuildCircuitOn := FALSE; // Сброс импульсной команды
 	ELSIF Dumper.cmdBuildCircuitOff THEN
 		xCircuitBuilt := FALSE;
+		Dumper.cmdBuildCircuitOff := FALSE; // Сброс импульсной команды
 	END_IF;
 END_IF;
 // Моторы конвейера - управление контакторами через состояние схемы
 Dumper.MotorConveyor[1].qxKM_Power := xCircuitBuilt;
 Dumper.MotorConveyor[2].qxKM_Power := xCircuitBuilt;
 
+// Обработка импульсных команд сборки/разборки схемы поворота
+// cmdBuildCircuitOnRotation - собрать схему поворота (включить контакторы)
+// cmdBuildCircuitOffRotation - разобрать схему поворота (выключить контакторы)
+IF Dumper.eStateRemote = E_StateRemote.Manual THEN
+	IF Dumper.cmdBuildCircuitOnRotation THEN
+		xCircuitBuiltRotation := TRUE;
+		Dumper.cmdBuildCircuitOnRotation := FALSE; // Сброс импульсной команды
+	ELSIF Dumper.cmdBuildCircuitOffRotation THEN
+		xCircuitBuiltRotation := FALSE;
+		Dumper.cmdBuildCircuitOffRotation := FALSE; // Сброс импульсной команды
+	END_IF;
+END_IF;
+// Моторы поворота - управление контакторами через состояние схемы
+Dumper.MotorRotation[1].qxKM_Power := xCircuitBuiltRotation;
+Dumper.MotorRotation[2].qxKM_Power := xCircuitBuiltRotation;
+
 // ========================================
 // УПРАВЛЕНИЕ МОТОРАМИ ПОВОРОТА
 // ========================================
 
-// Обработка импульсных команд поворота (из ПМУ и АСУТП)
+// Обработка команд поворота (ПМУ - постоянная, АСУТП - импульсная)
 // Команды поворота могут быть активны в любом режиме работы
 
 // Обработка команды поворота влево
-IF (Dumper.fbBtnTurnLeft.qxRisingEdge OR Dumper.cmdTurnLeft) AND nRotationSubstage = 0 THEN
+// ПМУ: постоянная кнопка (qxSignal), АСУТП: импульсная команда (cmdTurnLeft)
+IF (Dumper.fbBtnTurnLeft.qxSignal OR Dumper.cmdTurnLeft) AND nRotationSubstage = 0 THEN
 	// Можем начать поворот влево только если:
 	// 1. Не упёрлись в левый концевик
 	// 2. Нет активного поворота (nRotationSubstage = 0)
-	// 3. Нет команды остановки поворота
-	IF NOT Dumper.fbEndSwitchLeft.qxSignal AND NOT Dumper.cmdStopRotation THEN
+	IF NOT Dumper.fbEndSwitchLeft.qxSignal THEN
 		xRotationLeftActive := TRUE;
 		xRotationRightActive := FALSE;
 		nRotationSubstage := 1; // Начать последовательность запуска
 	END_IF;
-	// Сброс импульсной команды
-	Dumper.cmdTurnLeft := FALSE;
 END_IF;
 
 // Обработка команды поворота вправо
-IF (Dumper.fbBtnTurnRight.qxRisingEdge OR Dumper.cmdTurnRight) AND nRotationSubstage = 0 THEN
+// ПМУ: постоянная кнопка (qxSignal), АСУТП: импульсная команда (cmdTurnRight)
+IF (Dumper.fbBtnTurnRight.qxSignal OR Dumper.cmdTurnRight) AND nRotationSubstage = 0 THEN
 	// Можем начать поворот вправо только если:
 	// 1. Не упёрлись в правый концевик
 	// 2. Нет активного поворота (nRotationSubstage = 0)
-	// 3. Нет команды остановки поворота
-	IF NOT Dumper.fbEndSwitchRight.qxSignal AND NOT Dumper.cmdStopRotation THEN
+	IF NOT Dumper.fbEndSwitchRight.qxSignal THEN
 		xRotationRightActive := TRUE;
 		xRotationLeftActive := FALSE;
 		nRotationSubstage := 1; // Начать последовательность запуска
 	END_IF;
-	// Сброс импульсной команды
+END_IF;
+
+// Условия остановки поворота:
+// 1. Кнопка ПМУ отпущена (fbBtnTurn.qxSignal = FALSE)
+// 2. Достигнут концевик
+// 3. Импульсная команда остановки (cmdStopRotation)
+IF nRotationSubstage >= 1 AND nRotationSubstage <= 4 THEN
+	// Проверка условий остановки
+	IF (xRotationLeftActive AND (NOT Dumper.fbBtnTurnLeft.qxSignal OR Dumper.fbEndSwitchLeft.qxSignal))
+		OR (xRotationRightActive AND (NOT Dumper.fbBtnTurnRight.qxSignal OR Dumper.fbEndSwitchRight.qxSignal))
+		OR Dumper.cmdStopRotation
+	THEN
+		// Начать последовательность остановки
+		nRotationSubstage := 5;
+	END_IF;
+END_IF;
+
+// Сброс импульсных команд от АСУТП
+IF Dumper.cmdTurnLeft THEN
+	Dumper.cmdTurnLeft := FALSE;
+END_IF;
+IF Dumper.cmdTurnRight THEN
 	Dumper.cmdTurnRight := FALSE;
 END_IF;
-
-// Автоматическая остановка при достижении концевых выключателей
-IF Dumper.fbEndSwitchLeft.qxSignal AND xRotationLeftActive THEN
-	// Упёрлись в левый концевик - останавливаем поворот влево
-	nRotationSubstage := 0;
-	xRotationLeftActive := FALSE;
-END_IF;
-
-IF Dumper.fbEndSwitchRight.qxSignal AND xRotationRightActive THEN
-	// Упёрлись в правый концевик - останавливаем поворот вправо
-	nRotationSubstage := 0;
-	xRotationRightActive := FALSE;
-END_IF;
-
-// Остановка по команде
-IF Dumper.cmdStopRotation AND (xRotationLeftActive OR xRotationRightActive) THEN
-	nRotationSubstage := 0;
-	xRotationLeftActive := FALSE;
-	xRotationRightActive := FALSE;
-	// Сброс импульсной команды остановки
+IF Dumper.cmdStopRotation THEN
 	Dumper.cmdStopRotation := FALSE;
 END_IF;
 
@@ -774,6 +796,10 @@ CASE nRotationSubstage OF
 		rTargetFreqRot1 := 0.0;
 		rTargetFreqRot2 := 0.0;
 
+		// Сброс флагов поворота
+		xRotationLeftActive := FALSE;
+		xRotationRightActive := FALSE;
+
 	1: // RELEASE_BRAKE - Отпускание тормоза поворота
 		// Отпустить тормоз (1 = тормоз отпущен)
 		Dumper.qxBreakerRotation := TRUE;
@@ -790,18 +816,18 @@ CASE nRotationSubstage OF
 
 	3: // START_VFD - Запуск VFD поворота
 		IF xRotationLeftActive THEN
-			// Поворот влево - запуск в режиме реверса
-			Dumper.MotorRotation[1].VFD.qxStart := TRUE;
-			Dumper.MotorRotation[2].VFD.qxStart := TRUE;
-			Dumper.MotorRotation[1].qxVFDReverseStart := TRUE;
-			Dumper.MotorRotation[2].qxVFDReverseStart := TRUE;
-
-		ELSIF xRotationRightActive THEN
-			// Поворот вправо - запуск в прямом направлении
+			// Поворот влево - запуск в прямом направлении
 			Dumper.MotorRotation[1].VFD.qxStart := TRUE;
 			Dumper.MotorRotation[2].VFD.qxStart := TRUE;
 			Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
 			Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+
+		ELSIF xRotationRightActive THEN
+			// Поворот вправо - запуск в режиме реверса
+			Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+			Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+			Dumper.MotorRotation[1].qxVFDReverseStart := TRUE;
+			Dumper.MotorRotation[2].qxVFDReverseStart := TRUE;
 		END_IF;
 
 		// Установка целевой частоты
@@ -820,6 +846,48 @@ CASE nRotationSubstage OF
 		// Поддержка целевой частоты
 		rTargetFreqRot1 := MOTOR_FREQUENCY_DUMPER_ROTATION;
 		rTargetFreqRot2 := MOTOR_FREQUENCY_DUMPER_ROTATION;
+
+	5: // STOP_VFD - Остановка VFD поворота
+		// Установить целевую частоту 0
+		rTargetFreqRot1 := 0.0;
+		rTargetFreqRot2 := 0.0;
+
+		IF VFD_SMOOTH_SET_FREQUENCY THEN
+			// Плавная остановка: ждем снижения частоты до 0, затем отключаем VFD
+			IF Dumper.MotorRotation[1].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
+				AND Dumper.MotorRotation[2].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
+			THEN
+				// Частота достигла 0, отключаем VFD
+				Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+				Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+				Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
+				Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+				nRotationSubstage := 6;
+			END_IF;
+		ELSE
+			// Прямая остановка: сразу отключаем VFD
+			Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+			Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+			Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
+			Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+			nRotationSubstage := 6;
+		END_IF;
+
+	6: // WAIT_VFD_STOP - Ожидание остановки VFD
+		// Проверить обратную связь VFD о выключении
+		IF NOT Dumper.MotorRotation[1].VFD.fbStateIsWorking.qxSignal
+			AND NOT Dumper.MotorRotation[2].VFD.fbStateIsWorking.qxSignal
+		THEN
+			// VFD выключены, переход к активации тормоза
+			nRotationSubstage := 7;
+		END_IF;
+
+	7: // ACTIVATE_BRAKE - Активация тормоза
+		// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
+		Dumper.qxBreakerRotation := FALSE;
+
+		// Переход в IDLE
+		nRotationSubstage := 0;
 END_CASE;
 
 // ========================================
