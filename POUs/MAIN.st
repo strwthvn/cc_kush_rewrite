@@ -138,6 +138,7 @@ fbBunker[1](
 	xStart := xStartBunker[1],
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1],
 	xReset := stCommands.cmdResetAll.qxSignal,
+	irManualFrequency := BUNKER_1_FREQ_VIBFEEDER,
 	eStage => eBunkerStage[1],
 	eStageToSCADA => eBunkerStageToSCADA[1]
 );
@@ -147,6 +148,7 @@ fbBunker[2](
 	xStart := xStartBunker[2],
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2],
 	xReset := stCommands.cmdResetAll.qxSignal,
+	irManualFrequency := BUNKER_2_FREQ_VIBFEEDER,
 	eStage => eBunkerStage[2],
 	eStageToSCADA => eBunkerStageToSCADA[2]
 );
@@ -156,6 +158,7 @@ fbBunker[3](
 	xStart := xStartBunker[3],
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3],
 	xReset := stCommands.cmdResetAll.qxSignal,
+	irManualFrequency := BUNKER_3_FREQ_VIBFEEDER,
 	eStage => eBunkerStage[3],
 	eStageToSCADA => eBunkerStageToSCADA[3]
 );

@@ -4,6 +4,7 @@ VAR_INPUT
 	xStart : BOOL; // Команда запуска вибропитателей
 	xStop : BOOL; // Команда останова (аварийная)
 	xReset : BOOL; // Сброс ошибок
+	irManualFrequency : REAL; // Частота для ручного режима управления
 END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия запуска вибропитателей
@@ -463,9 +464,16 @@ CASE STAGE OF
 		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
 		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
 
-		// Управление от PID-контроллера (активируется в MAIN.st при AUTO_STEP = WORK)
-		rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
-		rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+		// Выбор источника частоты в зависимости от режима управления
+		IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+			// Ручной режим - используем частоту из irManualFrequency
+			rTargetFreqVibFeeder1 := irManualFrequency;
+			rTargetFreqVibFeeder2 := irManualFrequency;
+		ELSE
+			// Автоматический режим - используем частоту от PID-контроллера
+			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
+			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+		END_IF;
 
 		// Обработка команды останова
 		IF xStop THEN
