@@ -46,6 +46,9 @@ STRUCT
 	cmdAddVib4 : BOOL; // Включить управление вибратора 4
 	
 	cmdBuildCircuitOn, cmdBuildCircuitOff  : BOOL; // Команда собрать/разобрать схему
+	
+	cmdBuildCircuitOnVibrator, cmdBuildCircuitOffVibrator  : BOOL; // Команда собрать/разобрать схему вибратора
+	
 	// == Генерация состояний ==
 	eLightColor : E_LightColor; // Текущий сигнал светофора
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)

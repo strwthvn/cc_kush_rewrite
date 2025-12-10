@@ -27,6 +27,7 @@ VAR
 
 	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
 	xCircuitBuilt : BOOL := FALSE;
+	xCircuitBuiltVibrator : BOOL := FALSE;
 
 	// Целевые частоты для моторов вибропитателей
 	rTargetFreqVibFeeder1 : REAL := 0.0;
@@ -587,9 +588,23 @@ IF Bunker.eStateRemote = E_StateRemote.Manual THEN
 	END_IF;
 END_IF;
 
+IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+	IF Bunker.cmdBuildCircuitOnVibrator THEN
+		xCircuitBuiltVibrator := TRUE;
+	ELSIF Bunker.cmdBuildCircuitOffVibrator THEN
+		xCircuitBuiltVibrator := FALSE;
+	END_IF;
+END_IF;
+
 // Моторы вибропитателей - управление контакторами через состояние схемы
 Bunker.MotorVibFeeder[1].qxKM_Power := xCircuitBuilt;
 Bunker.MotorVibFeeder[2].qxKM_Power := xCircuitBuilt;
+
+// Моторы вибраторов - управление контакторами через состояние схемы
+Bunker.MotorVibrator[1].qxKM_Power := xCircuitBuiltVibrator;
+Bunker.MotorVibrator[2].qxKM_Power := xCircuitBuiltVibrator;
+Bunker.MotorVibrator[3].qxKM_Power := xCircuitBuiltVibrator;
+Bunker.MotorVibrator[4].qxKM_Power := xCircuitBuiltVibrator;
 
 // ========================================
 // УПРАВЛЕНИЕ СВЕТОФОРОМ
