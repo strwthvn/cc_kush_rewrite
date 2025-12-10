@@ -59,17 +59,57 @@ IF xManualStart THEN
 
 	// Ручной запуск моторов (контакторы управляются в FB_BunkerControl)
 	FOR i := 1 TO 4 BY 1 DO
-		// ПУСК на ЧРП
-		MotorVibrator[i].VFD.qxStart := TRUE;
+		// Проверяем, включен ли вибратор через cmdAddVib
+		CASE i OF
+			1: IF Bunker.cmdAddVib1 THEN
+				MotorVibrator[i].VFD.qxStart := TRUE;
+				// Выбор частоты в зависимости от режима управления бункера
+				IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+					MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+				ELSE
+					MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+				END_IF;
+			ELSE
+				MotorVibrator[i].VFD.qxStart := FALSE;
+				MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+			END_IF;
 
-		// Выбор частоты в зависимости от режима управления бункера
-		IF Bunker.eStateRemote = E_StateRemote.Manual THEN
-			// Ручной режим - используем ручную частоту
-			MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
-		ELSE
-			// Автоматический режим - используем рабочую частоту
-			MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
-		END_IF;
+			2: IF Bunker.cmdAddVib2 THEN
+				MotorVibrator[i].VFD.qxStart := TRUE;
+				IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+					MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+				ELSE
+					MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+				END_IF;
+			ELSE
+				MotorVibrator[i].VFD.qxStart := FALSE;
+				MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+			END_IF;
+
+			3: IF Bunker.cmdAddVib3 THEN
+				MotorVibrator[i].VFD.qxStart := TRUE;
+				IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+					MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+				ELSE
+					MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+				END_IF;
+			ELSE
+				MotorVibrator[i].VFD.qxStart := FALSE;
+				MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+			END_IF;
+
+			4: IF Bunker.cmdAddVib4 THEN
+				MotorVibrator[i].VFD.qxStart := TRUE;
+				IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+					MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+				ELSE
+					MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+				END_IF;
+			ELSE
+				MotorVibrator[i].VFD.qxStart := FALSE;
+				MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+			END_IF;
+		END_CASE;
 	END_FOR
 
 ELSE
@@ -77,21 +117,7 @@ ELSE
 	// АВТОМАТИЧЕСКИЙ РЕЖИМ УПРАВЛЕНИЯ
 	// ========================================
 
-	IF NOT xEnable THEN
-		// Если Enable выключен - остановить все ЧРП и сбросить состояние
-		FOR i := 1 TO 4 BY 1 DO
-			MotorVibrator[i].VFD.qxStart := FALSE;
-			MotorVibrator[i].VFD.qrOutFrequency := 0.0;
-		END_FOR
-
-		// Сброс состояния
-		eState := E_VibratorState.IDLE;
-		nCurrentCycle := 0;
-		tonActiveWork(IN := FALSE);
-		tonPauseVibrator(IN := FALSE);
-		tonPauseFB(IN := FALSE);
-
-	ELSE
+	IF xEnable THEN
 		// Автоматический цикл работы
 		CASE eState OF
 			E_VibratorState.IDLE:
@@ -110,19 +136,58 @@ ELSE
 				tonPauseVibrator(IN := FALSE);
 				tonPauseFB(IN := FALSE);
 
-				// Запуск всех моторов
+				// Запуск выбранных моторов
 				FOR i := 1 TO 4 BY 1 DO
-					// ПУСК на ЧРП
-					MotorVibrator[i].VFD.qxStart := TRUE;
+					// Проверяем, включен ли вибратор через cmdAddVib
+					CASE i OF
+						1: IF Bunker.cmdAddVib1 THEN
+							MotorVibrator[i].VFD.qxStart := TRUE;
+							IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+								MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+							ELSE
+								MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+							END_IF;
+						ELSE
+							MotorVibrator[i].VFD.qxStart := FALSE;
+							MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+						END_IF;
 
-					// Выбор частоты в зависимости от режима управления бункера
-					IF Bunker.eStateRemote = E_StateRemote.Manual THEN
-						// Ручной режим - используем ручную частоту
-						MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
-					ELSE
-						// Автоматический режим - используем рабочую частоту
-						MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
-					END_IF;
+						2: IF Bunker.cmdAddVib2 THEN
+							MotorVibrator[i].VFD.qxStart := TRUE;
+							IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+								MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+							ELSE
+								MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+							END_IF;
+						ELSE
+							MotorVibrator[i].VFD.qxStart := FALSE;
+							MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+						END_IF;
+
+						3: IF Bunker.cmdAddVib3 THEN
+							MotorVibrator[i].VFD.qxStart := TRUE;
+							IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+								MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+							ELSE
+								MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+							END_IF;
+						ELSE
+							MotorVibrator[i].VFD.qxStart := FALSE;
+							MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+						END_IF;
+
+						4: IF Bunker.cmdAddVib4 THEN
+							MotorVibrator[i].VFD.qxStart := TRUE;
+							IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+								MotorVibrator[i].VFD.qrOutFrequency := irManualFrequency;
+							ELSE
+								MotorVibrator[i].VFD.qrOutFrequency := rWorkingFrequency;
+							END_IF;
+						ELSE
+							MotorVibrator[i].VFD.qxStart := FALSE;
+							MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+						END_IF;
+					END_CASE;
 				END_FOR
 
 				// Переход в паузу после окончания времени активной работы
@@ -176,6 +241,20 @@ ELSE
 					eState := E_VibratorState.IDLE;
 				END_IF
 		END_CASE
+
+	ELSE
+		// xEnable = FALSE И xManualStart = FALSE - полная остановка
+		FOR i := 1 TO 4 BY 1 DO
+			MotorVibrator[i].VFD.qxStart := FALSE;
+			MotorVibrator[i].VFD.qrOutFrequency := 0.0;
+		END_FOR
+
+		// Сброс состояния
+		eState := E_VibratorState.IDLE;
+		nCurrentCycle := 0;
+		tonActiveWork(IN := FALSE);
+		tonPauseVibrator(IN := FALSE);
+		tonPauseFB(IN := FALSE);
 	END_IF
 END_IF
 
