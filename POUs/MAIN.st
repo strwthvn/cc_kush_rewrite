@@ -210,7 +210,9 @@ fbSimulation(
 // ОТВАЛООБРАЗОВАТЕЛЬ
 
 // Запуск отвалообразователя в ручном режиме
-IF 	stDumper.cmdSetModeManual THEN stDumper.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stDumper.cmdSetModeManual OR stCommands.cmdSetToManual THEN stDumper.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stDumper.cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stDumper.eStateRemote := E_StateRemote.Auto; END_IF;
+
 IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
 	AND stDumper.cmdStartConveyor // Команда на запуск в ручном режиме
 	AND eDumperStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
@@ -222,7 +224,6 @@ END_IF;
 IF eDumperStage = E_StageWithPreStartAlarm.STARTING AND xStartDumper THEN xStartDumper := FALSE; END_IF;
 
 // Остановка отвалообразователя в ручном режиме
-IF 	stDumper.cmdSetModeManual THEN stDumper.eStateRemote := E_StateRemote.Manual; END_IF;
 IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
 	AND stDumper.cmdStopConveyor // Команда на остановку в ручном режиме
 	AND	(eDumperStage = E_StageWithPreStartAlarm.WORK // В статусе работы
@@ -236,7 +237,9 @@ IF eDumperStage <> E_StageWithPreStartAlarm.WORK AND xManualStopDumper THEN xMan
 // СБОРНЫЙ КОНВЕЙЕР
 
 // Запуск сборочного конвейера в ручном режиме
-IF 	stConveyor.cmdSetModeManual THEN stConveyor.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stConveyor.cmdSetModeManual OR stCommands.cmdSetToManual THEN stConveyor.eStateRemote := E_StateRemote.Manual; END_IF;
+IF 	stConveyor.cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stConveyor.eStateRemote := E_StateRemote.Auto; END_IF;
+
 IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
 	AND stConveyor.cmdStartConveyor // Команда на запуск в ручном режиме
 	AND eConveyorStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
@@ -248,7 +251,6 @@ END_IF;
 IF eConveyorStage = E_StageWithPreStartAlarm.STARTING AND xStartConveyor THEN xStartConveyor := FALSE; END_IF;
 
 // Остановка сборочного конвейера в ручном режиме
-IF 	stConveyor.cmdSetModeManual THEN stConveyor.eStateRemote := E_StateRemote.Manual; END_IF;
 IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
 	AND stConveyor.cmdStopConveyor // Команда на остановку в ручном режиме
 	AND	(eConveyorStage = E_StageWithPreStartAlarm.WORK // В статусе работы
@@ -263,7 +265,9 @@ IF eConveyorStage <> E_StageWithPreStartAlarm.WORK AND xManualStopConveyor THEN 
 
 FOR i := 1 TO 3 DO
 	// Запуск бункера в ручном режиме
-	IF 	stBunker[i].cmdSetModeManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
+	IF 	stBunker[i].cmdSetModeManual OR stCommands.cmdSetToManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
+	IF 	stBunker[i].cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stBunker[i].eStateRemote := E_StateRemote.Auto; END_IF;
+	
 	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
 		AND stBunker[i].cmdStartFeeder // Команда на запуск в ручном режиме
 		AND eBunkerStage[i] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
@@ -275,7 +279,6 @@ FOR i := 1 TO 3 DO
 	IF eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING AND xStartBunker[i] THEN xStartBunker[i] := FALSE; END_IF;
 
 	// Остановка бункера в ручном режиме
-	IF 	stBunker[i].cmdSetModeManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
 	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
 		AND stBunker[i].cmdStartFeeder // Команда на остановку в ручном режиме
 		AND	(eBunkerStage[i] = E_StageWithPreStartAlarm.WORK // В статусе работы
@@ -290,9 +293,9 @@ END_FOR;
 // Процессы аварийных остановок в ручном режиме 
 	// F FC_Dumper_GetErrorCommon(Dumper:=stDumper) THEN FC_Dumper_EmergencyStop(Dumper:=stDumper); END_IF;
 	// F FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) THEN FC_Conveyor_EmergencyStop(Conveyor:=stConveyor); END_IF;
-	FOR i := 1 TO 3 DO 
+	//FOR i := 1 TO 3 DO 
 		// IF FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) THEN FC_Bunker_EmergencyStop(Bunker:=stBunker[i]); END_IF;
-	END_FOR
+	//END_FOR
 
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
 CASE AUTO_STEP OF
@@ -523,11 +526,9 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 1, xValue => stCommands.cmdStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 2, xValue => stCommands.cmdEmergencyStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 3, xValue => stCommands.cmdResetAll.ixSignal);
-
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 2, rValue => ICUR_PRECENT);
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 4, rValue => rElectricityMeter);
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 6, rValue => EFFICIENCY_LIMIT_RATE);
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 8, rValue => ANNUNCIATOR_LIGHT_HZ);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 4, xValue => stCommands.cmdSetToAuto);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue => stCommands.cmdSetToManual);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 6, xValue => stCommands.cmdSetToRepair);
 
 // Уставки ЧРП (30-59)
 // Регистры 30-31: BOOL флаги ЧРП
