@@ -32,7 +32,8 @@ STRUCT
 
 	// == АСУТП ==
 	cmdEmergencyStop, cmdTurnLeft, cmdTurnRight, cmdReset, cmdStopRotation : BOOL;
-
+	cmdBuildCircuitOnRotation, cmdBuildCircuitOffRotation  : BOOL; // Команда собрать/разобрать схему поворота
+	
 	// == Генерация состояний ==
 	xStateWarning : BOOL; // Программное предупреждение
 	xStateFailure : BOOL; // Программная ошибка

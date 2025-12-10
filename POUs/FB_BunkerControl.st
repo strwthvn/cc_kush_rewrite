@@ -24,6 +24,13 @@ VAR
 	// Автомат состояний для запуска вибропитателей
 	STAGE : E_StageWithPreStartAlarm := E_StageWithPreStartAlarm.IDLE;
 
+	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
+	xCircuitBuilt : BOOL := FALSE;
+
+	// Целевые частоты для моторов вибропитателей
+	rTargetFreqVibFeeder1 : REAL := 0.0;
+	rTargetFreqVibFeeder2 : REAL := 0.0;
+
 END_VAR
 
 // ========================================
@@ -123,14 +130,6 @@ FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBFEEDER BY 1 DO
 		ixFeedback := Bunker.MotorVibFeeder[i].fbStateKM.qxSignal,
 		xEnableFeedback := TRUE
 	);
-	Bunker.MotorVibFeeder[i].qxKM_Power := Bunker.MotorVibFeeder[i].Device.qxPower;
-
-	// Device control для ЧРП
-	Bunker.MotorVibFeeder[i].VFD.Device(
-		ixFeedback := Bunker.MotorVibFeeder[i].VFD.fbStateIsWorking.qxSignal,
-		xEnableFeedback := TRUE
-	);
-	Bunker.MotorVibFeeder[i].VFD.qxStart := Bunker.MotorVibFeeder[i].VFD.Device.qxPower;
 END_FOR;
 
 // ========================================
@@ -220,8 +219,8 @@ Bunker.MotorVibFeeder[1].VFD.fbAnalogInput(
 
 // Аналоговый выход ЧРП (задание частоты)
 Bunker.MotorVibFeeder[1].VFD.fbAnalogOutput(
-	xEnable := Bunker.MotorVibFeeder[1].VFD.Device.qxActive,
-	rEngValue := Bunker.MotorVibFeeder[1].VFD.qrOutFrequency,
+	xEnable := Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal,
+	rEngValue := Bunker.MotorVibFeeder[1].VFD.Frequency.qrCurrentFrequency,
 	rEngValue_Max := VFD_FREQ_MAX_RANGE,
 	rEngValue_Min := VFD_FREQ_MIN,
 	rCurrent_Max := VFD_CURRENT_MAX,
@@ -319,8 +318,8 @@ Bunker.MotorVibFeeder[2].VFD.fbAnalogInput(
 
 // Аналоговый выход ЧРП (задание частоты)
 Bunker.MotorVibFeeder[2].VFD.fbAnalogOutput(
-	xEnable := Bunker.MotorVibFeeder[2].VFD.Device.qxActive,
-	rEngValue := Bunker.MotorVibFeeder[2].VFD.qrOutFrequency,
+	xEnable := Bunker.MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal,
+	rEngValue := Bunker.MotorVibFeeder[2].VFD.Frequency.qrCurrentFrequency,
 	rEngValue_Max := VFD_FREQ_MAX_RANGE,
 	rEngValue_Min := VFD_FREQ_MIN,
 	rCurrent_Max := VFD_CURRENT_MAX,
@@ -366,7 +365,7 @@ FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBRATOR BY 1 DO
 
 	// Аналоговый выход ЧРП (задание частоты)
 	Bunker.MotorVibrator[i].VFD.fbAnalogOutput(
-		xEnable := Bunker.MotorVibrator[i].VFD.Device.qxActive,
+		xEnable := Bunker.MotorVibrator[i].VFD.fbStateIsWorking.qxSignal,
 		rEngValue := Bunker.MotorVibrator[i].VFD.qrOutFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,
@@ -430,9 +429,13 @@ Bunker.xStateWarning := Bunker.MotorVibFeeder[1].VFD.fbRangeDiagnostic.qxWarning
 
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
-		// Сброс частот
-		Bunker.MotorVibFeeder[1].VFD.qrOutFrequency := 0.0;
-		Bunker.MotorVibFeeder[2].VFD.qrOutFrequency := 0.0;
+		// Сброс целевых частот
+		rTargetFreqVibFeeder1 := 0.0;
+		rTargetFreqVibFeeder2 := 0.0;
+
+		// Остановка VFD
+		Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
+		Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
 
 		// Переход в STARTING при получении команды запуска
 		IF xStart THEN
@@ -440,51 +443,45 @@ CASE STAGE OF
 		END_IF
 
 	E_StageWithPreStartAlarm.STARTING:
-		// Команда контакторам
-		Bunker.MotorVibFeeder[1].Device.xStartCommand := TRUE;
-		Bunker.MotorVibFeeder[2].Device.xStartCommand := TRUE;
+		// Команда ПУСК на VFD (TRUE = ПУСК)
+		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
+		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
 
-		// Команда ЧРП после включения контакторов
-		Bunker.MotorVibFeeder[1].VFD.Device.xStartCommand :=
-			Bunker.MotorVibFeeder[1].Device.qxActive;
-		Bunker.MotorVibFeeder[2].VFD.Device.xStartCommand :=
-			Bunker.MotorVibFeeder[2].Device.qxActive;
+		// Установка целевой стартовой частоты
+		rTargetFreqVibFeeder1 := BUNKER_VIBFEEDER_START_FREQUENCY;
+		rTargetFreqVibFeeder2 := BUNKER_VIBFEEDER_START_FREQUENCY;
 
-		// Прямое задание стартовой частоты
-		Bunker.MotorVibFeeder[1].VFD.qrOutFrequency := BUNKER_VIBFEEDER_START_FREQUENCY;
-		Bunker.MotorVibFeeder[2].VFD.qrOutFrequency := BUNKER_VIBFEEDER_START_FREQUENCY;
-
-		// Переход в WORK по включению оборудования
-		IF Bunker.MotorVibFeeder[1].Device.qxActive
-		   AND Bunker.MotorVibFeeder[2].Device.qxActive
-		   AND Bunker.MotorVibFeeder[1].VFD.Device.qxActive
-		   AND Bunker.MotorVibFeeder[2].VFD.Device.qxActive
+		// Переход в WORK по включению оборудования (обратная связь VFD)
+		IF Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
+		   AND Bunker.MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal
 		THEN
 			STAGE := E_StageWithPreStartAlarm.WORK;
 		END_IF
 
 	E_StageWithPreStartAlarm.WORK:
+		// Команда ПУСК остается активной
+		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
+		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
+
 		// Управление от PID-контроллера (активируется в MAIN.st при AUTO_STEP = WORK)
-		Bunker.MotorVibFeeder[1].VFD.qrOutFrequency := Bunker.rMotorVibFeederCommonFrequency;
-		Bunker.MotorVibFeeder[2].VFD.qrOutFrequency := Bunker.rMotorVibFeederCommonFrequency;
+		rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
+		rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
 
 		// Обработка команды останова
 		IF xStop THEN
-			Bunker.MotorVibFeeder[1].Device.xStopCommand := TRUE;
-			Bunker.MotorVibFeeder[2].Device.xStopCommand := TRUE;
-			Bunker.MotorVibFeeder[1].VFD.Device.xStopCommand := TRUE;
-			Bunker.MotorVibFeeder[2].VFD.Device.xStopCommand := TRUE;
+			Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
+			Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF
 
 	E_StageWithPreStartAlarm.ERROR:
-		// Сброс частот
-		Bunker.MotorVibFeeder[1].VFD.qrOutFrequency := 0.0;
-		Bunker.MotorVibFeeder[2].VFD.qrOutFrequency := 0.0;
+		// Сброс целевых частот
+		rTargetFreqVibFeeder1 := 0.0;
+		rTargetFreqVibFeeder2 := 0.0;
 
-		// Команды останова
-		Bunker.MotorVibFeeder[1].Device.xStopCommand := TRUE;
-		Bunker.MotorVibFeeder[2].Device.xStopCommand := TRUE;
+		// Команда СТОП на VFD (FALSE = СТОП)
+		Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
+		Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
 
 		// Переход в IDLE при сбросе ошибки
 		IF xReset AND NOT FC_Bunker_GetErrorMotorVibFeeder(Bunker := Bunker) THEN
@@ -495,6 +492,32 @@ END_CASE;
 
 // Выходной параметр - текущая стадия
 eStage := STAGE;
+
+// ========================================
+// ОБРАБОТКА ЧАСТОТЫ (после установки целевых значений в CASE)
+// ========================================
+
+// Мотор вибропитателя 1
+Bunker.MotorVibFeeder[1].VFD.Frequency(
+	irMaxFrequency := VFD_FREQUENCY_MAX,
+	// Если плавный пуск - используем шаг, иначе - большой шаг для мгновенной установки
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
+	rTargetFrequency := rTargetFreqVibFeeder1,
+	xPulse := PULSE_RTRIG.Q,
+	xConditionToProceed := TRUE
+);
+// qrCurrentFrequency передается напрямую в fbAnalogOutput.rEngValue
+
+// Мотор вибропитателя 2
+Bunker.MotorVibFeeder[2].VFD.Frequency(
+	irMaxFrequency := VFD_FREQUENCY_MAX,
+	// Если плавный пуск - используем шаг, иначе - большой шаг для мгновенной установки
+	irStep := SEL(VFD_SMOOTH_SET_FREQUENCY, VFD_FREQ_MAX_RANGE, VFD_FREQUENCY_STEP),
+	rTargetFrequency := rTargetFreqVibFeeder2,
+	xPulse := PULSE_RTRIG.Q,
+	xConditionToProceed := TRUE
+);
+// qrCurrentFrequency передается напрямую в fbAnalogOutput.rEngValue
 
 // ========================================
 // ПЕРЕДАЧА СОСТОЯНИЙ ДЛЯ SCADA
@@ -540,6 +563,25 @@ END_IF;
 Bunker.xStateRemoteAuto := Bunker.eStateRemote := E_StateRemote.Auto;
 Bunker.xStateRemoteManual := Bunker.eStateRemote := E_StateRemote.Manual;
 Bunker.xStateRemoteRepair := Bunker.eStateRemote := E_StateRemote.Repair;
+
+// ========================================
+// УПРАВЛЕНИЕ КОНТАКТОРАМИ
+// ========================================
+
+// Обработка импульсных команд сборки/разборки схемы
+// cmdBuildCircuitOn - собрать схему (включить контакторы)
+// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
+IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+	IF Bunker.cmdBuildCircuitOn THEN
+		xCircuitBuilt := TRUE;
+	ELSIF Bunker.cmdBuildCircuitOff THEN
+		xCircuitBuilt := FALSE;
+	END_IF;
+END_IF;
+
+// Моторы вибропитателей - управление контакторами через состояние схемы
+Bunker.MotorVibFeeder[1].qxKM_Power := xCircuitBuilt;
+Bunker.MotorVibFeeder[2].qxKM_Power := xCircuitBuilt;
 
 // ========================================
 // УПРАВЛЕНИЕ СВЕТОФОРОМ
