@@ -34,6 +34,9 @@ STRUCT
 	// АСУТП
 	cmdStartFeeder : BOOL; // Команда "Пуск питателя"
 	cmdStopFeeder : BOOL; // Команда "Стоп питателя"
+	cmdStartVibrator : BOOL; // Команда "Пуск виратора"
+	cmdStopVibrator : BOOL; // Команда "Стоп вибратора"
+	
 	cmdEmergencyStopFeeder : BOOL; // Команда "Аварийная остановка"
 	cmdDumpingPrecent : REAL; // Задание процентного соотношения сбрасывания
 	cmdReset : BOOL; // Сброс ошибок

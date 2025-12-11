@@ -48,8 +48,6 @@ VAR
 		ERROR				// Состояние ошибки
 		) := IDLE; // Начальное положение
 
-	ton_waitAfterStartDumper : TON; // Таймер ожидания после пуска отвалообразователя
-
 	// Вспомогательные переменные
 	i : INT; // Счётчик для циклов
 	awModbusRegisters : ARRAY [0..99] OF WORD; // Массив Modbus регистров
@@ -60,7 +58,16 @@ VAR
 
 	// Временная переменная для конвертации TIME из Modbus (секунды)
 	rTempTime : REAL;
+	
+	ton_AutoTimer : TON; // Таймер автоматического режима
+	tof_VibratorEnable : ARRAY [1..3] OF TON;
+	
+	xAutoStopping : BOOL; // Процесс остановки
+	xAutoEmergencyStopping : BOOL; // Процесс аварийной остановки
+	tVibratorWork : TIME := T#15S;
 END_VAR
+
+stCommonSignals.qx6KM1 := TRUE;
 
 // == ИНИЦИАЛИЗАЦИЯ ==
 // Инициализация общих сигналов
@@ -225,9 +232,9 @@ IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в реж
 	AND eDumperStage <> E_StageWithPreStartAlarm.STARTING AND eDumperStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
 	//AND NOT FC_Dumper_GetErrorCommon(Dumper:=stDumper) // Не имеет ошибок
 	THEN
+		xManualStopDumper := FALSE;
 		xStartDumper := TRUE;
 END_IF;
-IF eDumperStage = E_StageWithPreStartAlarm.STARTING AND xStartDumper THEN xStartDumper := FALSE; END_IF;
 
 // Остановка отвалообразователя в ручном режиме
 IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
@@ -236,6 +243,7 @@ IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в реж
 		OR eDumperStage = E_StageWithPreStartAlarm.STARTING 
 		OR eDumperStage = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
 	THEN
+		xStartDumper := FALSE;
 		xManualStopDumper := TRUE;
 END_IF;
 IF eDumperStage <> E_StageWithPreStartAlarm.WORK AND xManualStopDumper THEN xManualStopDumper := FALSE; END_IF;
@@ -253,8 +261,8 @@ IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в ре
 	//AND NOT FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) // Не имеет ошибок
 	THEN
 		xStartConveyor := TRUE;
+		xManualStopConveyor := FALSE;
 END_IF;
-IF eConveyorStage = E_StageWithPreStartAlarm.STARTING AND xStartConveyor THEN xStartConveyor := FALSE; END_IF;
 
 // Остановка сборочного конвейера в ручном режиме
 IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
@@ -263,6 +271,7 @@ IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в ре
 		OR eConveyorStage = E_StageWithPreStartAlarm.STARTING 
 		OR eConveyorStage = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
 	THEN
+		xStartConveyor := FALSE;
 		xManualStopConveyor := TRUE;
 END_IF;
 IF eConveyorStage <> E_StageWithPreStartAlarm.WORK AND xManualStopConveyor THEN xManualStopConveyor := FALSE; END_IF;
@@ -280,17 +289,16 @@ FOR i := 1 TO 3 DO
 		AND eBunkerStage[i] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[i] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
 		//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) // Не имеет ошибок
 		THEN
+			xManualStopBunker[i] := FALSE;
 			xStartBunker[i] := TRUE;
 	END_IF;
-	IF eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING AND xStartBunker[i] THEN xStartBunker[i] := FALSE; END_IF;
+IF (eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING OR eBunkerStage[i] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[i] THEN xStartBunker[i] := FALSE; END_IF;
 
 	// Остановка бункера в ручном режиме
 	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-		AND stBunker[i].cmdStartFeeder // Команда на остановку в ручном режиме
-		AND	(eBunkerStage[i] = E_StageWithPreStartAlarm.WORK // В статусе работы
-			OR eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING 
-			OR eBunkerStage[i] = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
+		AND stBunker[i].cmdStopFeeder // Команда на остановку в ручном режиме
 		THEN
+			xStartBunker[i] := FALSE;
 			xManualStopBunker[i] := TRUE;
 	END_IF;
 	IF eBunkerStage[i] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[i] THEN xManualStopBunker[i] := FALSE; END_IF;
@@ -303,11 +311,72 @@ END_FOR;
 		// IF FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) THEN FC_Bunker_EmergencyStop(Bunker:=stBunker[i]); END_IF;
 	//END_FOR
 
+tof_VibratorEnable[1](PT:= T#20S);
+tof_VibratorEnable[2](PT:= T#20S);
+tof_VibratorEnable[3](PT:= T#20S);
+
+	// Вибратор 1 бункера
+	IF stBunker[1].cmdStartVibrator THEN
+		tof_VibratorEnable[1].IN := TRUE;
+		stBunker[1].MotorVibrator[1].VFD.qxStart := TRUE;
+		stBunker[1].MotorVibrator[2].VFD.qxStart := TRUE;
+		stBunker[1].MotorVibrator[3].VFD.qxStart := TRUE;
+		stBunker[1].MotorVibrator[4].VFD.qxStart := TRUE;
+	END_IF
+	
+	IF stBunker[1].cmdStopVibrator OR tof_VibratorEnable[1].Q THEN
+		tof_VibratorEnable[1].IN := FALSE;
+		stBunker[1].MotorVibrator[1].VFD.qxStart := FALSE;
+		stBunker[1].MotorVibrator[2].VFD.qxStart := FALSE;
+		stBunker[1].MotorVibrator[3].VFD.qxStart := FALSE;
+		stBunker[1].MotorVibrator[4].VFD.qxStart := FALSE;
+	END_IF
+
+	// Вибратор 2 бункера
+	IF stBunker[2].cmdStartVibrator THEN
+		tof_VibratorEnable[2].IN := TRUE;
+		stBunker[2].MotorVibrator[1].VFD.qxStart := TRUE;
+		stBunker[2].MotorVibrator[2].VFD.qxStart := TRUE;
+		stBunker[2].MotorVibrator[3].VFD.qxStart := TRUE;
+		stBunker[2].MotorVibrator[4].VFD.qxStart := TRUE;
+	END_IF
+	
+	IF stBunker[2].cmdStopVibrator OR tof_VibratorEnable[2].Q THEN
+		tof_VibratorEnable[2].IN := FALSE;
+		stBunker[2].MotorVibrator[1].VFD.qxStart := FALSE;
+		stBunker[2].MotorVibrator[2].VFD.qxStart := FALSE;
+		stBunker[2].MotorVibrator[3].VFD.qxStart := FALSE;
+		stBunker[2].MotorVibrator[4].VFD.qxStart := FALSE;
+	END_IF
+
+	// Вибратор 3 бункера
+	IF stBunker[3].cmdStartVibrator THEN
+		tof_VibratorEnable[3].IN := TRUE;
+		stBunker[3].MotorVibrator[1].VFD.qxStart := TRUE;
+		stBunker[3].MotorVibrator[2].VFD.qxStart := TRUE;
+		stBunker[3].MotorVibrator[3].VFD.qxStart := TRUE;
+		stBunker[3].MotorVibrator[4].VFD.qxStart := TRUE;
+	END_IF
+	
+	IF stBunker[3].cmdStopVibrator OR tof_VibratorEnable[3].Q THEN
+		tof_VibratorEnable[3].IN := FALSE;
+		stBunker[3].MotorVibrator[1].VFD.qxStart := FALSE;
+		stBunker[3].MotorVibrator[2].VFD.qxStart := FALSE;
+		stBunker[3].MotorVibrator[3].VFD.qxStart := FALSE;
+		stBunker[3].MotorVibrator[4].VFD.qxStart := FALSE;
+	END_IF
+	
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
+ton_AutoTimer(PT:=T#10S);
+
 CASE AUTO_STEP OF
 
 	IDLE: // Стадия ожидания задания
-
+	
+	IF stCommands.cmdStartCommon.qxSignal AND NOT xAutoStopping AND NOT xAutoEmergencyStopping THEN 
+		AUTO_STEP := START_DUMPER;
+	END_IF;
+	(*
 		// Удачная проверка
 		IF stCommands.cmdStartCommon.qxRisingEdge // Получение команды оператора на ПУСК
 		AND BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3 = 100 // Сумма всех коэффицентов равна 100
@@ -329,29 +398,78 @@ CASE AUTO_STEP OF
 		THEN
 			xStateErrorAcceptIdle := TRUE; // Флаг ошибки задания
 		END_IF;
-
+*)
 	INIT : // Первоначальный расчёт работы вибропитателей
 		// АЛГОРИТМ расчёта производительности
 		// TODO: Добавить расчёт производительности вибропитателей
-		AUTO_STEP := START_DUMPER;
 
 	START_DUMPER :
 		IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN // Если отвалообразователь не запущен
-			xStartDumper := TRUE; // Команда запуска отвалообразователя
+				xStartDumper := TRUE; // Команда запуска отвалообразователя
 		ELSE
-			xStartDumper := FALSE; // Сброс команды
-			AUTO_STEP := START_CONV; // Отвалообразователь запущен, переход к следующему шагу
+			ton_AutoTimer.IN := TRUE;
+			IF ton_AutoTimer.Q THEN			
+				xStartDumper := FALSE;
+				ton_AutoTimer.IN := FALSE;
+				AUTO_STEP := START_CONV; // Отвалообразователь запущен, переход к следующему шагу
+			END_IF;
 		END_IF;
 
 	START_CONV:
-		IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN // Если конвейер не запущен
-			xStartConveyor := TRUE; // Команда запуска конвейера
+		IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN // Если отвалообразователь не запущен
+			xStartConveyor := TRUE; // Команда запуска отвалообразователя
 		ELSE
-			xStartConveyor := FALSE; // Сброс команды
-			AUTO_STEP := START_VIBFEEDER; // Конвейер запущен, переход к следующему шагу
+			ton_AutoTimer.IN := TRUE;
+			IF ton_AutoTimer.Q THEN
+				ton_AutoTimer.IN := FALSE;
+				xStartConveyor := FALSE;
+				AUTO_STEP := START_VIBFEEDER; // Отвалообразователь запущен, переход к следующему шагу
+			END_IF;
 		END_IF;
 
 	START_VIBFEEDER:
+	// Запуск 3 бункера
+		IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK 
+		AND stBunker[3].eStateRemote = E_StateRemote.Auto
+		THEN
+			xStartBunker[3] := TRUE; // Команда запуска отвалообразователя
+		ELSE
+			ton_AutoTimer.IN := TRUE;
+			IF ton_AutoTimer.Q THEN
+				xStartBunker[3] := FALSE;
+				ton_AutoTimer.IN := FALSE;
+			END_IF;
+		END_IF;
+	// Запуск 2 бункера
+		IF 	eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK 
+			AND stBunker[2].eStateRemote = E_StateRemote.Auto
+			AND (eBunkerStage[3] = E_StageWithPreStartAlarm.WORK OR stBunker[3].eStateRemote = NOT E_StateRemote.Auto)
+			THEN
+				xStartBunker[2] := TRUE; // Команда запуска отвалообразователя
+		ELSE
+			ton_AutoTimer.IN := TRUE;
+			IF ton_AutoTimer.Q THEN
+				xStartBunker[2] := FALSE;
+				ton_AutoTimer.IN := FALSE;
+			END_IF;
+		END_IF;
+	// Запуск 1 бункера
+		IF 	eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK 
+			AND stBunker[1].eStateRemote = E_StateRemote.Auto
+			AND (eBunkerStage[2] = E_StageWithPreStartAlarm.WORK OR stBunker[3].eStateRemote = NOT E_StateRemote.Auto)
+			THEN
+				xStartBunker[1] := TRUE; // Команда запуска отвалообразователя
+		ELSE
+			ton_AutoTimer.IN := TRUE;
+			IF ton_AutoTimer.Q THEN
+				xStartBunker[1] := FALSE;
+				ton_AutoTimer.IN := FALSE;
+				AUTO_STEP := WORK;
+			END_IF;
+		END_IF;
+		
+		
+	(*
 		// Последовательный запуск бункеров: 1 → 2 → 3 (пропускаем бункеры с нулевой пропорцией)
 		IF BUNKER_WORK_PRECENT_1 > 0 AND eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK THEN
 			// Запускаем бункер 1 (если пропорция > 0)
@@ -371,8 +489,67 @@ CASE AUTO_STEP OF
 			xStartBunker[3] := FALSE;
 			AUTO_STEP := WORK; // Переход в работу, PID активируется
 		END_IF;
-
+*)
 	WORK:
+	xStartBunker[1] := FALSE;
+	xStartBunker[2] := FALSE;
+	xStartBunker[3] := FALSE;
+	xStartConveyor := FALSE;
+	xStartDumper := FALSE;
+	
+	IF stCommands.cmdStopCommon.qxSignal THEN
+		xAutoStopping := TRUE;
+	END_IF
+	
+	IF stCommands.cmdEmergencyStopCommon.qxSignal
+	OR ( 
+		NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
+		AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
+		OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
+		OR eBunkerStage[1] = E_StageWithPreStartAlarm.WORK)
+		)
+	OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
+		
+	THEN
+		xAutoEmergencyStopping := TRUE;
+	END_IF
+	
+	IF xAutoStopping OR xAutoEmergencyStopping THEN
+		IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
+			xManualStopBunker[3] := TRUE;
+		ELSIF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
+			xManualStopBunker[2] := TRUE;
+		ELSIF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
+			xManualStopBunker[1] := TRUE;
+			ton_AutoTimer.IN := TRUE;
+		ELSIF eConveyorStage = E_StageWithPreStartAlarm.WORK THEN
+			xManualStopBunker[3] := FALSE;
+			xManualStopBunker[2] := FALSE;
+			xManualStopBunker[1] := FALSE;
+			IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
+				xManualStopConveyor := TRUE;
+				ton_AutoTimer.IN := FALSE;
+			END_IF
+		ELSIF eDumperStage = E_StageWithPreStartAlarm.WORK THEN
+			ton_AutoTimer.IN := TRUE;
+			IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
+				xManualStopDumper := TRUE;
+				ton_AutoTimer.IN := FALSE;
+			END_IF
+		ELSE
+			ton_AutoTimer.IN := FALSE;
+			xManualStopBunker[1] := FALSE;
+			xManualStopBunker[2] := FALSE;
+			xManualStopBunker[3] := FALSE;
+			xManualStopConveyor := FALSE;
+			xManualStopDumper := FALSE;
+			xAutoEmergencyStopping := FALSE;
+			xAutoStopping := FALSE;
+			AUTO_STEP := IDLE;
+			END_IF;
+	END_IF
+	
+	(*
 		// Нормальная работа
 		xStateAutoWorking := TRUE;
 
@@ -435,7 +612,7 @@ CASE AUTO_STEP OF
 			xStartBunker[3] := FALSE;
 			AUTO_STEP := END_REPORT;
 		END_IF;
-
+*)
 	END_REPORT:
 		// Формирование отчёта
 		// TODO: Добавить формирование отчёта
@@ -489,7 +666,7 @@ stBunker[2].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_2;
 stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
 
 
-(*fbEmergencyStopProcess(
+(* fbEmergencyStopProcess(
 	ixEnable:= stCommands.cmdEmergencyStopCommon.qxSignal 
 		OR ( FC_Get_ErrorCommon(
 			Bunker1:= stBunker[1], 
@@ -520,6 +697,8 @@ IF stCommands.cmdResetAll.qxRisingEdge THEN
 	AUTO_STEP := IDLE;
 END_IF
 
+
+
 // ========================================
 // MODBUS РЕГИСТРЫ
 // ========================================
@@ -532,9 +711,9 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 1, xValue => stCommands.cmdStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 2, xValue => stCommands.cmdEmergencyStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 3, xValue => stCommands.cmdResetAll.ixSignal);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 4, xValue => stCommands.cmdSetToAuto);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue => stCommands.cmdSetToManual);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 6, xValue => stCommands.cmdSetToRepair);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 8, xValue => stCommands.cmdSetToRepair);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 9, xValue => stCommands.cmdSetToManual);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 10, xValue => stCommands.cmdSetToAuto);
 
 // Уставки ЧРП (30-59)
 // Регистры 30-31: BOOL флаги ЧРП
@@ -677,6 +856,9 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 1, xValue => stBunker[1].cmdStopVibrator);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 2, xValue => stBunker[1].cmdEmergencyStopFeeder);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 3, xValue => stBunker[1].cmdReset);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 11, xValue => stBunker[1].cmdBuildCircuitOnVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 12, xValue => stBunker[1].cmdBuildCircuitOffVibrator);
+
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 278, rValue => BUNKER_1_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 282, rValue => BUNKER_1_FREQ_VIBFEEDER);
@@ -697,10 +879,13 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 11, xValue => stBunker[2].cmdBuildCircuitOn);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 12, xValue => stBunker[2].cmdBuildCircuitOff);
 
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 0, xValue => stBunker[2].cmdStartVibrator);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 1, xValue => stBunker[2].cmdStopVibrator);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 2, xValue => stBunker[2].cmdEmergencyStopFeeder);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 300, iBitIndex := 3, xValue => stBunker[2].cmdReset);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 0, xValue => stBunker[2].cmdStartVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 1, xValue => stBunker[2].cmdStopVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 2, xValue => stBunker[2].cmdEmergencyStopFeeder);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 3, xValue => stBunker[2].cmdReset);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 11, xValue => stBunker[2].cmdBuildCircuitOnVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 12, xValue => stBunker[2].cmdBuildCircuitOffVibrator);
+
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 308, rValue => BUNKER_2_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 312, rValue => BUNKER_2_FREQ_VIBFEEDER);
@@ -721,10 +906,13 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 11, xValue => stBunker[3].cmdBuildCircuitOn);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 12, xValue => stBunker[3].cmdBuildCircuitOff);
 
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 0, xValue => stBunker[3].cmdStartVibrator);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 1, xValue => stBunker[3].cmdStopVibrator);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 2, xValue => stBunker[3].cmdEmergencyStopFeeder);
-FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 330, iBitIndex := 3, xValue => stBunker[3].cmdReset);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 0, xValue => stBunker[3].cmdStartVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 1, xValue => stBunker[3].cmdStopVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 2, xValue => stBunker[3].cmdEmergencyStopFeeder);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 3, xValue => stBunker[3].cmdReset);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 11, xValue => stBunker[3].cmdBuildCircuitOnVibrator);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 12, xValue => stBunker[3].cmdBuildCircuitOffVibrator);
+
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 338, rValue => BUNKER_3_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 342, rValue => BUNKER_3_FREQ_VIBFEEDER);
@@ -745,7 +933,10 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 9, xValue := stCommonSignals.fb10QF1.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 10, xValue := stCommonSignals.fb11QF1.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 11, xValue := stCommonSignals.qx6KM1);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 12, xValue := SIMULATION);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 12, xValue := (stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto));
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 13, xValue := NOT(stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto));
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 15, xValue := SIMULATION);
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 2, rValue := ICUR_PRECENT);
 
@@ -984,4 +1175,5 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 282, rValue := stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag);
 
 GLOBAL.awModbusInputRegisters[290] := TO_WORD(eConveyorStageToSCADA);
+
 END_PROGRAM
