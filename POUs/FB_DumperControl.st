@@ -734,7 +734,7 @@ IF (Dumper.fbBtnTurnLeft.qxSignal OR Dumper.cmdTurnLeft) AND nRotationSubstage =
 	// Можем начать поворот влево только если:
 	// 1. Не упёрлись в левый концевик
 	// 2. Нет активного поворота (nRotationSubstage = 0)
-	IF NOT Dumper.fbEndSwitchLeft.qxSignal THEN
+	IF Dumper.fbEndSwitchLeft.qxSignal THEN
 		xRotationLeftActive := TRUE;
 		xRotationRightActive := FALSE;
 		nRotationSubstage := 1; // Начать последовательность запуска
@@ -747,7 +747,7 @@ IF (Dumper.fbBtnTurnRight.qxSignal OR Dumper.cmdTurnRight) AND nRotationSubstage
 	// Можем начать поворот вправо только если:
 	// 1. Не упёрлись в правый концевик
 	// 2. Нет активного поворота (nRotationSubstage = 0)
-	IF NOT Dumper.fbEndSwitchRight.qxSignal THEN
+	IF Dumper.fbEndSwitchRight.qxSignal THEN
 		xRotationRightActive := TRUE;
 		xRotationLeftActive := FALSE;
 		nRotationSubstage := 1; // Начать последовательность запуска
@@ -760,8 +760,8 @@ END_IF;
 // 3. Импульсная команда остановки (cmdStopRotation)
 IF nRotationSubstage >= 1 AND nRotationSubstage <= 4 THEN
 	// Проверка условий остановки
-	IF (xRotationLeftActive AND (NOT Dumper.fbBtnTurnLeft.qxSignal OR Dumper.fbEndSwitchLeft.qxSignal))
-		OR (xRotationRightActive AND (NOT Dumper.fbBtnTurnRight.qxSignal OR Dumper.fbEndSwitchRight.qxSignal))
+	IF (xRotationLeftActive AND NOT Dumper.fbEndSwitchLeft.qxSignal)
+		OR (xRotationRightActive AND NOT Dumper.fbEndSwitchRight.qxSignal)
 		OR Dumper.cmdStopRotation
 	THEN
 		// Начать последовательность остановки
@@ -817,10 +817,11 @@ CASE nRotationSubstage OF
 	3: // START_VFD - Запуск VFD поворота
 		IF xRotationLeftActive THEN
 			// Поворот влево - запуск в прямом направлении
-			Dumper.MotorRotation[1].VFD.qxStart := TRUE;
-			Dumper.MotorRotation[2].VFD.qxStart := TRUE;
 			Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
 			Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+			Dumper.MotorRotation[1].VFD.qxStart := TRUE;
+			Dumper.MotorRotation[2].VFD.qxStart := TRUE;
+
 
 		ELSIF xRotationRightActive THEN
 			// Поворот вправо - запуск в режиме реверса
