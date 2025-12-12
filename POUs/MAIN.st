@@ -65,6 +65,7 @@ VAR
 
 	xAutoStopping : BOOL; // Процесс остановки
 	xAutoEmergencyStopping : BOOL; // Процесс аварийной остановки
+	nStopSubstage : INT := 0; // Подшаг последовательной остановки (0=бункер1, 1=задержка, 2=бункер2, 3=задержка, 4=бункер3, 5=задержка, 6=конвейер, 7=задержка, 8=отвалообразователь, 9=готово)
 END_VAR
 
 stCommonSignals.qx6KM1 := TRUE;
@@ -414,63 +415,145 @@ CASE AUTO_STEP OF
 	WORK:
 		// Нормальная работа
 		xStateAutoWorking := TRUE;
-		
+
 		xStartBunker[1] := FALSE;
 		xStartBunker[2] := FALSE;
 		xStartBunker[3] := FALSE;
 		xStartConveyor := FALSE;
 		xStartDumper := FALSE;
-		
-		IF stCommands.cmdStopCommon.qxSignal THEN
-			xAutoStopping := TRUE;
-		END_IF
-		
+
+		// === ОПРЕДЕЛЕНИЕ ТИПА ОСТАНОВКИ ===
+
+		// Аварийная остановка (приоритет)
 		IF stCommands.cmdEmergencyStopCommon.qxSignal
-		OR ( 
+		OR (
 			NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
 			AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
 			OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
-			OR eBunkerStage[1] = E_StageWithPreStartAlarm.WORK)
+			OR eBunkerStage[3] = E_StageWithPreStartAlarm.WORK)
 			)
 		OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
-			
 		THEN
 			xAutoEmergencyStopping := TRUE;
 		END_IF
-		
-		IF xAutoStopping OR xAutoEmergencyStopping THEN
-			IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
-				xManualStopBunker[3] := TRUE;
-			ELSIF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
-				xManualStopBunker[2] := TRUE;
-			ELSIF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
-				xManualStopBunker[1] := TRUE;
-				ton_AutoTimer.IN := TRUE;
-			ELSIF eConveyorStage = E_StageWithPreStartAlarm.WORK THEN
-				xManualStopBunker[3] := FALSE;
-				xManualStopBunker[2] := FALSE;
-				xManualStopBunker[1] := FALSE;
-				IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
-					xManualStopConveyor := TRUE;
-					ton_AutoTimer.IN := FALSE;
-				END_IF
-			ELSIF eDumperStage = E_StageWithPreStartAlarm.WORK THEN
-				ton_AutoTimer.IN := TRUE;
-				IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
-					xManualStopDumper := TRUE;
-					ton_AutoTimer.IN := FALSE;
-				END_IF
-			ELSE
-				ton_AutoTimer.IN := FALSE;
+
+		// Обычная остановка
+		IF stCommands.cmdStopCommon.qxSignal AND NOT xAutoEmergencyStopping THEN
+			xAutoStopping := TRUE;
+		END_IF
+
+		// === АВАРИЙНАЯ ОСТАНОВКА (останавливаем всё сразу) ===
+		IF xAutoEmergencyStopping THEN
+			xManualStopBunker[1] := TRUE;
+			xManualStopBunker[2] := TRUE;
+			xManualStopBunker[3] := TRUE;
+			xManualStopConveyor := TRUE;
+			xManualStopDumper := TRUE;
+
+			// Ожидание остановки всего оборудования
+			IF eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK
+			AND eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK
+			AND eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK
+			AND eConveyorStage <> E_StageWithPreStartAlarm.WORK
+			AND eDumperStage <> E_StageWithPreStartAlarm.WORK
+			THEN
+				// Сброс всех команд
 				xManualStopBunker[1] := FALSE;
 				xManualStopBunker[2] := FALSE;
 				xManualStopBunker[3] := FALSE;
 				xManualStopConveyor := FALSE;
 				xManualStopDumper := FALSE;
 				xAutoEmergencyStopping := FALSE;
-				xAutoStopping := FALSE;
-				AUTO_STEP := IDLE;
-				END_IF;
+				nStopSubstage := 0;
+				xStateAutoWorking := FALSE;
+				AUTO_STEP := ERROR;
+			END_IF
+
+		// === ОБЫЧНАЯ ОСТАНОВКА (последовательная, обратная от запуска) ===
+		ELSIF xAutoStopping THEN
+			CASE nStopSubstage OF
+				0: // Шаг 0: Остановка бункера 1
+					IF BUNKER_WORK_PRECENT_1 > 0 THEN
+						xManualStopBunker[1] := TRUE;
+						IF eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopBunker[1] := FALSE;
+							nStopSubstage := 1; // Бункер 1 остановлен → задержка
+						END_IF
+					ELSE
+						nStopSubstage := 2; // Бункер 1 не используется → переход к бункеру 2 без задержки
+					END_IF
+
+				1: // Шаг 1: Задержка после бункера 1
+					ton_AutoTimer.IN := TRUE;
+					IF ton_AutoTimer.Q THEN
+						ton_AutoTimer.IN := FALSE;
+						nStopSubstage := 2; // Переход к бункеру 2
+					END_IF
+
+				2: // Шаг 2: Остановка бункера 2
+					IF BUNKER_WORK_PRECENT_2 > 0 THEN
+						xManualStopBunker[2] := TRUE;
+						IF eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopBunker[2] := FALSE;
+							nStopSubstage := 3; // Бункер 2 остановлен → задержка
+						END_IF
+					ELSE
+						nStopSubstage := 4; // Бункер 2 не используется → переход к бункеру 3 без задержки
+					END_IF
+
+				3: // Шаг 3: Задержка после бункера 2
+					ton_AutoTimer.IN := TRUE;
+					IF ton_AutoTimer.Q THEN
+						ton_AutoTimer.IN := FALSE;
+						nStopSubstage := 4; // Переход к бункеру 3
+					END_IF
+
+				4: // Шаг 4: Остановка бункера 3
+					IF BUNKER_WORK_PRECENT_3 > 0 THEN
+						xManualStopBunker[3] := TRUE;
+						IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopBunker[3] := FALSE;
+							nStopSubstage := 5; // Бункер 3 остановлен → задержка
+						END_IF
+					ELSE
+						nStopSubstage := 6; // Бункер 3 не используется → переход к конвейеру без задержки
+					END_IF
+
+				5: // Шаг 5: Задержка после бункера 3
+					ton_AutoTimer.IN := TRUE;
+					IF ton_AutoTimer.Q THEN
+						ton_AutoTimer.IN := FALSE;
+						nStopSubstage := 6; // Переход к конвейеру
+					END_IF
+
+				6: // Шаг 6: Остановка конвейера
+					xManualStopConveyor := TRUE;
+					IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN
+						xManualStopConveyor := FALSE;
+						nStopSubstage := 7; // Конвейер остановлен → задержка
+					END_IF
+
+				7: // Шаг 7: Задержка после конвейера
+					ton_AutoTimer.IN := TRUE;
+					IF ton_AutoTimer.Q THEN
+						ton_AutoTimer.IN := FALSE;
+						nStopSubstage := 8; // Переход к отвалообразователю
+					END_IF
+
+				8: // Шаг 8: Остановка отвалообразователя
+					xManualStopDumper := TRUE;
+					IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN
+						xManualStopDumper := FALSE;
+						nStopSubstage := 9; // Отвалообразователь остановлен → завершение
+					END_IF
+
+				9: // Шаг 9: Завершение остановки
+					ton_AutoTimer.IN := FALSE;
+					xAutoStopping := FALSE;
+					xStateAutoWorking := FALSE;
+					nStopSubstage := 0; // Сброс для следующего цикла
+					AUTO_STEP := IDLE; // Возврат в IDLE
+			END_CASE
 		END_IF
 		
 
