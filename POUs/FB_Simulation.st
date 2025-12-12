@@ -105,6 +105,12 @@ IF _xInitRequired THEN
 	Dumper.fbZQAlarm[3].ixSignal := TRUE;
 	Dumper.fbZQAlarm[4].ixSignal := TRUE;
 
+	// Контроль схода ленты - предупреждение (ZQ) - инвертированный сигнал (NC)
+	Dumper.fbZQWarning[1].ixSignal := TRUE;
+	Dumper.fbZQWarning[2].ixSignal := TRUE;
+	Dumper.fbZQWarning[3].ixSignal := TRUE;
+	Dumper.fbZQWarning[4].ixSignal := TRUE;
+
 	// Кнопка аварийной остановки - инвертированный сигнал (NC)
 	Dumper.fbBtnEmergencyStop.ixSignal := TRUE;
 
@@ -158,6 +164,12 @@ IF _xInitRequired THEN
 	Conveyor.fbZQAlarm[2].ixSignal := TRUE;
 	Conveyor.fbZQAlarm[3].ixSignal := TRUE;
 	Conveyor.fbZQAlarm[4].ixSignal := TRUE;
+
+	// Контроль схода ленты - предупреждение (ZQ) - инвертированный сигнал (NC)
+	Conveyor.fbZQWarning[1].ixSignal := TRUE;
+	Conveyor.fbZQWarning[2].ixSignal := TRUE;
+	Conveyor.fbZQWarning[3].ixSignal := TRUE;
+	Conveyor.fbZQWarning[4].ixSignal := TRUE;
 
 	// Кнопка аварийной остановки - инвертированный сигнал (NC)
 	Conveyor.fbBtnEmergencyStop.ixSignal := TRUE;

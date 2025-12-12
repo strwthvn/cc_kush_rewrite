@@ -197,15 +197,6 @@ fbConveyor(
 xStateEmergencyStop := stCommonSignals.fbEmergencyStopBtn.qxSignal
 	OR stCommands.cmdEmergencyStopCommon.qxRisingEdge;
 
-// Вызов всех ошибок в переменную готовности
-xStateErrorCheckReady := NOT FC_Get_ErrorCommon(
-	Bunker1 := stBunker[1],
-	Bunker2 := stBunker[2],
-	Bunker3 := stBunker[3],
-	Conveyor := stConveyor,
-	Dumper := stDumper
-);
-
 // ========================================
 // СИМУЛЯЦИЯ
 // ========================================
@@ -549,13 +540,6 @@ CASE AUTO_STEP OF
 		END_IF;
 
 	ERROR:
-		// Обработка ошибок
-		// Сброс всех команд запуска
-		xStartDumper := FALSE;
-		xStartConveyor := FALSE;
-		xStartBunker[1] := FALSE;
-		xStartBunker[2] := FALSE;
-		xStartBunker[3] := FALSE;
 
 		// Переход в IDLE при сбросе ошибки
 		IF stCommands.cmdResetAll.qxRisingEdge AND xStateErrorCheckReady THEN
