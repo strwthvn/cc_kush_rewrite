@@ -61,7 +61,9 @@ VAR
 	
 	ton_AutoTimer : TON; // Таймер автоматического режима
 	tof_VibratorEnable : ARRAY [1..3] OF TON;
-	
+
+	nBunkerStartStep : INT := 0; // Подшаг последовательного запуска бункеров (0=бункер3, 1=задержка, 2=бункер2, 3=задержка, 4=бункер1, 5=готово)
+
 	xAutoStopping : BOOL; // Процесс остановки
 	xAutoEmergencyStopping : BOOL; // Процесс аварийной остановки
 	tVibratorWork : TIME := T#15S;
@@ -428,45 +430,59 @@ CASE AUTO_STEP OF
 		END_IF;
 
 	START_VIBFEEDER:
-	// Запуск 3 бункера
-		IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK 
-		AND stBunker[3].eStateRemote = E_StateRemote.Auto
-		THEN
-			xStartBunker[3] := TRUE; // Команда запуска отвалообразователя
-		ELSE
-			ton_AutoTimer.IN := TRUE;
-			IF ton_AutoTimer.Q THEN
-				xStartBunker[3] := FALSE;
-				ton_AutoTimer.IN := FALSE;
-			END_IF;
-		END_IF;
-	// Запуск 2 бункера
-		IF 	eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK 
-			AND stBunker[2].eStateRemote = E_StateRemote.Auto
-			AND (eBunkerStage[3] = E_StageWithPreStartAlarm.WORK OR stBunker[3].eStateRemote = NOT E_StateRemote.Auto)
-			THEN
-				xStartBunker[2] := TRUE; // Команда запуска отвалообразователя
-		ELSE
-			ton_AutoTimer.IN := TRUE;
-			IF ton_AutoTimer.Q THEN
-				xStartBunker[2] := FALSE;
-				ton_AutoTimer.IN := FALSE;
-			END_IF;
-		END_IF;
-	// Запуск 1 бункера
-		IF 	eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK 
-			AND stBunker[1].eStateRemote = E_StateRemote.Auto
-			AND (eBunkerStage[2] = E_StageWithPreStartAlarm.WORK OR stBunker[3].eStateRemote = NOT E_StateRemote.Auto)
-			THEN
-				xStartBunker[1] := TRUE; // Команда запуска отвалообразователя
-		ELSE
-			ton_AutoTimer.IN := TRUE;
-			IF ton_AutoTimer.Q THEN
-				xStartBunker[1] := FALSE;
-				ton_AutoTimer.IN := FALSE;
-				AUTO_STEP := WORK;
-			END_IF;
-		END_IF;
+		// Последовательный запуск бункеров с задержкой: 3 → задержка → 2 → задержка → 1
+		CASE nBunkerStartStep OF
+			0: // Шаг 0: Запуск бункера 3
+				IF stBunker[3].eStateRemote = E_StateRemote.Auto THEN
+					xStartBunker[3] := TRUE;
+					IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
+						xStartBunker[3] := FALSE;
+						nBunkerStartStep := 1; // Бункер 3 запущен → задержка
+					END_IF;
+				ELSE
+					nBunkerStartStep := 1; // Бункер 3 не в авто → пропустить
+				END_IF;
+
+			1: // Шаг 1: Задержка после бункера 3
+				ton_AutoTimer.IN := TRUE;
+				IF ton_AutoTimer.Q THEN
+					ton_AutoTimer.IN := FALSE;
+					nBunkerStartStep := 2; // Переход к бункеру 2
+				END_IF;
+
+			2: // Шаг 2: Запуск бункера 2
+				IF stBunker[2].eStateRemote = E_StateRemote.Auto THEN
+					xStartBunker[2] := TRUE;
+					IF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
+						xStartBunker[2] := FALSE;
+						nBunkerStartStep := 3; // Бункер 2 запущен → задержка
+					END_IF;
+				ELSE
+					nBunkerStartStep := 3; // Бункер 2 не в авто → пропустить
+				END_IF;
+
+			3: // Шаг 3: Задержка после бункера 2
+				ton_AutoTimer.IN := TRUE;
+				IF ton_AutoTimer.Q THEN
+					ton_AutoTimer.IN := FALSE;
+					nBunkerStartStep := 4; // Переход к бункеру 1
+				END_IF;
+
+			4: // Шаг 4: Запуск бункера 1
+				IF stBunker[1].eStateRemote = E_StateRemote.Auto THEN
+					xStartBunker[1] := TRUE;
+					IF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
+						xStartBunker[1] := FALSE;
+						nBunkerStartStep := 5; // Бункер 1 запущен → завершение
+					END_IF;
+				ELSE
+					nBunkerStartStep := 5; // Бункер 1 не в авто → завершение
+				END_IF;
+
+			5: // Шаг 5: Все бункеры запущены
+				nBunkerStartStep := 0; // Сброс для следующего цикла
+				AUTO_STEP := WORK; // Переход к работе
+		END_CASE;
 		
 		
 	(*
