@@ -456,8 +456,16 @@ CASE STAGE OF
 		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
 		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
 
-		rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
-		rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+		// Выбор источника частоты в зависимости от режима управления
+		IF Bunker.eStateRemote = E_StateRemote.Auto THEN
+			// Автоматический режим - частота от ПИД
+			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
+			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+		ELSE
+			// Ручной/Ремонт режим - частота от SCADA
+			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederManualFrequency;
+			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederManualFrequency;
+		END_IF;
 
 		// Переход в WORK по включению оборудования (обратная связь VFD)
 		IF Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
@@ -471,9 +479,16 @@ CASE STAGE OF
 		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
 		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
 
-		// Автоматическая поддержка частоты
-		rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
-		rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+		// Выбор источника частоты в зависимости от режима управления
+		IF Bunker.eStateRemote = E_StateRemote.Auto THEN
+			// Автоматический режим - динамическая частота от ПИД
+			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
+			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+		ELSE
+			// Ручной/Ремонт режим - частота от SCADA
+			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederManualFrequency;
+			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederManualFrequency;
+		END_IF;
 
 		// Обработка команды останова
 		IF xStop THEN

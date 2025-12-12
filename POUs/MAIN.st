@@ -56,6 +56,11 @@ VAR
 	rWeight1, rWeight2, rWeight3 : REAL; // Индивидуальный вес каждого бункера
 	rTotalWeightActive : REAL; // Суммарный вес активных бункеров
 
+	// Начальные частоты вибропитателей (рассчитываются в INIT)
+	rInitialFrequency_1 : REAL := 0.0; // Начальная частота бункера 1, Гц
+	rInitialFrequency_2 : REAL := 0.0; // Начальная частота бункера 2, Гц
+	rInitialFrequency_3 : REAL := 0.0; // Начальная частота бункера 3, Гц
+
 	// Временная переменная для конвертации TIME из Modbus (секунды)
 	rTempTime : REAL;
 	
@@ -326,12 +331,24 @@ CASE AUTO_STEP OF
 	IDLE: // Стадия ожидания задания
 
 	IF stCommands.cmdStartCommon.qxSignal AND xStateErrorCheckReady THEN
-		AUTO_STEP := START_DUMPER;
+		AUTO_STEP := INIT;
 	END_IF;
 
 	INIT : // Первоначальный расчёт работы вибропитателей
-		// АЛГОРИТМ расчёта производительности
-		// TODO: Добавить расчёт производительности вибропитателей
+		// Расчёт начальных частот на основе заданных пропорций
+		// Формула: FreqBase_i = TargetSum * (Proportion_i / 100)
+
+		rInitialFrequency_1 := BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM * (BUNKER_WORK_PRECENT_1 / 100.0);
+		rInitialFrequency_2 := BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM * (BUNKER_WORK_PRECENT_2 / 100.0);
+		rInitialFrequency_3 := BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM * (BUNKER_WORK_PRECENT_3 / 100.0);
+
+		// Установка начальных частот в структуры бункеров
+		stBunker[1].rMotorVibFeederCommonFrequency := rInitialFrequency_1;
+		stBunker[2].rMotorVibFeederCommonFrequency := rInitialFrequency_2;
+		stBunker[3].rMotorVibFeederCommonFrequency := rInitialFrequency_3;
+
+		// Переход к запуску отвалообразователя
+		AUTO_STEP := START_DUMPER;
 
 	START_DUMPER :
 		IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN // Если отвалообразователь не запущен
@@ -634,21 +651,25 @@ END_CASE;
 IF BUNKER_ENABLE_PID THEN
 
 	fbProportionPid(
-		xEnable:= AUTO_STEP = WORK, 
-		xReset:= stCommands.cmdResetAll.qxRisingEdge, 
-		
-		rProportionTarget_1:= BUNKER_WORK_PRECENT_1, 
-		rProportionTarget_2:= BUNKER_WORK_PRECENT_2, 
-		rProportionTarget_3:= BUNKER_WORK_PRECENT_3, 
-		
-		rProportionActual_1:= stBunker[1].rProportionActual, 
-		rProportionActual_2:= stBunker[1].rProportionActual, 
-		rProportionActual_3:= stBunker[1].rProportionActual,
-		
-		rFrequency_Min:= 5, 
-		rFrequency_Max:= 50, 
-		rFrequency_TargetSum:= 90, 
-		rDeltaTime:= 0.5, 
+		xEnable:= AUTO_STEP = WORK,
+		xReset:= stCommands.cmdResetAll.qxRisingEdge,
+
+		rProportionTarget_1:= BUNKER_WORK_PRECENT_1,
+		rProportionTarget_2:= BUNKER_WORK_PRECENT_2,
+		rProportionTarget_3:= BUNKER_WORK_PRECENT_3,
+
+		rProportionActual_1:= stBunker[1].rProportionActual,
+		rProportionActual_2:= stBunker[2].rProportionActual,
+		rProportionActual_3:= stBunker[3].rProportionActual,
+
+		rFrequencyBase_1:= rInitialFrequency_1,
+		rFrequencyBase_2:= rInitialFrequency_2,
+		rFrequencyBase_3:= rInitialFrequency_3,
+
+		rFrequency_Min:= 5,
+		rFrequency_Max:= 50,
+		rFrequency_TargetSum:= BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM,
+		rDeltaTime:= 0.5
 	);
 
 

@@ -171,7 +171,7 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 278, rValue => BUNKER_1_FREQ_VIBRATOR);
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 282, rValue => BUNKER_1_FREQ_VIBFEEDER);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 282, rValue => stBunker[1].rMotorVibFeederManualFrequency);
 
 // Команды - Бункер 2 (300-329)
 // Регистры 300-301: BOOL флаги управления бункером 2
@@ -198,7 +198,7 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 308, rValue => BUNKER_2_FREQ_VIBRATOR);
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 312, rValue => BUNKER_2_FREQ_VIBFEEDER);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 312, rValue => stBunker[2].rMotorVibFeederManualFrequency);
 
 // Команды - Бункер 3 (330-359)
 // Регистры 330-331: BOOL флаги управления бункером 3
@@ -225,7 +225,7 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 338, rValue => BUNKER_3_FREQ_VIBRATOR);
-FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 342, rValue => BUNKER_3_FREQ_VIBFEEDER);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 342, rValue => stBunker[3].rMotorVibFeederManualFrequency);
 
 // === INPUT РЕГИСТРЫ (PLC → SCADA) - Запись данных мониторинга ===
 
@@ -267,7 +267,7 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 32, rValue := stBunker[1].rWeight);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 34, rValue := stBunker[1].rProportionActual);
-FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 36, rValue := stBunker[1].rMotorVibFeederCommonFrequency);
+//FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 36, rValue := stBunker[1].rMotorVibFeederCommonFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 38, rValue := stBunker[1].cmdDumpingPrecent);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 40, rValue := stBunker[1].MotorVibrator[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 42, rValue := stBunker[1].MotorVibrator[1].VFD.rActualFrequency);
@@ -311,7 +311,7 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 92, rValue := stBunker[2].rWeight);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 94, rValue := stBunker[2].rProportionActual);
-FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 96, rValue := stBunker[2].rMotorVibFeederCommonFrequency);
+//FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 96, rValue := stBunker[2].rMotorVibFeederCommonFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 98, rValue := stBunker[2].cmdDumpingPrecent);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 100, rValue := stBunker[2].MotorVibrator[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 102, rValue := stBunker[2].MotorVibrator[1].VFD.rActualFrequency);
@@ -355,7 +355,7 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 152, rValue := stBunker[3].rWeight);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 154, rValue := stBunker[3].rProportionActual);
-FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 156, rValue := stBunker[3].rMotorVibFeederCommonFrequency);
+//FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 156, rValue := stBunker[3].rMotorVibFeederCommonFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 158, rValue := stBunker[3].cmdDumpingPrecent);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 160, rValue := stBunker[3].MotorVibrator[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 162, rValue := stBunker[3].MotorVibrator[1].VFD.rActualFrequency);
@@ -485,5 +485,3 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 282, rValue := stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag);
 
 GLOBAL.awModbusInputRegisters[290] := TO_WORD(eConveyorStageToSCADA);
-
-END_FUNCTION

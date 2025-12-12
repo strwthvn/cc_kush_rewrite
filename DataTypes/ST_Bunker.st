@@ -13,9 +13,10 @@ STRUCT
 	
 	// Пропорция от веса
 	rProportionActual : REAL;
-	
+
 	// Частота двух моторов вибропитателя
-	rMotorVibFeederCommonFrequency : REAL;
+	rMotorVibFeederCommonFrequency : REAL; // Частота от автоматического режима (ПИД)
+	rMotorVibFeederManualFrequency : REAL; // Частота для ручного режима (от SCADA)
 	
 	// == Контроль открытия люка
 	// DI:
