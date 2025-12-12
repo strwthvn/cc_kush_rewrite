@@ -456,9 +456,8 @@ CASE STAGE OF
 		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
 		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
 
-		// Установка целевой стартовой частоты
-		rTargetFreqVibFeeder1 := BUNKER_VIBFEEDER_START_FREQUENCY;
-		rTargetFreqVibFeeder2 := BUNKER_VIBFEEDER_START_FREQUENCY;
+		rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
+		rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
 
 		// Переход в WORK по включению оборудования (обратная связь VFD)
 		IF Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
@@ -472,16 +471,9 @@ CASE STAGE OF
 		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
 		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
 
-		// Выбор источника частоты в зависимости от режима управления
-		IF Bunker.eStateRemote = E_StateRemote.Manual THEN
-			// Ручной режим - используем частоту из irManualFrequency
-			rTargetFreqVibFeeder1 := irManualFrequency;
-			rTargetFreqVibFeeder2 := irManualFrequency;
-		ELSE
-			// Автоматический режим - используем частоту от PID-контроллера
-			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
-			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
-		END_IF;
+		// Автоматическая поддержка частоты
+		rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
+		rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
 
 		// Обработка команды останова
 		IF xStop THEN

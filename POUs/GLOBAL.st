@@ -152,6 +152,8 @@ VAR_GLOBAL RETAIN
 	BUNKER_WORK_PRECENT_2 : REAL; // Уставка пропорции шихтования для бункера 2
 	BUNKER_WORK_PRECENT_3 : REAL; // Уставка пропорции шихтования для бункера 3
 	BUNKER_VIBFEEDER_START_FREQUENCY : REAL := 10.0; // Минимальная частота для запуска вибропитателей (Гц)
+    BUNKER_ENABLE_PID : BOOL := FALSE;
+    BUNKER_ENABLE_PROPORTION_MONITORING : BOOL := FALSE;
 
 	// Ручное задание частоты на бункер (работает в ручном режиме управления)
 	BUNKER_1_FREQ_VIBFEEDER : REAL := 30;
@@ -160,8 +162,6 @@ VAR_GLOBAL RETAIN
 	BUNKER_2_FREQ_VIBRATOR : REAL := 30;
 	BUNKER_3_FREQ_VIBFEEDER : REAL := 30;
 	BUNKER_3_FREQ_VIBRATOR : REAL := 30;
-	
-	
 	
 	// Светофор бункера
 	BUNKER_WEIGHT_LIGHT_RED : BOOL; // Уставка веса бункера для красного светофора

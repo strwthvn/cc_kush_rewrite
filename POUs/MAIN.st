@@ -376,14 +376,14 @@ CASE AUTO_STEP OF
 		// Последовательный запуск бункеров с задержкой: 3 → задержка → 2 → задержка → 1
 		CASE nBunkerStartStep OF
 			0: // Шаг 0: Запуск бункера 3
-				IF stBunker[3].eStateRemote = E_StateRemote.Auto THEN
+				IF stBunker[3].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_3 > 0 THEN
 					xStartBunker[3] := TRUE;
 					IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[3] := FALSE;
 						nBunkerStartStep := 1; // Бункер 3 запущен → задержка
 					END_IF;
 				ELSE
-					nBunkerStartStep := 1; // Бункер 3 не в авто → пропустить
+					nBunkerStartStep := 2; // Бункер 3 пропущен → переход к бункеру 2 без задержки
 				END_IF;
 
 			1: // Шаг 1: Задержка после бункера 3
@@ -394,14 +394,14 @@ CASE AUTO_STEP OF
 				END_IF;
 
 			2: // Шаг 2: Запуск бункера 2
-				IF stBunker[2].eStateRemote = E_StateRemote.Auto THEN
+				IF stBunker[2].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_2 > 0 THEN
 					xStartBunker[2] := TRUE;
 					IF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[2] := FALSE;
 						nBunkerStartStep := 3; // Бункер 2 запущен → задержка
 					END_IF;
 				ELSE
-					nBunkerStartStep := 3; // Бункер 2 не в авто → пропустить
+					nBunkerStartStep := 4; // Бункер 2 пропущен → переход к бункеру 1 без задержки
 				END_IF;
 
 			3: // Шаг 3: Задержка после бункера 2
@@ -412,14 +412,14 @@ CASE AUTO_STEP OF
 				END_IF;
 
 			4: // Шаг 4: Запуск бункера 1
-				IF stBunker[1].eStateRemote = E_StateRemote.Auto THEN
+				IF stBunker[1].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_1 > 0 THEN
 					xStartBunker[1] := TRUE;
 					IF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[1] := FALSE;
 						nBunkerStartStep := 5; // Бункер 1 запущен → завершение
 					END_IF;
 				ELSE
-					nBunkerStartStep := 5; // Бункер 1 не в авто → завершение
+					nBunkerStartStep := 5; // Бункер 1 пропущен → завершение
 				END_IF;
 
 			5: // Шаг 5: Все бункеры запущены
@@ -427,28 +427,6 @@ CASE AUTO_STEP OF
 				AUTO_STEP := WORK; // Переход к работе
 		END_CASE;
 		
-		
-	(*
-		// Последовательный запуск бункеров: 1 → 2 → 3 (пропускаем бункеры с нулевой пропорцией)
-		IF BUNKER_WORK_PRECENT_1 > 0 AND eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK THEN
-			// Запускаем бункер 1 (если пропорция > 0)
-			xStartBunker[1] := TRUE;
-		ELSIF BUNKER_WORK_PRECENT_2 > 0 AND eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK THEN
-			// Бункер 1 запущен или пропущен, запускаем бункер 2 (если пропорция > 0)
-			xStartBunker[1] := FALSE;
-			xStartBunker[2] := TRUE;
-		ELSIF BUNKER_WORK_PRECENT_3 > 0 AND eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK THEN
-			// Бункеры 1 и 2 запущены или пропущены, запускаем бункер 3 (если пропорция > 0)
-			xStartBunker[2] := FALSE;
-			xStartBunker[3] := TRUE;
-		ELSE
-			// Все активные бункеры запущены
-			xStartBunker[1] := FALSE;
-			xStartBunker[2] := FALSE;
-			xStartBunker[3] := FALSE;
-			AUTO_STEP := WORK; // Переход в работу, PID активируется
-		END_IF;
-*)
 	WORK:
 	xStartBunker[1] := FALSE;
 	xStartBunker[2] := FALSE;
@@ -508,7 +486,8 @@ CASE AUTO_STEP OF
 			END_IF;
 	END_IF
 	
-	(*
+
+	IF BUNKER_ENABLE_PROPORTION_MONITORING
 		// Нормальная работа
 		xStateAutoWorking := TRUE;
 
@@ -561,17 +540,8 @@ CASE AUTO_STEP OF
 			stBunker[2].rProportionActual := 0.0;
 			stBunker[3].rProportionActual := 0.0;
 		END_IF;
+	END_IF;
 
-		// Обработка команд останова
-		IF stCommands.cmdStopCommon.qxRisingEdge OR xStateEmergencyStop THEN
-			xStartDumper := FALSE;
-			xStartConveyor := FALSE;
-			xStartBunker[1] := FALSE;
-			xStartBunker[2] := FALSE;
-			xStartBunker[3] := FALSE;
-			AUTO_STEP := END_REPORT;
-		END_IF;
-*)
 	END_REPORT:
 		// Формирование отчёта
 		// TODO: Добавить формирование отчёта
@@ -600,30 +570,33 @@ CASE AUTO_STEP OF
 
 END_CASE;
 
-fbProportionPid(
-	xEnable:= AUTO_STEP = WORK, 
-	xReset:= stCommands.cmdResetAll.qxRisingEdge, 
-	
-	rProportionTarget_1:= BUNKER_WORK_PRECENT_1, 
-	rProportionTarget_2:= BUNKER_WORK_PRECENT_2, 
-	rProportionTarget_3:= BUNKER_WORK_PRECENT_3, 
-	
-	rProportionActual_1:= stBunker[1].rProportionActual, 
-	rProportionActual_2:= stBunker[1].rProportionActual, 
-	rProportionActual_3:= stBunker[1].rProportionActual,
-	
-	rFrequency_Min:= 5, 
-	rFrequency_Max:= 50, 
-	rFrequency_TargetSum:= 90, 
-	rDeltaTime:= 0.5, 
-);
+IF BUNKER_ENABLE_PID THEN
+
+	fbProportionPid(
+		xEnable:= AUTO_STEP = WORK, 
+		xReset:= stCommands.cmdResetAll.qxRisingEdge, 
+		
+		rProportionTarget_1:= BUNKER_WORK_PRECENT_1, 
+		rProportionTarget_2:= BUNKER_WORK_PRECENT_2, 
+		rProportionTarget_3:= BUNKER_WORK_PRECENT_3, 
+		
+		rProportionActual_1:= stBunker[1].rProportionActual, 
+		rProportionActual_2:= stBunker[1].rProportionActual, 
+		rProportionActual_3:= stBunker[1].rProportionActual,
+		
+		rFrequency_Min:= 5, 
+		rFrequency_Max:= 50, 
+		rFrequency_TargetSum:= 90, 
+		rDeltaTime:= 0.5, 
+	);
 
 
-// Передача частоты ПИД регулятора 
-stBunker[1].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_1;
-stBunker[2].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_2;
-stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
+	// Передача частоты ПИД регулятора 
+	stBunker[1].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_1;
+	stBunker[2].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_2;
+	stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
 
+END_IF;
 
 (* fbEmergencyStopProcess(
 	ixEnable:= stCommands.cmdEmergencyStopCommon.qxSignal 
@@ -644,19 +617,6 @@ stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
 	qxStateStopProcess=> , 
 	qxStateEmergencyStop=> , 
 	qnCurrentStage=> );*)
-
-// Переход в ERROR при возникновении ошибок
-IF fbEmergencyStopProcess.qxStateStopProcess THEN
-	AUTO_STEP := ERROR;
-	xStateAutoWorking := FALSE;
-END_IF;
-
-// Возврат состояния после команды RESET
-IF stCommands.cmdResetAll.qxRisingEdge THEN
-	AUTO_STEP := IDLE;
-END_IF
-
-
 
 // ========================================
 // MODBUS РЕГИСТРЫ
