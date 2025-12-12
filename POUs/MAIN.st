@@ -314,36 +314,29 @@ END_FOR;
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
 ton_AutoTimer(PT:=T#10S);
 
+// Проверка готовности системы к автоматическому пуску
+xStateErrorCheckReady :=
+	NOT xAutoStopping AND NOT xAutoEmergencyStopping
+	AND stBunker[1].eStateRemote = E_StateRemote.Auto
+	AND stBunker[2].eStateRemote = E_StateRemote.Auto
+	AND stBunker[3].eStateRemote = E_StateRemote.Auto
+	AND stDumper.eStateRemote = E_StateRemote.Auto
+	AND stConveyor.eStateRemote = E_StateRemote.Auto
+	AND NOT stBunker[1].xStateFailure
+	AND NOT stBunker[2].xStateFailure
+	AND NOT stBunker[3].xStateFailure
+	AND NOT stDumper.xStateFailure
+	AND NOT stConveyor.xStateFailure
+	AND BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3 = 100;
+
 CASE AUTO_STEP OF
 
 	IDLE: // Стадия ожидания задания
-	
-	IF stCommands.cmdStartCommon.qxSignal AND NOT xAutoStopping AND NOT xAutoEmergencyStopping THEN 
+
+	IF stCommands.cmdStartCommon.qxSignal AND xStateErrorCheckReady THEN
 		AUTO_STEP := START_DUMPER;
 	END_IF;
-	(*
-		// Удачная проверка
-		IF stCommands.cmdStartCommon.qxRisingEdge // Получение команды оператора на ПУСК
-		AND BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3 = 100 // Сумма всех коэффицентов равна 100
-		AND xStateErrorCheckReady // Статус готовности к пуску (отсутствие ошибок)
-		// Дополнительная проверка: не более одного бункера с нулевой пропорцией
-		AND NOT ((BUNKER_WORK_PRECENT_1 = 0 AND BUNKER_WORK_PRECENT_2 = 0)
-			OR (BUNKER_WORK_PRECENT_1 = 0 AND BUNKER_WORK_PRECENT_3 = 0)
-			OR (BUNKER_WORK_PRECENT_2 = 0 AND BUNKER_WORK_PRECENT_3 = 0))
-		THEN
-			xStateErrorAcceptIdle := FALSE;
-			AUTO_STEP := INIT;
 
-		// Неудачная проверка
-		ELSIF stCommands.cmdStartCommon.qxRisingEdge // Получение команды оператора на подтверждение задания шихты
-		AND NOT (BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3 = 100 // Сумма всех коэффицентов НЕ равна 100
-			AND NOT ((BUNKER_WORK_PRECENT_1 = 0 AND BUNKER_WORK_PRECENT_2 = 0)
-				OR (BUNKER_WORK_PRECENT_1 = 0 AND BUNKER_WORK_PRECENT_3 = 0)
-				OR (BUNKER_WORK_PRECENT_2 = 0 AND BUNKER_WORK_PRECENT_3 = 0))) // Или более одного бункера с нулевой пропорцией
-		THEN
-			xStateErrorAcceptIdle := TRUE; // Флаг ошибки задания
-		END_IF;
-*)
 	INIT : // Первоначальный расчёт работы вибропитателей
 		// АЛГОРИТМ расчёта производительности
 		// TODO: Добавить расчёт производительности вибропитателей
@@ -428,119 +421,120 @@ CASE AUTO_STEP OF
 		END_CASE;
 		
 	WORK:
-	xStartBunker[1] := FALSE;
-	xStartBunker[2] := FALSE;
-	xStartBunker[3] := FALSE;
-	xStartConveyor := FALSE;
-	xStartDumper := FALSE;
-	
-	IF stCommands.cmdStopCommon.qxSignal THEN
-		xAutoStopping := TRUE;
-	END_IF
-	
-	IF stCommands.cmdEmergencyStopCommon.qxSignal
-	OR ( 
-		NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
-		AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
-		OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
-		OR eBunkerStage[1] = E_StageWithPreStartAlarm.WORK)
-		)
-	OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
-		
-	THEN
-		xAutoEmergencyStopping := TRUE;
-	END_IF
-	
-	IF xAutoStopping OR xAutoEmergencyStopping THEN
-		IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
-			xManualStopBunker[3] := TRUE;
-		ELSIF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
-			xManualStopBunker[2] := TRUE;
-		ELSIF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
-			xManualStopBunker[1] := TRUE;
-			ton_AutoTimer.IN := TRUE;
-		ELSIF eConveyorStage = E_StageWithPreStartAlarm.WORK THEN
-			xManualStopBunker[3] := FALSE;
-			xManualStopBunker[2] := FALSE;
-			xManualStopBunker[1] := FALSE;
-			IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
-				xManualStopConveyor := TRUE;
-				ton_AutoTimer.IN := FALSE;
-			END_IF
-		ELSIF eDumperStage = E_StageWithPreStartAlarm.WORK THEN
-			ton_AutoTimer.IN := TRUE;
-			IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
-				xManualStopDumper := TRUE;
-				ton_AutoTimer.IN := FALSE;
-			END_IF
-		ELSE
-			ton_AutoTimer.IN := FALSE;
-			xManualStopBunker[1] := FALSE;
-			xManualStopBunker[2] := FALSE;
-			xManualStopBunker[3] := FALSE;
-			xManualStopConveyor := FALSE;
-			xManualStopDumper := FALSE;
-			xAutoEmergencyStopping := FALSE;
-			xAutoStopping := FALSE;
-			AUTO_STEP := IDLE;
-			END_IF;
-	END_IF
-	
-
-	IF BUNKER_ENABLE_PROPORTION_MONITORING
 		// Нормальная работа
 		xStateAutoWorking := TRUE;
-
-		// === Расчёт актуальных пропорций бункеров ===
-		// 1. Извлечь вес каждого бункера из кумулятивных показаний
-		rWeight3 := stBunker[3].rWeightUnderBunker;
-		rWeight2 := stBunker[2].rWeightUnderBunker - stBunker[3].rWeightUnderBunker;
-		rWeight1 := stBunker[1].rWeightUnderBunker - stBunker[2].rWeightUnderBunker;
-
-		// 2. Зажать отрицательные значения (ошибки датчиков)
-		IF rWeight1 < 0.0 THEN rWeight1 := 0.0; END_IF
-		IF rWeight2 < 0.0 THEN rWeight2 := 0.0; END_IF
-		IF rWeight3 < 0.0 THEN rWeight3 := 0.0; END_IF
-
-		// 3. Суммировать вес только активных бункеров
-		rTotalWeightActive := 0.0;
-		IF BUNKER_WORK_PRECENT_1 > 0.0 THEN
-			rTotalWeightActive := rTotalWeightActive + rWeight1;
+		
+		xStartBunker[1] := FALSE;
+		xStartBunker[2] := FALSE;
+		xStartBunker[3] := FALSE;
+		xStartConveyor := FALSE;
+		xStartDumper := FALSE;
+		
+		IF stCommands.cmdStopCommon.qxSignal THEN
+			xAutoStopping := TRUE;
 		END_IF
-		IF BUNKER_WORK_PRECENT_2 > 0.0 THEN
-			rTotalWeightActive := rTotalWeightActive + rWeight2;
+		
+		IF stCommands.cmdEmergencyStopCommon.qxSignal
+		OR ( 
+			NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
+			AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
+			OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
+			OR eBunkerStage[1] = E_StageWithPreStartAlarm.WORK)
+			)
+		OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
+			
+		THEN
+			xAutoEmergencyStopping := TRUE;
 		END_IF
-		IF BUNKER_WORK_PRECENT_3 > 0.0 THEN
-			rTotalWeightActive := rTotalWeightActive + rWeight3;
+		
+		IF xAutoStopping OR xAutoEmergencyStopping THEN
+			IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
+				xManualStopBunker[3] := TRUE;
+			ELSIF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
+				xManualStopBunker[2] := TRUE;
+			ELSIF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
+				xManualStopBunker[1] := TRUE;
+				ton_AutoTimer.IN := TRUE;
+			ELSIF eConveyorStage = E_StageWithPreStartAlarm.WORK THEN
+				xManualStopBunker[3] := FALSE;
+				xManualStopBunker[2] := FALSE;
+				xManualStopBunker[1] := FALSE;
+				IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
+					xManualStopConveyor := TRUE;
+					ton_AutoTimer.IN := FALSE;
+				END_IF
+			ELSIF eDumperStage = E_StageWithPreStartAlarm.WORK THEN
+				ton_AutoTimer.IN := TRUE;
+				IF ton_AutoTimer.Q OR xAutoEmergencyStopping THEN
+					xManualStopDumper := TRUE;
+					ton_AutoTimer.IN := FALSE;
+				END_IF
+			ELSE
+				ton_AutoTimer.IN := FALSE;
+				xManualStopBunker[1] := FALSE;
+				xManualStopBunker[2] := FALSE;
+				xManualStopBunker[3] := FALSE;
+				xManualStopConveyor := FALSE;
+				xManualStopDumper := FALSE;
+				xAutoEmergencyStopping := FALSE;
+				xAutoStopping := FALSE;
+				AUTO_STEP := IDLE;
+				END_IF;
 		END_IF
+		
 
-		// 4. Рассчитать пропорции
-		IF rTotalWeightActive > 0.5 THEN  // Защита от деления на ноль
-			// Активные бункеры
+		IF BUNKER_ENABLE_PROPORTION_MONITORING THEN
+
+			// === Расчёт актуальных пропорций бункеров ===
+			// 1. Извлечь вес каждого бункера из кумулятивных показаний
+			rWeight3 := stBunker[3].rWeightUnderBunker;
+			rWeight2 := stBunker[2].rWeightUnderBunker - stBunker[3].rWeightUnderBunker;
+			rWeight1 := stBunker[1].rWeightUnderBunker - stBunker[2].rWeightUnderBunker;
+
+			// 2. Зажать отрицательные значения (ошибки датчиков)
+			IF rWeight1 < 0.0 THEN rWeight1 := 0.0; END_IF
+			IF rWeight2 < 0.0 THEN rWeight2 := 0.0; END_IF
+			IF rWeight3 < 0.0 THEN rWeight3 := 0.0; END_IF
+
+			// 3. Суммировать вес только активных бункеров
+			rTotalWeightActive := 0.0;
 			IF BUNKER_WORK_PRECENT_1 > 0.0 THEN
-				stBunker[1].rProportionActual := rWeight1 / rTotalWeightActive;
-			ELSE
-				stBunker[1].rProportionActual := 0.0;
+				rTotalWeightActive := rTotalWeightActive + rWeight1;
 			END_IF
-
 			IF BUNKER_WORK_PRECENT_2 > 0.0 THEN
-				stBunker[2].rProportionActual := rWeight2 / rTotalWeightActive;
-			ELSE
-				stBunker[2].rProportionActual := 0.0;
+				rTotalWeightActive := rTotalWeightActive + rWeight2;
+			END_IF
+			IF BUNKER_WORK_PRECENT_3 > 0.0 THEN
+				rTotalWeightActive := rTotalWeightActive + rWeight3;
 			END_IF
 
-			IF BUNKER_WORK_PRECENT_3 > 0.0 THEN
-				stBunker[3].rProportionActual := rWeight3 / rTotalWeightActive;
+			// 4. Рассчитать пропорции
+			IF rTotalWeightActive > 0.5 THEN  // Защита от деления на ноль
+				// Активные бункеры
+				IF BUNKER_WORK_PRECENT_1 > 0.0 THEN
+					stBunker[1].rProportionActual := rWeight1 / rTotalWeightActive;
+				ELSE
+					stBunker[1].rProportionActual := 0.0;
+				END_IF
+
+				IF BUNKER_WORK_PRECENT_2 > 0.0 THEN
+					stBunker[2].rProportionActual := rWeight2 / rTotalWeightActive;
+				ELSE
+					stBunker[2].rProportionActual := 0.0;
+				END_IF
+
+				IF BUNKER_WORK_PRECENT_3 > 0.0 THEN
+					stBunker[3].rProportionActual := rWeight3 / rTotalWeightActive;
+				ELSE
+					stBunker[3].rProportionActual := 0.0;
+				END_IF
 			ELSE
+				// Недостаточный вес - обнулить все пропорции
+				stBunker[1].rProportionActual := 0.0;
+				stBunker[2].rProportionActual := 0.0;
 				stBunker[3].rProportionActual := 0.0;
-			END_IF
-		ELSE
-			// Недостаточный вес - обнулить все пропорции
-			stBunker[1].rProportionActual := 0.0;
-			stBunker[2].rProportionActual := 0.0;
-			stBunker[3].rProportionActual := 0.0;
+			END_IF;
 		END_IF;
-	END_IF;
 
 	END_REPORT:
 		// Формирование отчёта
