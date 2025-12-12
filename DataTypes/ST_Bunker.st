@@ -47,14 +47,14 @@ STRUCT
 	cmdAddVib2 : BOOL; // Включить управление вибратора 2
 	cmdAddVib3 : BOOL; // Включить управление вибратора 3
 	cmdAddVib4 : BOOL; // Включить управление вибратора 4
-	
 	cmdBuildCircuitOn, cmdBuildCircuitOff  : BOOL; // Команда собрать/разобрать схему
-	
 	cmdBuildCircuitOnVibrator, cmdBuildCircuitOffVibrator  : BOOL; // Команда собрать/разобрать схему вибратора
 	
 	// == Генерация состояний ==
 	eLightColor : E_LightColor; // Текущий сигнал светофора
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
+	xStateRemoteAuto, xStateRemoteManual, xStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
+	
 	wLightColor : WORD; // Передача сигнала светофора по ModbusTCP
 	
 	xStateWarning : BOOL; // Программное предупреждение

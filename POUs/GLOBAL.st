@@ -16,7 +16,7 @@ VAR_GLOBAL
 	EFFICIENCY_LIMIT_RATE : REAL := 1; // Коэффицент ограничения производительности (0-1)
 	
 	// Переменные симуляции
-	SIMULATION : BOOL := TRUE;
+	SIMULATION : BOOL := FALSE;
 	
 	// == MODBUS РЕГИСТРЫ ДЛЯ SCADA ==
 	// Массив регистров для передачи данных в SCADA систему
@@ -65,14 +65,14 @@ VAR_GLOBAL RETAIN
 		);
 		
 	// Опция плавного задания частоты
-	VFD_SMOOTH_SET_FREQUENCY : BOOL := TRUE;
+	VFD_SMOOTH_SET_FREQUENCY : BOOL := FALSE;
 	
 	// Таймеры последовательного запуска механизмов в автоматическом режиме
-	TIME_AFTER_START_DUMPER : TIME := T#0S; // Время ожидания после запуска отвалообразователя
-	TIME_AFTER_START_CONVEYOR : TIME := T#0S; // Время ожидания после запуска конвейера
-	TIME_AFTER_START_BUNKER_1 : TIME := T#0S; // Время ожидания после запуска бункера 1
-	TIME_AFTER_START_BUNKER_2 : TIME := T#0S; // Время ожидания после запуска бункера 2
-	TIME_AFTER_START_BUNKER_3 : TIME := T#0S; // Время ожидания после запуска бункера 3
+	TIME_AFTER_START_DUMPER : TIME := T#40S; // Время ожидания после запуска отвалообразователя
+	TIME_AFTER_START_CONVEYOR : TIME := T#40S; // Время ожидания после запуска конвейера
+	TIME_AFTER_START_BUNKER_1 : TIME := T#40S; // Время ожидания после запуска бункера 1
+	TIME_AFTER_START_BUNKER_2 : TIME := T#40S; // Время ожидания после запуска бункера 2
+	TIME_AFTER_START_BUNKER_3 : TIME := T#40S; // Время ожидания после запуска бункера 3
 	
 	// Таймер ожидания пропавшего сигнала обратной связи работы механизма
 	TIME_WAITING_FEEDBACK : TIME := T#0S;
@@ -98,8 +98,14 @@ VAR_GLOBAL RETAIN
 		L_Value := -1,
 		H_Value := -1,
 		HH_Value := -1);
-	// Ток мотора конвейера
+	// Ток мотора конвейера отвалообразователя
 	MOTOR_CONVEYOR_CURRENT_POINTS : ST_AlarmSetpoints := (
+		LL_Value := -1,
+		L_Value := -1,
+		H_Value := -1,
+		HH_Value := -1);
+	// Ток мотора конвейера сборного
+	MOTOR_CONVEYOR_PREFABRICATED_CURRENT_POINTS : ST_AlarmSetpoints := (
 		LL_Value := -1,
 		L_Value := -1,
 		H_Value := -1,
@@ -145,16 +151,16 @@ VAR_GLOBAL RETAIN
 	BUNKER_WORK_PRECENT_2 : REAL; // Уставка пропорции шихтования для бункера 2
 	BUNKER_WORK_PRECENT_3 : REAL; // Уставка пропорции шихтования для бункера 3
 	BUNKER_VIBFEEDER_START_FREQUENCY : REAL := 10.0; // Минимальная частота для запуска вибропитателей (Гц)
-
+	
 	// Ручное задание частоты на бункер (работает в ручном режиме управления)
-	BUNKER_1_FREQ_VIBFEEDER : REAL := 30.0;
-	BUNKER_2_FREQ_VIBFEEDER : REAL := 30.0;
-	BUNKER_3_FREQ_VIBFEEDER : REAL := 30.0;
-
-	// Ручное задание частоты вибраторов бункера (работает в ручном режиме управления)
-	BUNKER_1_FREQ_VIBRATOR : REAL := 30.0;
-	BUNKER_2_FREQ_VIBRATOR : REAL := 30.0;
-	BUNKER_3_FREQ_VIBRATOR : REAL := 30.0;
+	BUNKER_1_FREQ_VIBFEEDER : REAL := 30;
+	BUNKER_1_FREQ_VIBRATOR : REAL := 30;
+	BUNKER_2_FREQ_VIBFEEDER : REAL := 30;
+	BUNKER_2_FREQ_VIBRATOR : REAL := 30;
+	BUNKER_3_FREQ_VIBFEEDER : REAL := 30;
+	BUNKER_3_FREQ_VIBRATOR : REAL := 30;
+	
+	
 	
 	// Светофор бункера
 	BUNKER_WEIGHT_LIGHT_RED : BOOL; // Уставка веса бункера для красного светофора

@@ -5,7 +5,7 @@ STRUCT
 	cmdStartCommon : FB_UniversalSignal; // Команда общего пуска
 	cmdStopCommon : FB_UniversalSignal; // Команда общего останова
 	cmdEmergencyStopCommon : FB_UniversalSignal; // Команда общей аварийной остановки
-
-	cmdSetPrecentBunker : ARRAY [1..3] OF USINT; // Задание процента шихтования каждому бункеру (3)
+	
+	cmdSetToAuto, cmdSetToManual, cmdSetToRepair : BOOL; // Команды перевода режима управления
 END_STRUCT
 END_TYPE

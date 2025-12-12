@@ -384,7 +384,7 @@ FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBRATOR BY 1 DO
 	);
 	Bunker.MotorVibrator[i].VFD.nSetOutSignalToModule := Bunker.MotorVibrator[i].VFD.fbAnalogOutput.iDAC_Code;
 END_FOR;
-
+(*
 fbVibratorControl(
 	MotorVibrator:= Bunker.MotorVibrator,
 	Bunker:= Bunker,
@@ -398,6 +398,7 @@ fbVibratorControl(
 	nCycleCount:= VIBRATOR_SETTINGS.COUNT_CYCLE,
 	xMotorsWorking=> ,
 	tTimeToNext=> );
+*)
 
 fbPneumoControl(
 	xEnable:= ,
