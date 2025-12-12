@@ -1,0 +1,22 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Excel and CSV files
+*.xlsx
+*.csv
+*.xls
+
+# Other common patterns
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
