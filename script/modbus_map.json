@@ -3,2319 +3,2515 @@
     "description": "Holding Registers (SCADA → PLC) - Уставки и команды",
     "registers": [
       {
-        "section": "Общие системные переменные и уставки (0-29)",
+        "section": "Общие системные переменные и уставки",
         "address": "0.0",
         "data_type": "BOOL",
         "variable": "stCommands.cmdStartCommon.ixSignal",
-        "description": "Команда общего пуска"
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
+        "section": "Общие системные переменные и уставки",
         "address": "0.1",
         "data_type": "BOOL",
         "variable": "stCommands.cmdStopCommon.ixSignal",
-        "description": "Команда общего останова"
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
+        "section": "Общие системные переменные и уставки",
         "address": "0.2",
         "data_type": "BOOL",
         "variable": "stCommands.cmdEmergencyStopCommon.ixSignal",
-        "description": "Команда общей аварийной остановки"
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
+        "section": "Общие системные переменные и уставки",
         "address": "0.3",
         "data_type": "BOOL",
         "variable": "stCommands.cmdResetAll.ixSignal",
-        "description": "Сброс всех ошибок"
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "210.8",
+        "section": "Общие системные переменные и уставки",
+        "address": "0.8",
         "data_type": "BOOL",
-        "variable": "stDumper.cmdSetModeRepair",
-        "description": "Установить режим Ремонт"
+        "variable": "stCommands.cmdSetToRepair",
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "210.9",
+        "section": "Общие системные переменные и уставки",
+        "address": "0.9",
         "data_type": "BOOL",
-        "variable": "stDumper.cmdSetModeManual",
-        "description": "Установить режим Ручной"
+        "variable": "stCommands.cmdSetToManual",
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "210.10",
+        "section": "Общие системные переменные и уставки",
+        "address": "0.10",
         "data_type": "BOOL",
-        "variable": "stDumper.cmdSetModeAuto",
-        "description": "Установить режим Авто"
+        "variable": "stCommands.cmdSetToAuto",
+        "description": ""
       },
       {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "2-3",
-        "data_type": "REAL",
-        "variable": "ICUR_PRECENT",
-        "description": "Коэффициент использования установленной мощности (в процентах)"
-      },
-      {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "4-5",
-        "data_type": "REAL",
-        "variable": "rElectricityMeter",
-        "description": "Раход электроэнергии"
-      },
-      {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "6-7",
-        "data_type": "REAL",
-        "variable": "EFFICIENCY_LIMIT_RATE",
-        "description": "Коэффицент ограничения производительности (0-1)"
-      },
-      {
-        "section": "Общие системные переменные и уставки (0-29)",
-        "address": "8-9",
-        "data_type": "REAL",
-        "variable": "ANNUNCIATOR_LIGHT_HZ",
-        "description": "Световая индикация Гц"
-      },
-      {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "30.0",
         "data_type": "BOOL",
         "variable": "VFD_SMOOTH_SET_FREQUENCY",
-        "description": "Опция плавного задания частоты"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "32-33",
         "data_type": "REAL",
         "variable": "VFD_FREQUENCY_MAX",
-        "description": "-"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "34-35",
         "data_type": "REAL",
         "variable": "VFD_FREQUENCY_STEP",
-        "description": "-"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "36-37",
         "data_type": "REAL",
         "variable": "VFD_FREQUENCY_INACCURANCY",
-        "description": "-"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "38-39",
         "data_type": "REAL",
         "variable": "VFD_FREQUENCY_SYNC_TOLERANCE",
-        "description": "Допустимая разница частот для синхронизации моторов"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "40-41",
         "data_type": "REAL",
         "variable": "MOTOR_FREQUENCY_CONVEYOR",
-        "description": "Частота мотора конвейера"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "42-43",
         "data_type": "REAL",
         "variable": "MOTOR_FREQUENCY_DUMPER_CONVEYOR",
-        "description": "Частота мотора конвейера отвалообразователя"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "44-45",
         "data_type": "REAL",
         "variable": "MOTOR_FREQUENCY_DUMPER_ROTATION",
-        "description": "Частота мотора поворота отвалообразователя"
+        "description": ""
       },
       {
-        "section": "Уставки ЧРП (30-59)",
+        "section": "Уставки ЧРП",
         "address": "46-47",
         "data_type": "REAL",
         "variable": "CONVEYOR_DEAFULT_SPEED",
-        "description": "Скорость конвейера"
+        "description": ""
       },
       {
-        "section": "Уставки бункеров (60-89)",
+        "section": "Уставки бункеров",
         "address": "62-63",
         "data_type": "REAL",
         "variable": "BUNKER_WORK_PRECENT_1",
-        "description": "Уставка пропорции шихтования для бункера 1"
+        "description": ""
       },
       {
-        "section": "Уставки бункеров (60-89)",
+        "section": "Уставки бункеров",
         "address": "64-65",
         "data_type": "REAL",
         "variable": "BUNKER_WORK_PRECENT_2",
-        "description": "Уставка пропорции шихтования для бункера 2"
+        "description": ""
       },
       {
-        "section": "Уставки бункеров (60-89)",
+        "section": "Уставки бункеров",
         "address": "66-67",
         "data_type": "REAL",
         "variable": "BUNKER_WORK_PRECENT_3",
-        "description": "Уставка пропорции шихтования для бункера 3"
+        "description": ""
       },
       {
-        "section": "Уставки бункеров (60-89)",
+        "section": "Уставки бункеров",
         "address": "68-69",
         "data_type": "REAL",
         "variable": "BUNKER_MINIMAL_WEIGHT",
-        "description": "Уставка минимального веса бункера. Результат <= считывается алгоритмом как пустой бункер."
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Температура (90-119)",
+        "section": "Уставки аварийных значений - Температура",
         "address": "92-93",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_TEMP_POINTS.LL_Value",
-        "description": "Уставка Low-Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Температура (90-119)",
+        "section": "Уставки аварийных значений - Температура",
         "address": "94-95",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_TEMP_POINTS.L_Value",
-        "description": "Уставка Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Температура (90-119)",
+        "section": "Уставки аварийных значений - Температура",
         "address": "96-97",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_TEMP_POINTS.H_Value",
-        "description": "Уставка High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Температура (90-119)",
+        "section": "Уставки аварийных значений - Температура",
         "address": "98-99",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_TEMP_POINTS.HH_Value",
-        "description": "Уставка High-High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "122-123",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_CURRENT_POINTS.LL_Value",
-        "description": "Уставка Low-Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "124-125",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_CURRENT_POINTS.L_Value",
-        "description": "Уставка Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "126-127",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_CURRENT_POINTS.H_Value",
-        "description": "Уставка High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "128-129",
         "data_type": "REAL",
         "variable": "MOTOR_VIBFEEDER_CURRENT_POINTS.HH_Value",
-        "description": "Уставка High-High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "130-131",
         "data_type": "REAL",
         "variable": "MOTOR_VIBRATOR_CURRENT_POINTS.LL_Value",
-        "description": "Уставка Low-Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "132-133",
         "data_type": "REAL",
         "variable": "MOTOR_VIBRATOR_CURRENT_POINTS.L_Value",
-        "description": "Уставка Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "134-135",
         "data_type": "REAL",
         "variable": "MOTOR_VIBRATOR_CURRENT_POINTS.H_Value",
-        "description": "Уставка High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "136-137",
         "data_type": "REAL",
         "variable": "MOTOR_VIBRATOR_CURRENT_POINTS.HH_Value",
-        "description": "Уставка High-High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "138-139",
         "data_type": "REAL",
         "variable": "MOTOR_CONVEYOR_CURRENT_POINTS.LL_Value",
-        "description": "Уставка Low-Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "140-141",
         "data_type": "REAL",
         "variable": "MOTOR_CONVEYOR_CURRENT_POINTS.L_Value",
-        "description": "Уставка Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "142-143",
         "data_type": "REAL",
         "variable": "MOTOR_CONVEYOR_CURRENT_POINTS.H_Value",
-        "description": "Уставка High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "144-145",
         "data_type": "REAL",
         "variable": "MOTOR_CONVEYOR_CURRENT_POINTS.HH_Value",
-        "description": "Уставка High-High"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "146-147",
         "data_type": "REAL",
         "variable": "MOTOR_ROTATION_CURRENT_POINTS.LL_Value",
-        "description": "Уставка Low-Low"
+        "description": ""
       },
       {
-        "section": "Уставки аварийных значений - Ток (120-149)",
+        "section": "Уставки аварийных значений - Ток",
         "address": "148-149",
         "data_type": "REAL",
         "variable": "MOTOR_ROTATION_CURRENT_POINTS.L_Value",
-        "description": "Уставка Low"
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "152-153",
         "data_type": "REAL",
         "variable": "MOTOR_ROTATION_CURRENT_POINTS.H_Value",
-        "description": "Уставка High"
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "154-155",
         "data_type": "REAL",
         "variable": "MOTOR_ROTATION_CURRENT_POINTS.HH_Value",
-        "description": "Уставка High-High"
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "156-157",
-        "data_type": "TIME",
-        "variable": "VIBRATOR_SETTINGS.TIME_ACTIVE",
-        "description": "Время активной работы вибратора"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "158-159",
-        "data_type": "TIME",
-        "variable": "VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR",
-        "description": "Время паузы вибратора между циклами"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "160-161",
-        "data_type": "TIME",
-        "variable": "VIBRATOR_SETTINGS.TIME_PAUSE_FB",
-        "description": "Время паузы ФБ между подходами"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "162-163",
-        "data_type": "TIME",
-        "variable": "PNEUMO_SETTINGS.TIME_ACTIVE",
-        "description": "Время активной работы вибратора"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "164-165",
-        "data_type": "TIME",
-        "variable": "PNEUMO_SETTINGS.TIME_PAUSE_VIBRATOR",
-        "description": "Время паузы вибратора между циклами"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "166-167",
-        "data_type": "TIME",
-        "variable": "PNEUMO_SETTINGS.TIME_PAUSE_FB",
-        "description": "Время паузы ФБ между подходами"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "168-169",
-        "data_type": "TIME",
-        "variable": "TIME_WAITING_FEEDBACK",
-        "description": "Таймер ожидания пропавшего сигнала обратной связи работы механизма"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "170-171",
-        "data_type": "TIME",
-        "variable": "PNEUMATIC_COLLAPSE_TIME",
-        "description": "Уставка времени таймера пневмообрушения"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "172-173",
-        "data_type": "TIME",
-        "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL",
-        "description": "Время звучания первого сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "174-175",
-        "data_type": "TIME",
-        "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL_PAUSE",
-        "description": "Пауза после первого сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "176-177",
-        "data_type": "TIME",
-        "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL",
-        "description": "Время звучания второго сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (150-179)",
+        "section": "Уставки времени",
         "address": "178-179",
-        "data_type": "TIME",
-        "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL_PAUSE",
-        "description": "Пауза после втотрого сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (продолжение) (180-209)",
+        "section": "Уставки времени (продолжение)",
         "address": "182-183",
-        "data_type": "TIME",
-        "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL",
-        "description": "Время звучания первого сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (продолжение) (180-209)",
+        "section": "Уставки времени (продолжение)",
         "address": "184-185",
-        "data_type": "TIME",
-        "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL_PAUSE",
-        "description": "Пауза после первого сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (продолжение) (180-209)",
+        "section": "Уставки времени (продолжение)",
         "address": "186-187",
-        "data_type": "TIME",
-        "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL",
-        "description": "Время звучания второго сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Уставки времени (продолжение) (180-209)",
+        "section": "Уставки времени (продолжение)",
         "address": "188-189",
-        "data_type": "TIME",
-        "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL_PAUSE",
-        "description": "Пауза после втотрого сигнала"
+        "data_type": "REAL",
+        "variable": "rTempTime",
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.0",
         "data_type": "BOOL",
         "variable": "stDumper.cmdStartConveyor",
-        "description": "Команда пуска конвейера"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.1",
         "data_type": "BOOL",
         "variable": "stDumper.cmdStopConveyor",
-        "description": "Команда останова конвейера"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.2",
         "data_type": "BOOL",
         "variable": "stDumper.cmdEmergencyStop",
-        "description": "Команда аварийной остановки"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.3",
         "data_type": "BOOL",
         "variable": "stDumper.cmdReset",
-        "description": "Сброс ошибок"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.8",
         "data_type": "BOOL",
         "variable": "stDumper.cmdSetModeRepair",
-        "description": "Установить режим Ремонт"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.9",
         "data_type": "BOOL",
         "variable": "stDumper.cmdSetModeManual",
-        "description": "Установить режим Ручной"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "210.10",
         "data_type": "BOOL",
         "variable": "stDumper.cmdSetModeAuto",
-        "description": "Установить режим Авто"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
+        "address": "210.11",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdBuildCircuitOn",
+        "description": ""
+      },
+      {
+        "section": "Команды - Отвалообразователь",
+        "address": "210.12",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdBuildCircuitOff",
+        "description": ""
+      },
+      {
+        "section": "Команды - Отвалообразователь",
         "address": "211.0",
         "data_type": "BOOL",
         "variable": "stDumper.cmdTurnLeft",
-        "description": "Команда поворота влево"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "211.1",
         "data_type": "BOOL",
         "variable": "stDumper.cmdTurnRight",
-        "description": "Команда поворота вправо"
+        "description": ""
       },
       {
-        "section": "Команды - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
         "address": "211.2",
         "data_type": "BOOL",
         "variable": "stDumper.cmdStopRotation",
-        "description": "Команда остановка поворота"
+        "description": ""
       },
       {
-        "section": "Настройка - Отвалообразователь (210-239)",
+        "section": "Команды - Отвалообразователь",
+        "address": "211.11",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdBuildCircuitOnRotation",
+        "description": ""
+      },
+      {
+        "section": "Команды - Отвалообразователь",
+        "address": "211.12",
+        "data_type": "BOOL",
+        "variable": "stDumper.cmdBuildCircuitOffRotation",
+        "description": ""
+      },
+      {
+        "section": "Настройка - Отвалообразователь",
         "address": "212.0",
         "data_type": "BOOL",
         "variable": "DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE",
-        "description": "Опция на включение ППЗ в алгоритм"
+        "description": ""
       },
       {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.0",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdStartConveyor",
-        "description": "Команда пуска конвейера"
+        "description": ""
       },
       {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.1",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdStopConveyor",
-        "description": "Команда останова конвейера"
+        "description": ""
       },
       {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.2",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdEmergencyStop",
-        "description": "Команда аварийной остановки"
+        "description": ""
       },
       {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.3",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdReset",
-        "description": "Сброс ошибок"
+        "description": ""
       },
       {
-        "section": "Настройка - Конвейер (240-269)",
-        "address": "242.0",
-        "data_type": "BOOL",
-        "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE",
-        "description": "Опция на включение ППЗ в алгоритм"
-      },
-      {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.8",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdSetModeRepair",
-        "description": "Установить режим Ремонт"
+        "description": ""
       },
       {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.9",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdSetModeManual",
-        "description": "Установить режим Ручной"
+        "description": ""
       },
       {
-        "section": "Команды - Конвейер (240-269)",
+        "section": "Команды - Конвейер",
         "address": "240.10",
         "data_type": "BOOL",
         "variable": "stConveyor.cmdSetModeAuto",
-        "description": "Установить режим Авто"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Конвейер",
+        "address": "240.11",
+        "data_type": "BOOL",
+        "variable": "stConveyor.cmdBuildCircuitOn",
+        "description": ""
+      },
+      {
+        "section": "Команды - Конвейер",
+        "address": "240.12",
+        "data_type": "BOOL",
+        "variable": "stConveyor.cmdBuildCircuitOff",
+        "description": ""
+      },
+      {
+        "section": "Настройка - Конвейер",
+        "address": "242.0",
+        "data_type": "BOOL",
+        "variable": "CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
         "address": "270.0",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdStartFeeder",
-        "description": "Команда \"Пуск питателя\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.1",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdStopFeeder",
-        "description": "Команда \"Стоп питателя\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.2",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdEmergencyStopFeeder",
-        "description": "Команда \"Аварийная остановка\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.3",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdReset",
-        "description": "Сброс ошибок"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.4",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdAddVib1",
-        "description": "Добавление мотора вибратора 1 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.5",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdAddVib2",
-        "description": "Добавление мотора вибратора 2 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.6",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdAddVib3",
-        "description": "Добавление мотора вибратора 3 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.7",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdAddVib4",
-        "description": "Добавление мотора вибратора 4 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
-        "address": "278-279",
-        "data_type": "REAL",
-        "variable": "BUNKER_1_FREQ_VIBRATOR",
-        "description": "Ручное задание частоты вибратора"
-      },
-      {
-        "section": "Команды - Бункер 1 (270-299)",
-        "address": "282-283",
-        "data_type": "REAL",
-        "variable": "BUNKER_1_FREQ_VIBFEEDER",
-        "description": "Ручное задание частоты вибропитателя"
-      },
-      {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.8",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdSetModeRepair",
-        "description": "Установить режим Ремонт"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.9",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdSetModeManual",
-        "description": "Установить режим Ручной"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 1 (270-299)",
+        "section": "Команды - Бункер 1",
         "address": "270.10",
         "data_type": "BOOL",
         "variable": "stBunker[1].cmdSetModeAuto",
-        "description": "Установить режим Авто"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 1",
+        "address": "270.11",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdBuildCircuitOn",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "270.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdBuildCircuitOff",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "271.0",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdStartVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "271.1",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdStopVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "271.2",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdEmergencyStopFeeder",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "271.3",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdReset",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "271.11",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdBuildCircuitOnVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "271.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[1].cmdBuildCircuitOffVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "278-279",
+        "data_type": "REAL",
+        "variable": "BUNKER_1_FREQ_VIBRATOR",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 1",
+        "address": "282-283",
+        "data_type": "REAL",
+        "variable": "BUNKER_1_FREQ_VIBFEEDER",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
         "address": "300.0",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdStartFeeder",
-        "description": "Команда \"Пуск питателя\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.1",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdStopFeeder",
-        "description": "Команда \"Стоп питателя\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.2",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdEmergencyStopFeeder",
-        "description": "Команда \"Аварийная остановка\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.3",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdReset",
-        "description": "Сброс ошибок"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.4",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdAddVib1",
-        "description": "Добавление мотора вибратора 1 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.5",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdAddVib2",
-        "description": "Добавление мотора вибратора 2 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.6",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdAddVib3",
-        "description": "Добавление мотора вибратора 3 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.7",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdAddVib4",
-        "description": "Добавление мотора вибратора 4 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
-        "address": "308-309",
-        "data_type": "REAL",
-        "variable": "BUNKER_2_FREQ_VIBRATOR",
-        "description": "Ручное задание частоты вибратора"
-      },
-      {
-        "section": "Команды - Бункер 2 (300-329)",
-        "address": "312-313",
-        "data_type": "REAL",
-        "variable": "BUNKER_2_FREQ_VIBFEEDER",
-        "description": "Ручное задание частоты вибропитателя"
-      },
-      {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.8",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdSetModeRepair",
-        "description": "Установить режим Ремонт"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.9",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdSetModeManual",
-        "description": "Установить режим Ручной"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 2 (300-329)",
+        "section": "Команды - Бункер 2",
         "address": "300.10",
         "data_type": "BOOL",
         "variable": "stBunker[2].cmdSetModeAuto",
-        "description": "Установить режим Авто"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 2",
+        "address": "300.11",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdBuildCircuitOn",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "300.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdBuildCircuitOff",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "301.0",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdStartVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "301.1",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdStopVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "301.2",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdEmergencyStopFeeder",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "301.3",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdReset",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "301.11",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdBuildCircuitOnVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "301.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[2].cmdBuildCircuitOffVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "308-309",
+        "data_type": "REAL",
+        "variable": "BUNKER_2_FREQ_VIBRATOR",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 2",
+        "address": "312-313",
+        "data_type": "REAL",
+        "variable": "BUNKER_2_FREQ_VIBFEEDER",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
         "address": "330.0",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdStartFeeder",
-        "description": "Команда \"Пуск питателя\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.1",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdStopFeeder",
-        "description": "Команда \"Стоп питателя\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.2",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdEmergencyStopFeeder",
-        "description": "Команда \"Аварийная остановка\""
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.3",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdReset",
-        "description": "Сброс ошибок"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.4",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdAddVib1",
-        "description": "Добавление мотора вибратора 1 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.5",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdAddVib2",
-        "description": "Добавление мотора вибратора 2 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.6",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdAddVib3",
-        "description": "Добавление мотора вибратора 3 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.7",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdAddVib4",
-        "description": "Добавление мотора вибратора 4 в работу"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
-        "address": "338-339",
-        "data_type": "REAL",
-        "variable": "BUNKER_3_FREQ_VIBRATOR",
-        "description": "Ручное задание частоты вибратора"
-      },
-      {
-        "section": "Команды - Бункер 3 (330-359)",
-        "address": "342-343",
-        "data_type": "REAL",
-        "variable": "BUNKER_3_FREQ_VIBFEEDER",
-        "description": "Ручное задание частоты вибропитателя"
-      },
-      {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.8",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdSetModeRepair",
-        "description": "Установить режим Ремонт"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.9",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdSetModeManual",
-        "description": "Установить режим Ручной"
+        "description": ""
       },
       {
-        "section": "Команды - Бункер 3 (330-359)",
+        "section": "Команды - Бункер 3",
         "address": "330.10",
         "data_type": "BOOL",
         "variable": "stBunker[3].cmdSetModeAuto",
-        "description": "Установить режим Авто"
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "330.11",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdBuildCircuitOn",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "330.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdBuildCircuitOff",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "331.0",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdStartVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "331.1",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdStopVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "331.2",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdEmergencyStopFeeder",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "331.3",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdReset",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "331.11",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdBuildCircuitOnVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "331.12",
+        "data_type": "BOOL",
+        "variable": "stBunker[3].cmdBuildCircuitOffVibrator",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "338-339",
+        "data_type": "REAL",
+        "variable": "BUNKER_3_FREQ_VIBRATOR",
+        "description": ""
+      },
+      {
+        "section": "Команды - Бункер 3",
+        "address": "342-343",
+        "data_type": "REAL",
+        "variable": "BUNKER_3_FREQ_VIBFEEDER",
+        "description": ""
       }
     ]
   },
   "input_registers": {
-    "description": "Input Registers (PLC → SCADA) - Мониторинг и статусы",
+    "description": "Input Registers (PLC → SCADA) - Данные мониторинга",
     "registers": [
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.0",
         "data_type": "BOOL",
         "variable": "xStateAutoWorking",
-        "description": "Система полностью запущена и работает в автоматическом режиме"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.1",
         "data_type": "BOOL",
         "variable": "xStateEmergencyStop",
-        "description": "Система была аварийно остановлена"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.2",
         "data_type": "BOOL",
         "variable": "xStateErrorCheckReady",
-        "description": "Проверки стадии готовности к пуску провалились"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.3",
         "data_type": "BOOL",
         "variable": "xStateErrorAcceptIdle",
-        "description": "Невозможно принять коэффицент шихтования по заданию оператора - сумма коэффицентов не равна 100"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.4",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fbEmergencyStopBtn.qxSignal",
-        "description": "Кнопка \"Аварийная остановка\""
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.5",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fbRemoteModeBtn.qxSignal",
-        "description": "Режим работы ( 1 - дистанционный, 0 - местный)"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.6",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fbRealyCurrentControl.qxSignal",
-        "description": "Реле контроля фаз"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.7",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fbQF1.qxSignal",
-        "description": "Состояние автомат. выключателя (1 - включен, 0 - выключен)"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.8",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fb9QF1.qxSignal",
-        "description": "Состояние автомат. выключателя (1 - включен, 0 - выключен)"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.9",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fb10QF1.qxSignal",
-        "description": "Состояние автомат. выключателя (1 - включен, 0 - выключен)"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.10",
         "data_type": "BOOL",
         "variable": "stCommonSignals.fb11QF1.qxSignal",
-        "description": "Состояние автомат. выключателя (1 - включен, 0 - выключен)"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.11",
         "data_type": "BOOL",
         "variable": "stCommonSignals.qx6KM1",
-        "description": "Контактор 6KM1"
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
         "address": "0.12",
         "data_type": "BOOL",
-        "variable": "SIMULATION",
-        "description": "Режим симуляции"
+        "variable": "(stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto",
+        "description": ""
       },
       {
-        "section": "Общие системные статусы (0-29)",
+        "section": "Общие системные статусы",
+        "address": "0.13",
+        "data_type": "BOOL",
+        "variable": "NOT(stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto",
+        "description": ""
+      },
+      {
+        "section": "Общие системные статусы",
+        "address": "0.15",
+        "data_type": "BOOL",
+        "variable": "SIMULATION",
+        "description": ""
+      },
+      {
+        "section": "Общие системные статусы",
         "address": "2-3",
         "data_type": "REAL",
         "variable": "ICUR_PRECENT",
-        "description": "Коэффициент использования установленной мощности (в процентах)"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.0",
         "data_type": "BOOL",
         "variable": "stBunker[1].xStateWarning",
-        "description": "Программное предупреждение"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.1",
         "data_type": "BOOL",
         "variable": "stBunker[1].xStateFailure",
-        "description": "Программная ошибка"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.2",
         "data_type": "BOOL",
         "variable": "stBunker[1].fbStateHatch.qxSignal",
-        "description": "Положение люка (1 - закрыт , 0 - открыт )"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.3",
         "data_type": "BOOL",
         "variable": "stBunker[1].qxLightRed",
-        "description": "Красный сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.4",
         "data_type": "BOOL",
         "variable": "stBunker[1].qxLightYellow",
-        "description": "Желтый сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.5",
         "data_type": "BOOL",
         "variable": "stBunker[1].qxLightGreen",
-        "description": "Зеленый сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.6",
         "data_type": "BOOL",
         "variable": "stBunker[1].fbBtnStart.qxSignal",
-        "description": "Кнопка \"Пуск питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.7",
         "data_type": "BOOL",
         "variable": "stBunker[1].fbBtnStop.qxSignal",
-        "description": "Кнопка \"Стоп питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.8",
         "data_type": "BOOL",
         "variable": "stBunker[1].fbBtnEmergencyStop.qxSignal",
-        "description": "Кнопка \"Аварийная остановка\" NC"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.12",
         "data_type": "BOOL",
         "variable": "stBunker[1].xStateRemoteAuto",
-        "description": "Режим работы: Автоматический"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.13",
         "data_type": "BOOL",
         "variable": "stBunker[1].xStateRemoteManual",
-        "description": "Режим работы: Ручной"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "30.14",
         "data_type": "BOOL",
         "variable": "stBunker[1].xStateRemoteRepair",
-        "description": "Режим работы: Ремонт"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "32-33",
         "data_type": "REAL",
         "variable": "stBunker[1].rWeight",
-        "description": "Весы бункера"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "34-35",
         "data_type": "REAL",
         "variable": "stBunker[1].rProportionActual",
-        "description": "Пропорция от веса"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "36-37",
         "data_type": "REAL",
         "variable": "stBunker[1].rMotorVibFeederCommonFrequency",
-        "description": "Частота двух моторов вибропитателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "38-39",
         "data_type": "REAL",
         "variable": "stBunker[1].cmdDumpingPrecent",
-        "description": "Задание процентного соотношения сбрасывания"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "40-41",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "42-43",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "44-45",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "46-47",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "48-49",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "50-51",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "52-53",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[3].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "54-55",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[3].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "56-57",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[3].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "58-59",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[4].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "60-61",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[4].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "62-63",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibrator[4].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "64-65",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "66-67",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "68-69",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "70-71",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "72-73",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "74-75",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "76-77",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[1].rTempBearing[1]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "78-79",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[1].rTempBearing[2]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "80-81",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[2].rTempBearing[1]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 1 (30-89)",
+        "section": "Бункер 1",
         "address": "82-83",
         "data_type": "REAL",
         "variable": "stBunker[1].MotorVibFeeder[2].rTempBearing[2]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.0",
         "data_type": "BOOL",
         "variable": "stBunker[2].xStateWarning",
-        "description": "Программное предупреждение"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.1",
         "data_type": "BOOL",
         "variable": "stBunker[2].xStateFailure",
-        "description": "Программная ошибка"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.2",
         "data_type": "BOOL",
         "variable": "stBunker[2].fbStateHatch.qxSignal",
-        "description": "Положение люка (1 - закрыт , 0 - открыт )"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.3",
         "data_type": "BOOL",
         "variable": "stBunker[2].qxLightRed",
-        "description": "Красный сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.4",
         "data_type": "BOOL",
         "variable": "stBunker[2].qxLightYellow",
-        "description": "Желтый сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.5",
         "data_type": "BOOL",
         "variable": "stBunker[2].qxLightGreen",
-        "description": "Зеленый сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.6",
         "data_type": "BOOL",
         "variable": "stBunker[2].fbBtnStart.qxSignal",
-        "description": "Кнопка \"Пуск питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.7",
         "data_type": "BOOL",
         "variable": "stBunker[2].fbBtnStop.qxSignal",
-        "description": "Кнопка \"Стоп питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.8",
         "data_type": "BOOL",
         "variable": "stBunker[2].fbBtnEmergencyStop.qxSignal",
-        "description": "Кнопка \"Аварийная остановка\" NC"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.12",
         "data_type": "BOOL",
         "variable": "stBunker[2].xStateRemoteAuto",
-        "description": "Режим работы: Автоматический"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.13",
         "data_type": "BOOL",
         "variable": "stBunker[2].xStateRemoteManual",
-        "description": "Режим работы: Ручной"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "90.14",
         "data_type": "BOOL",
         "variable": "stBunker[2].xStateRemoteRepair",
-        "description": "Режим работы: Ремонт"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "92-93",
         "data_type": "REAL",
         "variable": "stBunker[2].rWeight",
-        "description": "Весы бункера"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "94-95",
         "data_type": "REAL",
         "variable": "stBunker[2].rProportionActual",
-        "description": "Пропорция от веса"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "96-97",
         "data_type": "REAL",
         "variable": "stBunker[2].rMotorVibFeederCommonFrequency",
-        "description": "Частота двух моторов вибропитателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "98-99",
         "data_type": "REAL",
         "variable": "stBunker[2].cmdDumpingPrecent",
-        "description": "Задание процентного соотношения сбрасывания"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "100-101",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "102-103",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "104-105",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "106-107",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "108-109",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "110-111",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "112-113",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[3].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "114-115",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[3].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "116-117",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[3].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "118-119",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[4].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "120-121",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[4].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "122-123",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibrator[4].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "124-125",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "126-127",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "128-129",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "130-131",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "132-133",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "134-135",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "136-137",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[1].rTempBearing[1]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "138-139",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[1].rTempBearing[2]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "140-141",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[2].rTempBearing[1]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 2 (90-149)",
+        "section": "Бункер 2",
         "address": "142-143",
         "data_type": "REAL",
         "variable": "stBunker[2].MotorVibFeeder[2].rTempBearing[2]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.0",
         "data_type": "BOOL",
         "variable": "stBunker[3].xStateWarning",
-        "description": "Программное предупреждение"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.1",
         "data_type": "BOOL",
         "variable": "stBunker[3].xStateFailure",
-        "description": "Программная ошибка"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.2",
         "data_type": "BOOL",
         "variable": "stBunker[3].fbStateHatch.qxSignal",
-        "description": "Положение люка (1 - закрыт , 0 - открыт )"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.3",
         "data_type": "BOOL",
         "variable": "stBunker[3].qxLightRed",
-        "description": "Красный сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.4",
         "data_type": "BOOL",
         "variable": "stBunker[3].qxLightYellow",
-        "description": "Желтый сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.5",
         "data_type": "BOOL",
         "variable": "stBunker[3].qxLightGreen",
-        "description": "Зеленый сигнал светофора"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.6",
         "data_type": "BOOL",
         "variable": "stBunker[3].fbBtnStart.qxSignal",
-        "description": "Кнопка \"Пуск питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.7",
         "data_type": "BOOL",
         "variable": "stBunker[3].fbBtnStop.qxSignal",
-        "description": "Кнопка \"Стоп питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.8",
         "data_type": "BOOL",
         "variable": "stBunker[3].fbBtnEmergencyStop.qxSignal",
-        "description": "Кнопка \"Аварийная остановка\" NC"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.12",
         "data_type": "BOOL",
         "variable": "stBunker[3].xStateRemoteAuto",
-        "description": "Режим работы: Автоматический"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.13",
         "data_type": "BOOL",
         "variable": "stBunker[3].xStateRemoteManual",
-        "description": "Режим работы: Ручной"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "150.14",
         "data_type": "BOOL",
         "variable": "stBunker[3].xStateRemoteRepair",
-        "description": "Режим работы: Ремонт"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "152-153",
         "data_type": "REAL",
         "variable": "stBunker[3].rWeight",
-        "description": "Весы бункера"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "154-155",
         "data_type": "REAL",
         "variable": "stBunker[3].rProportionActual",
-        "description": "Пропорция от веса"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "156-157",
         "data_type": "REAL",
         "variable": "stBunker[3].rMotorVibFeederCommonFrequency",
-        "description": "Частота двух моторов вибропитателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "158-159",
         "data_type": "REAL",
         "variable": "stBunker[3].cmdDumpingPrecent",
-        "description": "Задание процентного соотношения сбрасывания"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "160-161",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "162-163",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "164-165",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "166-167",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "168-169",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "170-171",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "172-173",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[3].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "174-175",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[3].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "176-177",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[3].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "178-179",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[4].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "180-181",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[4].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "182-183",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibrator[4].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "184-185",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "186-187",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "188-189",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "190-191",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "192-193",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "194-195",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "196-197",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[1].rTempBearing[1]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "198-199",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[1].rTempBearing[2]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "200-201",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[2].rTempBearing[1]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Бункер 3 (150-209)",
+        "section": "Бункер 3",
         "address": "202-203",
         "data_type": "REAL",
         "variable": "stBunker[3].MotorVibFeeder[2].rTempBearing[2]",
-        "description": "Температура подшипникового узла (в °C)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.0",
         "data_type": "BOOL",
         "variable": "stDumper.xStateWarning",
-        "description": "Программное предупреждение"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.1",
         "data_type": "BOOL",
         "variable": "stDumper.xStateFailure",
-        "description": "Программная ошибка"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.2",
         "data_type": "BOOL",
         "variable": "stDumper.xStateEnable",
-        "description": "Механизм полностью запущен"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.3",
         "data_type": "BOOL",
         "variable": "stDumper.xStateStarting",
-        "description": "Процесс запуска (вместе с ППЗ)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.4",
         "data_type": "BOOL",
         "variable": "stDumper.fbBtnStart.qxSignal",
-        "description": "Кнопка \"Пуск питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.5",
         "data_type": "BOOL",
         "variable": "stDumper.fbBtnStop.qxSignal",
-        "description": "Кнопка \"Стоп питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.6",
         "data_type": "BOOL",
         "variable": "stDumper.fbBtnEmergencyStop.qxSignal",
-        "description": "Кнопка \"Аварийная остановка\" NC"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.7",
         "data_type": "BOOL",
         "variable": "stDumper.fbBtnRemoteMode.qxSignal",
-        "description": "Кнопка режима"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.8",
         "data_type": "BOOL",
         "variable": "stDumper.xHLA",
-        "description": "Световая сигнализация"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.9",
         "data_type": "BOOL",
         "variable": "stDumper.xSoundAlarm",
-        "description": "Звуковая сигнализация"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.10",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQAlarm[1].qxSignal",
-        "description": "Контроль схода ленты 1 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.11",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQAlarm[2].qxSignal",
-        "description": "Контроль схода ленты 2 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.12",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQAlarm[3].qxSignal",
-        "description": "Контроль схода ленты 3 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.13",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQAlarm[4].qxSignal",
-        "description": "Контроль схода ленты 4 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.14",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQWarning[1].qxSignal",
-        "description": "Контроль схода ленты 1 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "210.15",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQWarning[2].qxSignal",
-        "description": "Контроль схода ленты 2 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.0",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQWarning[3].qxSignal",
-        "description": "Контроль схода ленты 3 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.1",
         "data_type": "BOOL",
         "variable": "stDumper.fbZQWarning[4].qxSignal",
-        "description": "Контроль схода ленты 4 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.2",
         "data_type": "BOOL",
         "variable": "stDumper.fbHQ_IsOk[1].qxSignal",
-        "description": "Кабель-тросовый выключатель 1 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.3",
         "data_type": "BOOL",
         "variable": "stDumper.fbHQ_IsOk[2].qxSignal",
-        "description": "Кабель-тросовый выключатель 2 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.4",
         "data_type": "BOOL",
         "variable": "stDumper.fbHQ_IsOk[3].qxSignal",
-        "description": "Кабель-тросовый выключатель 3 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.5",
         "data_type": "BOOL",
         "variable": "stDumper.fbHQ_IsOk[4].qxSignal",
-        "description": "Кабель-тросовый выключатель 4 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.6",
         "data_type": "BOOL",
         "variable": "stDumper.fbSQ_IsOk[1].qxSignal",
-        "description": "Контроль ограждения барабана 1 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.7",
         "data_type": "BOOL",
         "variable": "stDumper.fbSQ_IsOk[2].qxSignal",
-        "description": "Контроль ограждения барабана 2 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.8",
         "data_type": "BOOL",
         "variable": "stDumper.fbGS1.qxSignal",
-        "description": "Контроль заштыбовки (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.9",
         "data_type": "BOOL",
         "variable": "stDumper.fbQR[1].qxSignal",
-        "description": "Измерение скорости вращения барабана 1"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.10",
         "data_type": "BOOL",
         "variable": "stDumper.fbQR[2].qxSignal",
-        "description": "Измерение скорости вращения барабана 2"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.11",
         "data_type": "BOOL",
         "variable": "stDumper.fbYS1.qxSignal",
-        "description": "Контроль продольного разрыва ленты (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.12",
         "data_type": "BOOL",
         "variable": "stDumper.xStateRemoteAuto",
-        "description": "Режим работы: Автоматический"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.13",
         "data_type": "BOOL",
         "variable": "stDumper.xStateRemoteManual",
-        "description": "Режим работы: Ручной"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "211.14",
         "data_type": "BOOL",
         "variable": "stDumper.xStateRemoteRepair",
-        "description": "Режим работы: Ремонт"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "212-213",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "214-215",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "216-217",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "218-219",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "220-221",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Конвейер (210-239)",
+        "section": "Отвалообразователь - Конвейер",
         "address": "222-223",
         "data_type": "REAL",
         "variable": "stDumper.MotorConveyor[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "240.0",
         "data_type": "BOOL",
         "variable": "stDumper.fbBtnTurnLeft.qxSignal",
-        "description": "Кнопка поворота влево"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "240.1",
         "data_type": "BOOL",
         "variable": "stDumper.fbBtnTurnRight.qxSignal",
-        "description": "Кнопка поворота вправо"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "240.2",
         "data_type": "BOOL",
         "variable": "stDumper.fbEndSwitchRight.qxSignal",
-        "description": "Концевой выключатель правого положения"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "240.3",
         "data_type": "BOOL",
         "variable": "stDumper.fbEndSwitchLeft.qxSignal",
-        "description": "Концевой выключатель левого положения"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "242-243",
         "data_type": "REAL",
         "variable": "stDumper.MotorRotation[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "244-245",
         "data_type": "REAL",
         "variable": "stDumper.MotorRotation[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "246-247",
         "data_type": "REAL",
         "variable": "stDumper.MotorRotation[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "248-249",
         "data_type": "REAL",
         "variable": "stDumper.MotorRotation[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "250-251",
         "data_type": "REAL",
         "variable": "stDumper.MotorRotation[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Отвалообразователь - Поворот (240-269)",
+        "section": "Отвалообразователь - Поворот",
         "address": "252-253",
         "data_type": "REAL",
         "variable": "stDumper.MotorRotation[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.0",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateWarning",
-        "description": "Программное предупреждение"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.1",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateFailure",
-        "description": "Программная ошибка"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.2",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateEnable",
-        "description": "Механизм полностью запущен"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.3",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateStarting",
-        "description": "Процесс запуска (вместе с ППЗ)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.4",
         "data_type": "BOOL",
         "variable": "stConveyor.fbBtnStart.qxSignal",
-        "description": "Кнопка \"Пуск питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.5",
         "data_type": "BOOL",
         "variable": "stConveyor.fbBtnStop.qxSignal",
-        "description": "Кнопка \"Стоп питателя\" NO"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.6",
         "data_type": "BOOL",
         "variable": "stConveyor.fbBtnEmergencyStop.qxSignal",
-        "description": "Кнопка \"Аварийная остановка\" NC"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.7",
         "data_type": "BOOL",
         "variable": "stConveyor.xHLA",
-        "description": "Световая сигнализация"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.8",
         "data_type": "BOOL",
         "variable": "stConveyor.xSoundAlarm",
-        "description": "Звуковая сигнализация"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.9",
         "data_type": "BOOL",
         "variable": "stConveyor.fbYE1.qxSignal",
-        "description": "Обнаружение металла (металлодетектор)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.10",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQAlarm[1].qxSignal",
-        "description": "Контроль схода ленты 1 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.11",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQAlarm[2].qxSignal",
-        "description": "Контроль схода ленты 2 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.12",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQAlarm[3].qxSignal",
-        "description": "Контроль схода ленты 3 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.13",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQAlarm[4].qxSignal",
-        "description": "Контроль схода ленты 4 (тревога: 1 - норма, 0 - сход)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.14",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQWarning[1].qxSignal",
-        "description": "Контроль схода ленты 1 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "270.15",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQWarning[2].qxSignal",
-        "description": "Контроль схода ленты 2 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.0",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQWarning[3].qxSignal",
-        "description": "Контроль схода ленты 3 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.1",
         "data_type": "BOOL",
         "variable": "stConveyor.fbZQWarning[4].qxSignal",
-        "description": "Контроль схода ленты 4 (предупреждение: 1 - норма, 0 - предупреждение)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.2",
         "data_type": "BOOL",
         "variable": "stConveyor.fbHQ_IsOk[1].qxSignal",
-        "description": "Кабель-тросовый выключатель 1 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.3",
         "data_type": "BOOL",
         "variable": "stConveyor.fbHQ_IsOk[2].qxSignal",
-        "description": "Кабель-тросовый выключатель 2 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.4",
         "data_type": "BOOL",
         "variable": "stConveyor.fbHQ_IsOk[3].qxSignal",
-        "description": "Кабель-тросовый выключатель 3 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.5",
         "data_type": "BOOL",
         "variable": "stConveyor.fbHQ_IsOk[4].qxSignal",
-        "description": "Кабель-тросовый выключатель 4 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.6",
         "data_type": "BOOL",
         "variable": "stConveyor.fbSQ_IsOk[1].qxSignal",
-        "description": "Контроль ограждения барабана 1 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.7",
         "data_type": "BOOL",
         "variable": "stConveyor.fbSQ_IsOk[2].qxSignal",
-        "description": "Контроль ограждения барабана 2 (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.8",
         "data_type": "BOOL",
         "variable": "stConveyor.fbGS1.qxSignal",
-        "description": "Контроль заштыбовки (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.9",
         "data_type": "BOOL",
         "variable": "stConveyor.fbQR[1].qxSignal",
-        "description": "Измерение скорости вращения барабана 1"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.10",
         "data_type": "BOOL",
         "variable": "stConveyor.fbQR[2].qxSignal",
-        "description": "Измерение скорости вращения барабана 2"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.11",
         "data_type": "BOOL",
         "variable": "stConveyor.fbYS1.qxSignal",
-        "description": "Контроль продольного разрыва ленты (1 - норма, 0 - тревога)"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.12",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateRemoteAuto",
-        "description": "Режим работы: Автоматический"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.13",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateRemoteManual",
-        "description": "Режим работы: Ручной"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "271.14",
         "data_type": "BOOL",
         "variable": "stConveyor.xStateRemoteRepair",
-        "description": "Режим работы: Ремонт"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "272-273",
         "data_type": "REAL",
         "variable": "stConveyor.MotorConveyor[1].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "274-275",
         "data_type": "REAL",
         "variable": "stConveyor.MotorConveyor[1].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "276-277",
         "data_type": "REAL",
         "variable": "stConveyor.MotorConveyor[1].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "278-279",
         "data_type": "REAL",
         "variable": "stConveyor.MotorConveyor[2].VFD.qrOutFrequency",
-        "description": "Выходная частота"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "280-281",
         "data_type": "REAL",
         "variable": "stConveyor.MotorConveyor[2].VFD.rActualFrequency",
-        "description": "Текущая частота ЧРП"
+        "description": ""
       },
       {
-        "section": "Конвейер (270-299)",
+        "section": "Конвейер",
         "address": "282-283",
         "data_type": "REAL",
         "variable": "stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag",
-        "description": "Ток эл. двигателя"
+        "description": ""
       }
     ]
   }
