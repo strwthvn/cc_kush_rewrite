@@ -23,6 +23,9 @@ VAR
 	fbVibratorControl : FB_VibratorControl;
 	fbPneumoControl : FB_PneumoCollapseControl;
 
+	// Таймер для автоматического отключения вибраторов
+	tonVibratorEnable : TON;
+
 	// Автомат состояний для запуска вибропитателей
 	STAGE : E_StageWithPreStartAlarm := E_StageWithPreStartAlarm.IDLE;
 
@@ -609,6 +612,31 @@ Bunker.MotorVibrator[1].qxKM_Power := xCircuitBuiltVibrator;
 Bunker.MotorVibrator[2].qxKM_Power := xCircuitBuiltVibrator;
 Bunker.MotorVibrator[3].qxKM_Power := xCircuitBuiltVibrator;
 Bunker.MotorVibrator[4].qxKM_Power := xCircuitBuiltVibrator;
+
+// ========================================
+// УПРАВЛЕНИЕ ВИБРАТОРАМИ
+// ========================================
+
+// Обработка таймера автоматического отключения
+tonVibratorEnable(PT := VIBRATOR_SETTINGS.TIME_ACTIVE);
+
+// Управление запуском вибраторов
+IF Bunker.cmdStartVibrator THEN
+	tonVibratorEnable.IN := TRUE;
+	Bunker.MotorVibrator[1].VFD.qxStart := TRUE;
+	Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
+	Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
+	Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+END_IF
+
+// Управление остановкой вибраторов (по команде или по таймауту)
+IF Bunker.cmdStopVibrator OR tonVibratorEnable.Q THEN
+	tonVibratorEnable.IN := FALSE;
+	Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
+	Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
+	Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
+	Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+END_IF
 
 // ========================================
 // УПРАВЛЕНИЕ СВЕТОФОРОМ

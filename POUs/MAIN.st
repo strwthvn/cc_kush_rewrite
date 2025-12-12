@@ -60,13 +60,11 @@ VAR
 	rTempTime : REAL;
 	
 	ton_AutoTimer : TON; // Таймер автоматического режима
-	tof_VibratorEnable : ARRAY [1..3] OF TON;
 
 	nBunkerStartStep : INT := 0; // Подшаг последовательного запуска бункеров (0=бункер3, 1=задержка, 2=бункер2, 3=задержка, 4=бункер1, 5=готово)
 
 	xAutoStopping : BOOL; // Процесс остановки
 	xAutoEmergencyStopping : BOOL; // Процесс аварийной остановки
-	tVibratorWork : TIME := T#15S;
 END_VAR
 
 stCommonSignals.qx6KM1 := TRUE;
@@ -309,65 +307,10 @@ END_FOR;
 // Процессы аварийных остановок в ручном режиме 
 	// F FC_Dumper_GetErrorCommon(Dumper:=stDumper) THEN FC_Dumper_EmergencyStop(Dumper:=stDumper); END_IF;
 	// F FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) THEN FC_Conveyor_EmergencyStop(Conveyor:=stConveyor); END_IF;
-	//FOR i := 1 TO 3 DO 
+	//FOR i := 1 TO 3 DO
 		// IF FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) THEN FC_Bunker_EmergencyStop(Bunker:=stBunker[i]); END_IF;
 	//END_FOR
 
-tof_VibratorEnable[1](PT:= T#20S);
-tof_VibratorEnable[2](PT:= T#20S);
-tof_VibratorEnable[3](PT:= T#20S);
-
-	// Вибратор 1 бункера
-	IF stBunker[1].cmdStartVibrator THEN
-		tof_VibratorEnable[1].IN := TRUE;
-		stBunker[1].MotorVibrator[1].VFD.qxStart := TRUE;
-		stBunker[1].MotorVibrator[2].VFD.qxStart := TRUE;
-		stBunker[1].MotorVibrator[3].VFD.qxStart := TRUE;
-		stBunker[1].MotorVibrator[4].VFD.qxStart := TRUE;
-	END_IF
-	
-	IF stBunker[1].cmdStopVibrator OR tof_VibratorEnable[1].Q THEN
-		tof_VibratorEnable[1].IN := FALSE;
-		stBunker[1].MotorVibrator[1].VFD.qxStart := FALSE;
-		stBunker[1].MotorVibrator[2].VFD.qxStart := FALSE;
-		stBunker[1].MotorVibrator[3].VFD.qxStart := FALSE;
-		stBunker[1].MotorVibrator[4].VFD.qxStart := FALSE;
-	END_IF
-
-	// Вибратор 2 бункера
-	IF stBunker[2].cmdStartVibrator THEN
-		tof_VibratorEnable[2].IN := TRUE;
-		stBunker[2].MotorVibrator[1].VFD.qxStart := TRUE;
-		stBunker[2].MotorVibrator[2].VFD.qxStart := TRUE;
-		stBunker[2].MotorVibrator[3].VFD.qxStart := TRUE;
-		stBunker[2].MotorVibrator[4].VFD.qxStart := TRUE;
-	END_IF
-	
-	IF stBunker[2].cmdStopVibrator OR tof_VibratorEnable[2].Q THEN
-		tof_VibratorEnable[2].IN := FALSE;
-		stBunker[2].MotorVibrator[1].VFD.qxStart := FALSE;
-		stBunker[2].MotorVibrator[2].VFD.qxStart := FALSE;
-		stBunker[2].MotorVibrator[3].VFD.qxStart := FALSE;
-		stBunker[2].MotorVibrator[4].VFD.qxStart := FALSE;
-	END_IF
-
-	// Вибратор 3 бункера
-	IF stBunker[3].cmdStartVibrator THEN
-		tof_VibratorEnable[3].IN := TRUE;
-		stBunker[3].MotorVibrator[1].VFD.qxStart := TRUE;
-		stBunker[3].MotorVibrator[2].VFD.qxStart := TRUE;
-		stBunker[3].MotorVibrator[3].VFD.qxStart := TRUE;
-		stBunker[3].MotorVibrator[4].VFD.qxStart := TRUE;
-	END_IF
-	
-	IF stBunker[3].cmdStopVibrator OR tof_VibratorEnable[3].Q THEN
-		tof_VibratorEnable[3].IN := FALSE;
-		stBunker[3].MotorVibrator[1].VFD.qxStart := FALSE;
-		stBunker[3].MotorVibrator[2].VFD.qxStart := FALSE;
-		stBunker[3].MotorVibrator[3].VFD.qxStart := FALSE;
-		stBunker[3].MotorVibrator[4].VFD.qxStart := FALSE;
-	END_IF
-	
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
 ton_AutoTimer(PT:=T#10S);
 

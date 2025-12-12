@@ -56,6 +56,7 @@ VAR_GLOBAL RETAIN
 		TIME_PAUSE_FB := T#30S,
 		COUNT_CYCLE := 3
 		);
+
 	// Настройка пневмообрушения
 	PNEUMO_SETTINGS : ST_BunkerVibratorSettings := (
 		TIME_ACTIVE := T#10S,
@@ -151,7 +152,7 @@ VAR_GLOBAL RETAIN
 	BUNKER_WORK_PRECENT_2 : REAL; // Уставка пропорции шихтования для бункера 2
 	BUNKER_WORK_PRECENT_3 : REAL; // Уставка пропорции шихтования для бункера 3
 	BUNKER_VIBFEEDER_START_FREQUENCY : REAL := 10.0; // Минимальная частота для запуска вибропитателей (Гц)
-	
+
 	// Ручное задание частоты на бункер (работает в ручном режиме управления)
 	BUNKER_1_FREQ_VIBFEEDER : REAL := 30;
 	BUNKER_1_FREQ_VIBRATOR : REAL := 30;
