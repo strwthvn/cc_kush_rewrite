@@ -273,33 +273,86 @@ IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в ре
 END_IF;
 IF eConveyorStage <> E_StageWithPreStartAlarm.WORK AND xManualStopConveyor THEN xManualStopConveyor := FALSE; END_IF;
 
-// БУНКЕР
+// БУНКЕР 1
 
-FOR i := 1 TO 3 DO
-	// Запуск бункера в ручном режиме
-	IF 	stBunker[i].cmdSetModeManual OR stCommands.cmdSetToManual THEN stBunker[i].eStateRemote := E_StateRemote.Manual; END_IF;
-	IF 	stBunker[i].cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stBunker[i].eStateRemote := E_StateRemote.Auto; END_IF;
-	
-	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-		AND stBunker[i].cmdStartFeeder // Команда на запуск в ручном режиме
-		AND eBunkerStage[i] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
-		AND eBunkerStage[i] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[i] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-		//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[i]) // Не имеет ошибок
-		THEN
-			xManualStopBunker[i] := FALSE;
-			xStartBunker[i] := TRUE;
-	END_IF;
-IF (eBunkerStage[i] = E_StageWithPreStartAlarm.STARTING OR eBunkerStage[i] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[i] THEN xStartBunker[i] := FALSE; END_IF;
+// Переключение режимов
+IF stBunker[1].cmdSetModeManual OR stCommands.cmdSetToManual THEN stBunker[1].eStateRemote := E_StateRemote.Manual; END_IF;
+IF stBunker[1].cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stBunker[1].eStateRemote := E_StateRemote.Auto; END_IF;
 
-	// Остановка бункера в ручном режиме
-	IF 	stBunker[i].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-		AND stBunker[i].cmdStopFeeder // Команда на остановку в ручном режиме
-		THEN
-			xStartBunker[i] := FALSE;
-			xManualStopBunker[i] := TRUE;
-	END_IF;
-	IF eBunkerStage[i] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[i] THEN xManualStopBunker[i] := FALSE; END_IF;
-END_FOR;
+// Запуск бункера в ручном режиме
+IF stBunker[1].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stBunker[1].cmdStartFeeder // Команда на запуск в ручном режиме
+	AND eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
+	AND eBunkerStage[1] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[1] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
+	//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[1]) // Не имеет ошибок
+	THEN
+		xManualStopBunker[1] := FALSE;
+		xStartBunker[1] := TRUE;
+END_IF;
+IF (eBunkerStage[1] = E_StageWithPreStartAlarm.STARTING OR eBunkerStage[1] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[1] THEN xStartBunker[1] := FALSE; END_IF;
+
+// Остановка бункера в ручном режиме
+IF stBunker[1].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stBunker[1].cmdStopFeeder // Команда на остановку в ручном режиме
+	THEN
+		xStartBunker[1] := FALSE;
+		xManualStopBunker[1] := TRUE;
+END_IF;
+IF eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[1] THEN xManualStopBunker[1] := FALSE; END_IF;
+
+// БУНКЕР 2
+
+// Переключение режимов
+IF stBunker[2].cmdSetModeManual OR stCommands.cmdSetToManual THEN stBunker[2].eStateRemote := E_StateRemote.Manual; END_IF;
+IF stBunker[2].cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stBunker[2].eStateRemote := E_StateRemote.Auto; END_IF;
+
+// Запуск бункера в ручном режиме
+IF stBunker[2].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stBunker[2].cmdStartFeeder // Команда на запуск в ручном режиме
+	AND eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
+	AND eBunkerStage[2] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[2] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
+	//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[2]) // Не имеет ошибок
+	THEN
+		xManualStopBunker[2] := FALSE;
+		xStartBunker[2] := TRUE;
+END_IF;
+IF (eBunkerStage[2] = E_StageWithPreStartAlarm.STARTING OR eBunkerStage[2] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[2] THEN xStartBunker[2] := FALSE; END_IF;
+
+// Остановка бункера в ручном режиме
+IF stBunker[2].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stBunker[2].cmdStopFeeder // Команда на остановку в ручном режиме
+	THEN
+		xStartBunker[2] := FALSE;
+		xManualStopBunker[2] := TRUE;
+END_IF;
+IF eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[2] THEN xManualStopBunker[2] := FALSE; END_IF;
+
+// БУНКЕР 3
+
+// Переключение режимов
+IF stBunker[3].cmdSetModeManual OR stCommands.cmdSetToManual THEN stBunker[3].eStateRemote := E_StateRemote.Manual; END_IF;
+IF stBunker[3].cmdSetModeAuto OR stCommands.cmdSetToAuto THEN stBunker[3].eStateRemote := E_StateRemote.Auto; END_IF;
+
+// Запуск бункера в ручном режиме
+IF stBunker[3].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stBunker[3].cmdStartFeeder // Команда на запуск в ручном режиме
+	AND eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
+	AND eBunkerStage[3] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[3] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
+	//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[3]) // Не имеет ошибок
+	THEN
+		xManualStopBunker[3] := FALSE;
+		xStartBunker[3] := TRUE;
+END_IF;
+IF (eBunkerStage[3] = E_StageWithPreStartAlarm.STARTING OR eBunkerStage[3] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[3] THEN xStartBunker[3] := FALSE; END_IF;
+
+// Остановка бункера в ручном режиме
+IF stBunker[3].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
+	AND stBunker[3].cmdStopFeeder // Команда на остановку в ручном режиме
+	THEN
+		xStartBunker[3] := FALSE;
+		xManualStopBunker[3] := TRUE;
+END_IF;
+IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[3] THEN xManualStopBunker[3] := FALSE; END_IF;
 
 // Процессы аварийных остановок в ручном режиме 
 	// F FC_Dumper_GetErrorCommon(Dumper:=stDumper) THEN FC_Dumper_EmergencyStop(Dumper:=stDumper); END_IF;
