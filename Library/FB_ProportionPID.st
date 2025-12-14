@@ -33,6 +33,8 @@ VAR_INPUT
     rPID_Ki                 : REAL := 0.2;  // Интегральный коэффициент
     rPID_Kd                 : REAL := 0.05; // Дифференциальный коэффициент
     rPID_IntegralLimit      : REAL := 10.0; // Ограничение интеграла (anti-windup)
+    rPID_DerivativeFilter   : REAL := 0.1;  // Коэффициент фильтрации D-составляющей [0..1]
+                                            // 0 = нет фильтрации, 1 = максимум фильтра
 
     // ------------------------------------------------------------------------
     // Базовые частоты (рассчитываются заранее в INIT)
@@ -122,6 +124,10 @@ VAR
     _rIntegral_2            : REAL := 0.0;  // Интегральная составляющая ПИД 2
     _rIntegral_3            : REAL := 0.0;  // Интегральная составляющая ПИД 3
 
+    _rDerivativeFiltered_1  : REAL := 0.0;  // Фильтрованная производная ПИД 1
+    _rDerivativeFiltered_2  : REAL := 0.0;  // Фильтрованная производная ПИД 2
+    _rDerivativeFiltered_3  : REAL := 0.0;  // Фильтрованная производная ПИД 3
+
     // ------------------------------------------------------------------------
     // Флаги активности бункеров
     // ------------------------------------------------------------------------
@@ -179,6 +185,20 @@ IF NOT xEnable THEN
     qrPID_Error_1 := 0.0;
     qrPID_Error_2 := 0.0;
     qrPID_Error_3 := 0.0;
+    qrPID_Integral_1 := 0.0;
+    qrPID_Integral_2 := 0.0;
+    qrPID_Integral_3 := 0.0;
+
+    // Сброс внутренних переменных ПИД
+    _rIntegral_1 := 0.0;
+    _rIntegral_2 := 0.0;
+    _rIntegral_3 := 0.0;
+    _rPrevError_1 := 0.0;
+    _rPrevError_2 := 0.0;
+    _rPrevError_3 := 0.0;
+    _rDerivativeFiltered_1 := 0.0;
+    _rDerivativeFiltered_2 := 0.0;
+    _rDerivativeFiltered_3 := 0.0;
 
     RETURN; // Выход из блока
 END_IF
@@ -273,23 +293,35 @@ IF _xBunker1_Active THEN
     _rError := _rProportionNorm_1 - rProportionActual_1;
     qrPID_Error_1 := _rError;
 
-    // Накопление интегральной составляющей
-    _rIntegral_1 := _rIntegral_1 + _rError * rDeltaTime;
+    // Расчет дифференциальной составляющей (сырая производная)
+    _rDerivative := (_rError - _rPrevError_1) / rDeltaTime;
 
-    // Ограничение интеграла (anti-windup)
-    IF _rIntegral_1 > rPID_IntegralLimit THEN
-        _rIntegral_1 := rPID_IntegralLimit;
-    ELSIF _rIntegral_1 < -rPID_IntegralLimit THEN
-        _rIntegral_1 := -rPID_IntegralLimit;
+    // Низкочастотный фильтр первого порядка для D-составляющей
+    // D_filtered(n) = alpha * D_raw + (1-alpha) * D_filtered(n-1)
+    // alpha = 1 - rPID_DerivativeFilter (меньше alpha = больше фильтрации)
+    _rDerivativeFiltered_1 := (1.0 - rPID_DerivativeFilter) * _rDerivative
+                            + rPID_DerivativeFilter * _rDerivativeFiltered_1;
+
+    // ПИД формула: u(t) = Kp*e(t) + Ki*∫e(t)dt + Kd*de(t)/dt
+    _rOutput := rPID_Kp * _rError + rPID_Ki * _rIntegral_1 + rPID_Kd * _rDerivativeFiltered_1;
+
+    // Условная интеграция (conditional integration anti-windup):
+    // Накапливаем интеграл ТОЛЬКО если выход не насыщен
+    // или если ошибка уменьшает насыщение
+    IF (_rOutput >= 0.0 AND _rOutput <= 1.0) OR
+       (_rOutput < 0.0 AND _rError > 0.0) OR
+       (_rOutput > 1.0 AND _rError < 0.0) THEN
+        _rIntegral_1 := _rIntegral_1 + _rError * rDeltaTime;
+
+        // Ограничение интеграла (дополнительная защита)
+        IF _rIntegral_1 > rPID_IntegralLimit THEN
+            _rIntegral_1 := rPID_IntegralLimit;
+        ELSIF _rIntegral_1 < -rPID_IntegralLimit THEN
+            _rIntegral_1 := -rPID_IntegralLimit;
+        END_IF
     END_IF
 
     qrPID_Integral_1 := _rIntegral_1;
-
-    // Расчет дифференциальной составляющей
-    _rDerivative := (_rError - _rPrevError_1) / rDeltaTime;
-
-    // ПИД формула: u(t) = Kp*e(t) + Ki*∫e(t)dt + Kd*de(t)/dt
-    _rOutput := rPID_Kp * _rError + rPID_Ki * _rIntegral_1 + rPID_Kd * _rDerivative;
 
     // Ограничение выхода в диапазоне [0..1]
     IF _rOutput < 0.0 THEN
@@ -307,6 +339,9 @@ ELSE
     qrPID_Output_1 := 0.0;
     qrPID_Error_1 := 0.0;
     qrPID_Integral_1 := 0.0;
+    _rIntegral_1 := 0.0;              // КРИТИЧНО: сброс внутреннего интеграла
+    _rPrevError_1 := 0.0;
+    _rDerivativeFiltered_1 := 0.0;    // Сброс фильтра производной
 END_IF
 
 // ----------------------------------------------------------------------------
@@ -316,18 +351,26 @@ IF _xBunker2_Active THEN
     _rError := _rProportionNorm_2 - rProportionActual_2;
     qrPID_Error_2 := _rError;
 
-    _rIntegral_2 := _rIntegral_2 + _rError * rDeltaTime;
+    _rDerivative := (_rError - _rPrevError_2) / rDeltaTime;
+    _rDerivativeFiltered_2 := (1.0 - rPID_DerivativeFilter) * _rDerivative
+                            + rPID_DerivativeFilter * _rDerivativeFiltered_2;
 
-    IF _rIntegral_2 > rPID_IntegralLimit THEN
-        _rIntegral_2 := rPID_IntegralLimit;
-    ELSIF _rIntegral_2 < -rPID_IntegralLimit THEN
-        _rIntegral_2 := -rPID_IntegralLimit;
+    _rOutput := rPID_Kp * _rError + rPID_Ki * _rIntegral_2 + rPID_Kd * _rDerivativeFiltered_2;
+
+    // Условная интеграция (anti-windup)
+    IF (_rOutput >= 0.0 AND _rOutput <= 1.0) OR
+       (_rOutput < 0.0 AND _rError > 0.0) OR
+       (_rOutput > 1.0 AND _rError < 0.0) THEN
+        _rIntegral_2 := _rIntegral_2 + _rError * rDeltaTime;
+
+        IF _rIntegral_2 > rPID_IntegralLimit THEN
+            _rIntegral_2 := rPID_IntegralLimit;
+        ELSIF _rIntegral_2 < -rPID_IntegralLimit THEN
+            _rIntegral_2 := -rPID_IntegralLimit;
+        END_IF
     END_IF
 
     qrPID_Integral_2 := _rIntegral_2;
-
-    _rDerivative := (_rError - _rPrevError_2) / rDeltaTime;
-    _rOutput := rPID_Kp * _rError + rPID_Ki * _rIntegral_2 + rPID_Kd * _rDerivative;
 
     IF _rOutput < 0.0 THEN
         _rOutput := 0.0;
@@ -341,6 +384,9 @@ ELSE
     qrPID_Output_2 := 0.0;
     qrPID_Error_2 := 0.0;
     qrPID_Integral_2 := 0.0;
+    _rIntegral_2 := 0.0;              // КРИТИЧНО: сброс внутреннего интеграла
+    _rPrevError_2 := 0.0;
+    _rDerivativeFiltered_2 := 0.0;    // Сброс фильтра производной
 END_IF
 
 // ----------------------------------------------------------------------------
@@ -350,18 +396,26 @@ IF _xBunker3_Active THEN
     _rError := _rProportionNorm_3 - rProportionActual_3;
     qrPID_Error_3 := _rError;
 
-    _rIntegral_3 := _rIntegral_3 + _rError * rDeltaTime;
+    _rDerivative := (_rError - _rPrevError_3) / rDeltaTime;
+    _rDerivativeFiltered_3 := (1.0 - rPID_DerivativeFilter) * _rDerivative
+                            + rPID_DerivativeFilter * _rDerivativeFiltered_3;
 
-    IF _rIntegral_3 > rPID_IntegralLimit THEN
-        _rIntegral_3 := rPID_IntegralLimit;
-    ELSIF _rIntegral_3 < -rPID_IntegralLimit THEN
-        _rIntegral_3 := -rPID_IntegralLimit;
+    _rOutput := rPID_Kp * _rError + rPID_Ki * _rIntegral_3 + rPID_Kd * _rDerivativeFiltered_3;
+
+    // Условная интеграция (anti-windup)
+    IF (_rOutput >= 0.0 AND _rOutput <= 1.0) OR
+       (_rOutput < 0.0 AND _rError > 0.0) OR
+       (_rOutput > 1.0 AND _rError < 0.0) THEN
+        _rIntegral_3 := _rIntegral_3 + _rError * rDeltaTime;
+
+        IF _rIntegral_3 > rPID_IntegralLimit THEN
+            _rIntegral_3 := rPID_IntegralLimit;
+        ELSIF _rIntegral_3 < -rPID_IntegralLimit THEN
+            _rIntegral_3 := -rPID_IntegralLimit;
+        END_IF
     END_IF
 
     qrPID_Integral_3 := _rIntegral_3;
-
-    _rDerivative := (_rError - _rPrevError_3) / rDeltaTime;
-    _rOutput := rPID_Kp * _rError + rPID_Ki * _rIntegral_3 + rPID_Kd * _rDerivative;
 
     IF _rOutput < 0.0 THEN
         _rOutput := 0.0;
@@ -375,6 +429,9 @@ ELSE
     qrPID_Output_3 := 0.0;
     qrPID_Error_3 := 0.0;
     qrPID_Integral_3 := 0.0;
+    _rIntegral_3 := 0.0;              // КРИТИЧНО: сброс внутреннего интеграла
+    _rPrevError_3 := 0.0;
+    _rDerivativeFiltered_3 := 0.0;    // Сброс фильтра производной
 END_IF
 
 // ============================================================================
@@ -384,52 +441,106 @@ END_IF
 // на основе пропорций и целевой суммарной частоты
 
 // ----------------------------------------------------------------------------
-// ШАГ 1: Масштабирование базовых частот ПИД-выходами
+// ШАГ 1: Применение ПИД-коррекции к базовым частотам
+// ----------------------------------------------------------------------------
+// Новый алгоритм: ПИД-выход напрямую добавляется к базовой частоте
+// Формула: Freq = FreqBase + PID_Output * CorrectioRange
+// где CorrectionRange = диапазон коррекции вокруг базовой частоты
+
+// Бункер 1
+IF _xBunker1_Active THEN
+    // Диапазон коррекции = базовая частота (можно изменить на другой коэффициент)
+    _rScale_1 := rFrequencyBase_1;
+
+    // ПИД-выход [0..1] преобразуется в коррекцию [-FreqBase..+FreqBase]
+    // qrPID_Output_1 = 0.5 → нет коррекции
+    // qrPID_Output_1 > 0.5 → увеличение частоты
+    // qrPID_Output_1 < 0.5 → уменьшение частоты
+    _rFreqScaled_1 := rFrequencyBase_1 + (qrPID_Output_1 - 0.5) * 2.0 * _rScale_1;
+
+    // Ограничение коэффициента масштабирования (для диагностики)
+    _rScale_1 := _rFreqScaled_1 / rFrequencyBase_1;
+    IF _rScale_1 < rScaleLimit_Min THEN
+        _rScale_1 := rScaleLimit_Min;
+        _rFreqScaled_1 := rFrequencyBase_1 * _rScale_1;
+    ELSIF _rScale_1 > rScaleLimit_Max THEN
+        _rScale_1 := rScaleLimit_Max;
+        _rFreqScaled_1 := rFrequencyBase_1 * _rScale_1;
+    END_IF
+ELSE
+    _rFreqScaled_1 := 0.0;
+    _rScale_1 := 0.0;
+END_IF
+
+// Бункер 2
+IF _xBunker2_Active THEN
+    _rScale_2 := rFrequencyBase_2;
+    _rFreqScaled_2 := rFrequencyBase_2 + (qrPID_Output_2 - 0.5) * 2.0 * _rScale_2;
+
+    _rScale_2 := _rFreqScaled_2 / rFrequencyBase_2;
+    IF _rScale_2 < rScaleLimit_Min THEN
+        _rScale_2 := rScaleLimit_Min;
+        _rFreqScaled_2 := rFrequencyBase_2 * _rScale_2;
+    ELSIF _rScale_2 > rScaleLimit_Max THEN
+        _rScale_2 := rScaleLimit_Max;
+        _rFreqScaled_2 := rFrequencyBase_2 * _rScale_2;
+    END_IF
+ELSE
+    _rFreqScaled_2 := 0.0;
+    _rScale_2 := 0.0;
+END_IF
+
+// Бункер 3
+IF _xBunker3_Active THEN
+    _rScale_3 := rFrequencyBase_3;
+    _rFreqScaled_3 := rFrequencyBase_3 + (qrPID_Output_3 - 0.5) * 2.0 * _rScale_3;
+
+    _rScale_3 := _rFreqScaled_3 / rFrequencyBase_3;
+    IF _rScale_3 < rScaleLimit_Min THEN
+        _rScale_3 := rScaleLimit_Min;
+        _rFreqScaled_3 := rFrequencyBase_3 * _rScale_3;
+    ELSIF _rScale_3 > rScaleLimit_Max THEN
+        _rScale_3 := rScaleLimit_Max;
+        _rFreqScaled_3 := rFrequencyBase_3 * _rScale_3;
+    END_IF
+ELSE
+    _rFreqScaled_3 := 0.0;
+    _rScale_3 := 0.0;
+END_IF
+
+// ----------------------------------------------------------------------------
+// ШАГ 2: Применение ограничений оборудования (до нормализации!)
 // ----------------------------------------------------------------------------
 
 // Бункер 1
 IF _xBunker1_Active THEN
-    // Коэффициент масштабирования = ПИД-выход / целевая пропорция
-    _rScale_1 := qrPID_Output_1 / _rProportionNorm_1;
-
-    // Ограничение коэффициента масштабирования
-    IF _rScale_1 < rScaleLimit_Min THEN
-        _rScale_1 := rScaleLimit_Min;
-    ELSIF _rScale_1 > rScaleLimit_Max THEN
-        _rScale_1 := rScaleLimit_Max;
+    IF _rFreqScaled_1 > rFrequency_Max THEN
+        _rFreqScaled_1 := rFrequency_Max;
+    ELSIF _rFreqScaled_1 < rFrequency_Min THEN
+        _rFreqScaled_1 := rFrequency_Min;
     END_IF
-
-    _rFreqScaled_1 := rFrequencyBase_1 * _rScale_1;
 ELSE
     _rFreqScaled_1 := 0.0;
 END_IF
 
 // Бункер 2
 IF _xBunker2_Active THEN
-    _rScale_2 := qrPID_Output_2 / _rProportionNorm_2;
-
-    IF _rScale_2 < rScaleLimit_Min THEN
-        _rScale_2 := rScaleLimit_Min;
-    ELSIF _rScale_2 > rScaleLimit_Max THEN
-        _rScale_2 := rScaleLimit_Max;
+    IF _rFreqScaled_2 > rFrequency_Max THEN
+        _rFreqScaled_2 := rFrequency_Max;
+    ELSIF _rFreqScaled_2 < rFrequency_Min THEN
+        _rFreqScaled_2 := rFrequency_Min;
     END_IF
-
-    _rFreqScaled_2 := rFrequencyBase_2 * _rScale_2;
 ELSE
     _rFreqScaled_2 := 0.0;
 END_IF
 
 // Бункер 3
 IF _xBunker3_Active THEN
-    _rScale_3 := qrPID_Output_3 / _rProportionNorm_3;
-
-    IF _rScale_3 < rScaleLimit_Min THEN
-        _rScale_3 := rScaleLimit_Min;
-    ELSIF _rScale_3 > rScaleLimit_Max THEN
-        _rScale_3 := rScaleLimit_Max;
+    IF _rFreqScaled_3 > rFrequency_Max THEN
+        _rFreqScaled_3 := rFrequency_Max;
+    ELSIF _rFreqScaled_3 < rFrequency_Min THEN
+        _rFreqScaled_3 := rFrequency_Min;
     END_IF
-
-    _rFreqScaled_3 := rFrequencyBase_3 * _rScale_3;
 ELSE
     _rFreqScaled_3 := 0.0;
 END_IF
@@ -437,6 +548,7 @@ END_IF
 // ----------------------------------------------------------------------------
 // ШАГ 3: Нормализация для поддержания целевой суммарной частоты
 // ----------------------------------------------------------------------------
+// КРИТИЧНО: нормализация ПОСЛЕ ограничений, чтобы сумма всегда = TargetSum
 _rSumScaled := _rFreqScaled_1 + _rFreqScaled_2 + _rFreqScaled_3;
 
 // Защита от деления на ноль
@@ -447,43 +559,6 @@ END_IF
 qrFrequency_1 := _rFreqScaled_1 * (rFrequency_TargetSum / _rSumScaled);
 qrFrequency_2 := _rFreqScaled_2 * (rFrequency_TargetSum / _rSumScaled);
 qrFrequency_3 := _rFreqScaled_3 * (rFrequency_TargetSum / _rSumScaled);
-
-// ----------------------------------------------------------------------------
-// ШАГ 4: Применение ограничений оборудования
-// ----------------------------------------------------------------------------
-
-// Бункер 1
-IF _xBunker1_Active THEN
-    IF qrFrequency_1 > rFrequency_Max THEN
-        qrFrequency_1 := rFrequency_Max;
-    ELSIF qrFrequency_1 < rFrequency_Min THEN
-        qrFrequency_1 := rFrequency_Min;
-    END_IF
-ELSE
-    qrFrequency_1 := 0.0;
-END_IF
-
-// Бункер 2
-IF _xBunker2_Active THEN
-    IF qrFrequency_2 > rFrequency_Max THEN
-        qrFrequency_2 := rFrequency_Max;
-    ELSIF qrFrequency_2 < rFrequency_Min THEN
-        qrFrequency_2 := rFrequency_Min;
-    END_IF
-ELSE
-    qrFrequency_2 := 0.0;
-END_IF
-
-// Бункер 3
-IF _xBunker3_Active THEN
-    IF qrFrequency_3 > rFrequency_Max THEN
-        qrFrequency_3 := rFrequency_Max;
-    ELSIF qrFrequency_3 < rFrequency_Min THEN
-        qrFrequency_3 := rFrequency_Min;
-    END_IF
-ELSE
-    qrFrequency_3 := 0.0;
-END_IF
 
 // ============================================================================
 // ОБНОВЛЕНИЕ ДИАГНОСТИЧЕСКИХ ВЫХОДОВ
