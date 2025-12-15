@@ -450,9 +450,9 @@ CASE STAGE OF
 			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
 			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
 		ELSE
-			// Ручной/Ремонт режим - частота от SCADA
-			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederManualFrequency;
-			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederManualFrequency;
+			// Ручной/Ремонт режим - частота от входного параметра irManualFrequency
+			rTargetFreqVibFeeder1 := irManualFrequency;
+			rTargetFreqVibFeeder2 := irManualFrequency;
 		END_IF;
 
 		// Переход в WORK по включению оборудования (обратная связь VFD)
@@ -473,9 +473,9 @@ CASE STAGE OF
 			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
 			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
 		ELSE
-			// Ручной/Ремонт режим - частота от SCADA
-			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederManualFrequency;
-			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederManualFrequency;
+			// Ручной/Ремонт режим - частота от входного параметра irManualFrequency
+			rTargetFreqVibFeeder1 := irManualFrequency;
+			rTargetFreqVibFeeder2 := irManualFrequency;
 		END_IF;
 
 		// Обработка команды останова
