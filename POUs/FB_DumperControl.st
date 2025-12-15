@@ -2,7 +2,8 @@ FUNCTION_BLOCK FB_DumperControl
 VAR_INPUT
 	Dumper : REFERENCE TO ST_Dumper;
 	xStart : BOOL; // Команда запуска отвалообразователя
-	xStop : BOOL; // Команда остановки (аварийная остановка)
+	xStop : BOOL; // Команда остановки
+	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
 END_VAR
 VAR_OUTPUT
@@ -597,6 +598,10 @@ CASE STAGE OF
 		// Аварийная остановка: команда СТОП на VFD (FALSE = СТОП)
 		Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
 		Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+		Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+		Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+		Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
+		Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
 
 		// Сброс целевых частот
 		rTargetFreqConv1 := 0.0;
@@ -611,12 +616,18 @@ CASE STAGE OF
 		// Сброс подстадий для следующего запуска
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
+		nRotationSubstage := 0;
 
 		// Сброс таймера запуска
 		fbTimerStarting(IN := FALSE);
 
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
+
+		// Сброс ошибки и переход в IDLE при отсутствии ошибок
+		IF xReset AND NOT Dumper.xStateFailure THEN
+			STAGE := E_StageWithPreStartAlarm.IDLE;
+		END_IF
 END_CASE;
 
 // ========================================

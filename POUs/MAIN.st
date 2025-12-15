@@ -183,7 +183,8 @@ fbBunker[3](
 fbDumper(
 	Dumper := stDumper,
 	xStart := xStartDumper,
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopDumper,
+	xStop := xManualStopDumper,
+	xEmergencyStop := stDumper.cmdEmergencyStop,
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eDumperStage,
 	eStageToSCADA => eDumperStageToSCADA
@@ -193,7 +194,7 @@ fbDumper(
 fbConveyor(
 	Conveyor := stConveyor,
 	xStart := xStartConveyor,
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopConveyor,
+	xStop := xManualStopConveyor,
 	xReset := stCommands.cmdResetAll.qxSignal,
 	eStage => eConveyorStage,
 	eStageToSCADA => eConveyorStageToSCADA
@@ -214,7 +215,6 @@ fbSimulation(
 	Conveyor := stConveyor,
 	Bunker := stBunker
 );
-
 // == РУЧНОЙ РЕЖИМ - ДИСТАНЦИЯ ==
 
 // ОТВАЛООБРАЗОВАТЕЛЬ
@@ -235,15 +235,13 @@ END_IF;
 
 // Остановка отвалообразователя в ручном режиме
 IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
-	AND stDumper.cmdStopConveyor // Команда на остановку в ручном режиме
-	AND	(eDumperStage = E_StageWithPreStartAlarm.WORK // В статусе работы
-		OR eDumperStage = E_StageWithPreStartAlarm.STARTING 
-		OR eDumperStage = E_StageWithPreStartAlarm.PRESTART_ALARM) // В процессе запуска
+	AND stDumper.cmdStopConveyor // Команда на остановку в ручном режимеw
 	THEN
 		xStartDumper := FALSE;
 		xManualStopDumper := TRUE;
 END_IF;
-IF eDumperStage <> E_StageWithPreStartAlarm.WORK AND xManualStopDumper THEN xManualStopDumper := FALSE; END_IF;
+// Сброс команды остановки только после полного перехода в IDLE
+IF (eDumperStage = E_StageWithPreStartAlarm.IDLE OR eDumperStage = E_StageWithPreStartAlarm.ERROR) AND xManualStopDumper THEN xManualStopDumper := FALSE; END_IF;
 
 // СБОРНЫЙ КОНВЕЙЕР
 
@@ -271,7 +269,8 @@ IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в ре
 		xStartConveyor := FALSE;
 		xManualStopConveyor := TRUE;
 END_IF;
-IF eConveyorStage <> E_StageWithPreStartAlarm.WORK AND xManualStopConveyor THEN xManualStopConveyor := FALSE; END_IF;
+// Сброс команды остановки только после полного перехода в IDLE
+IF (eConveyorStage = E_StageWithPreStartAlarm.IDLE OR eConveyorStage = E_StageWithPreStartAlarm.ERROR) AND xManualStopConveyor THEN xManualStopConveyor := FALSE; END_IF;
 
 // БУНКЕР 1
 
@@ -289,7 +288,7 @@ IF stBunker[1].eStateRemote = E_StateRemote.Manual // Находится в ре
 		xManualStopBunker[1] := FALSE;
 		xStartBunker[1] := TRUE;
 END_IF;
-IF (eBunkerStage[1] = E_StageWithPreStartAlarm.STARTING OR eBunkerStage[1] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[1] THEN xStartBunker[1] := FALSE; END_IF;
+IF (eBunkerStage[1] = E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1] = E_StageWithPreStartAlarm.PRESTART_ALARM) AND xStartBunker[1] THEN xStartBunker[1] := FALSE; END_IF;
 
 // Остановка бункера в ручном режиме
 IF stBunker[1].eStateRemote = E_StateRemote.Manual // Находится в режиме Manual
@@ -298,7 +297,7 @@ IF stBunker[1].eStateRemote = E_StateRemote.Manual // Находится в ре
 		xStartBunker[1] := FALSE;
 		xManualStopBunker[1] := TRUE;
 END_IF;
-IF eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[1] THEN xManualStopBunker[1] := FALSE; END_IF;
+IF (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK OR eBunkerStage[1] = E_StageWithPreStartAlarm.ERROR) AND xManualStopBunker[1] THEN xManualStopBunker[1] := FALSE; END_IF;
 
 // БУНКЕР 2
 
@@ -325,7 +324,7 @@ IF stBunker[2].eStateRemote = E_StateRemote.Manual // Находится в ре
 		xStartBunker[2] := FALSE;
 		xManualStopBunker[2] := TRUE;
 END_IF;
-IF eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[2] THEN xManualStopBunker[2] := FALSE; END_IF;
+IF (eBunkerStage[2] = E_StageWithPreStartAlarm.WORK OR eBunkerStage[2] = E_StageWithPreStartAlarm.ERROR) AND xManualStopBunker[2] THEN xManualStopBunker[2] := FALSE; END_IF;
 
 // БУНКЕР 3
 
@@ -352,7 +351,7 @@ IF stBunker[3].eStateRemote = E_StateRemote.Manual // Находится в ре
 		xStartBunker[3] := FALSE;
 		xManualStopBunker[3] := TRUE;
 END_IF;
-IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK AND xManualStopBunker[3] THEN xManualStopBunker[3] := FALSE; END_IF;
+IF (eBunkerStage[3] = E_StageWithPreStartAlarm.WORK OR eBunkerStage[3] = E_StageWithPreStartAlarm.ERROR) AND xManualStopBunker[3] THEN xManualStopBunker[3] := FALSE; END_IF;
 
 // Процессы аварийных остановок в ручном режиме 
 	// F FC_Dumper_GetErrorCommon(Dumper:=stDumper) THEN FC_Dumper_EmergencyStop(Dumper:=stDumper); END_IF;
