@@ -66,7 +66,8 @@ class FC_ModbusParser:
 
     def _extract_section(self, content: str, marker: str) -> Optional[str]:
         """Извлечь секцию кода между маркерами"""
-        pattern = rf'//\s*===\s*{marker}.*?$(.+?)(?=//\s*===|END_FUNCTION)'
+        # Pattern matches from marker to either next === section, END_FUNCTION, or end of file
+        pattern = rf'//\s*===\s*{marker}.*?$(.+?)(?=//\s*===|END_FUNCTION|\Z)'
         match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
         return match.group(1) if match else None
 
@@ -75,7 +76,31 @@ class FC_ModbusParser:
         lines = content.split('\n')
 
         for line in lines:
-            # Проверка на секцию оборудования
+            # Проверка на DI/DO MODULES MAPPING секции (основная секция)
+            di_do_match = re.match(r'//\s+(DI|DO)\s+MODULES\s+MAPPING\s*\((\d+)-(\d+)\)', line)
+            if di_do_match:
+                module_type = di_do_match.group(1)
+                start_reg = int(di_do_match.group(2))
+                end_reg = int(di_do_match.group(3))
+                section_name = f"{module_type} MODULES MAPPING"
+                self.current_section = section_name
+                self.sections[(register_type, section_name)] = (start_reg, end_reg)
+                continue
+
+            # Проверка на подсекции модулей (Модуль DI1, DO1 и т.д.) - ПЕРЕД общим паттерном!
+            module_subsection_match = re.match(r'//\s+Модуль\s+(DI|DO)(\d+)\s*\((\d+)-(\d+)\):\s*(.+)', line)
+            if module_subsection_match:
+                module_type = module_subsection_match.group(1)
+                module_num = module_subsection_match.group(2)
+                start_reg = int(module_subsection_match.group(3))
+                end_reg = int(module_subsection_match.group(4))
+                description = module_subsection_match.group(5)
+                section_name = f"Модуль {module_type}{module_num}: {description}"
+                self.current_section = section_name
+                self.sections[(register_type, section_name)] = (start_reg, end_reg)
+                continue
+
+            # Проверка на секцию оборудования (стандартный формат - общий паттерн)
             section_match = re.match(r'//\s+(.+?)\s*\((\d+)-(\d+)\)', line)
             if section_match:
                 section_name = section_match.group(1)

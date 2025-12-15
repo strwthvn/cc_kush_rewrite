@@ -235,14 +235,7 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 1, xValue := xStateEmergencyStop);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 2, xValue := xStateErrorCheckReady);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 3, xValue := xStateErrorAcceptIdle);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 4, xValue := stCommonSignals.fbEmergencyStopBtn.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue := stCommonSignals.fbRemoteModeBtn.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 6, xValue := stCommonSignals.fbRealyCurrentControl.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 7, xValue := stCommonSignals.fbQF1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 8, xValue := stCommonSignals.fb9QF1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 9, xValue := stCommonSignals.fb10QF1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 10, xValue := stCommonSignals.fb11QF1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 11, xValue := stCommonSignals.qx6KM1);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 12, xValue := (stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto));
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 13, xValue := NOT(stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto));
 
@@ -254,20 +247,12 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 // Регистры 30-31: BOOL флаги статусов бункера 1
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 0, xValue := stBunker[1].xStateWarning);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 1, xValue := stBunker[1].xStateFailure);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 2, xValue := stBunker[1].fbStateHatch.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 3, xValue := stBunker[1].qxLightRed);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 4, xValue := stBunker[1].qxLightYellow);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 5, xValue := stBunker[1].qxLightGreen);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 6, xValue := stBunker[1].fbBtnStart.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 7, xValue := stBunker[1].fbBtnStop.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 8, xValue := stBunker[1].fbBtnEmergencyStop.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 12, xValue := stBunker[1].xStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 13, xValue := stBunker[1].xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 14, xValue := stBunker[1].xStateRemoteRepair);
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 32, rValue := stBunker[1].rWeight);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 34, rValue := stBunker[1].rProportionActual);
-//FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 36, rValue := stBunker[1].rMotorVibFeederCommonFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 38, rValue := stBunker[1].cmdDumpingPrecent);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 40, rValue := stBunker[1].MotorVibrator[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 42, rValue := stBunker[1].MotorVibrator[1].VFD.rActualFrequency);
@@ -298,20 +283,12 @@ GLOBAL.awModbusInputRegisters[84] := TO_WORD(eBunkerStageToSCADA[1]);
 // Регистры 90-91: BOOL флаги статусов бункера 2
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 0, xValue := stBunker[2].xStateWarning);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 1, xValue := stBunker[2].xStateFailure);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 2, xValue := stBunker[2].fbStateHatch.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 3, xValue := stBunker[2].qxLightRed);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 4, xValue := stBunker[2].qxLightYellow);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 5, xValue := stBunker[2].qxLightGreen);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 6, xValue := stBunker[2].fbBtnStart.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 7, xValue := stBunker[2].fbBtnStop.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 8, xValue := stBunker[2].fbBtnEmergencyStop.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 12, xValue := stBunker[2].xStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 13, xValue := stBunker[2].xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 14, xValue := stBunker[2].xStateRemoteRepair);
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 92, rValue := stBunker[2].rWeight);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 94, rValue := stBunker[2].rProportionActual);
-//FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 96, rValue := stBunker[2].rMotorVibFeederCommonFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 98, rValue := stBunker[2].cmdDumpingPrecent);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 100, rValue := stBunker[2].MotorVibrator[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 102, rValue := stBunker[2].MotorVibrator[1].VFD.rActualFrequency);
@@ -342,20 +319,12 @@ GLOBAL.awModbusInputRegisters[144] := TO_WORD(eBunkerStageToSCADA[2]);
 // Регистры 150-151: BOOL флаги статусов бункера 3
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 0, xValue := stBunker[3].xStateWarning);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 1, xValue := stBunker[3].xStateFailure);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 2, xValue := stBunker[3].fbStateHatch.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 3, xValue := stBunker[3].qxLightRed);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 4, xValue := stBunker[3].qxLightYellow);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 5, xValue := stBunker[3].qxLightGreen);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 6, xValue := stBunker[3].fbBtnStart.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 7, xValue := stBunker[3].fbBtnStop.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 8, xValue := stBunker[3].fbBtnEmergencyStop.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 12, xValue := stBunker[3].xStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 13, xValue := stBunker[3].xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 14, xValue := stBunker[3].xStateRemoteRepair);
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 152, rValue := stBunker[3].rWeight);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 154, rValue := stBunker[3].rProportionActual);
-//FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 156, rValue := stBunker[3].rMotorVibFeederCommonFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 158, rValue := stBunker[3].cmdDumpingPrecent);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 160, rValue := stBunker[3].MotorVibrator[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 162, rValue := stBunker[3].MotorVibrator[1].VFD.rActualFrequency);
@@ -388,32 +357,10 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 1, xValue := stDumper.xStateFailure);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 2, xValue := stDumper.xStateEnable);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 3, xValue := stDumper.xStateStarting);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 4, xValue := stDumper.fbBtnStart.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 5, xValue := stDumper.fbBtnStop.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 6, xValue := stDumper.fbBtnEmergencyStop.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 7, xValue := stDumper.fbBtnRemoteMode.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 8, xValue := stDumper.xHLA);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 9, xValue := stDumper.xSoundAlarm);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 10, xValue := stDumper.fbZQAlarm[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 11, xValue := stDumper.fbZQAlarm[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 12, xValue := stDumper.fbZQAlarm[3].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 13, xValue := stDumper.fbZQAlarm[4].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 14, xValue := stDumper.fbZQWarning[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 210, iBitIndex := 15, xValue := stDumper.fbZQWarning[2].qxSignal);
 
 // Регистр 211: дополнительные сигналы обратной связи отвалообразователя
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 0, xValue := stDumper.fbZQWarning[3].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 1, xValue := stDumper.fbZQWarning[4].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 2, xValue := stDumper.fbHQ_IsOk[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 3, xValue := stDumper.fbHQ_IsOk[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 4, xValue := stDumper.fbHQ_IsOk[3].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 5, xValue := stDumper.fbHQ_IsOk[4].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 6, xValue := stDumper.fbSQ_IsOk[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 7, xValue := stDumper.fbSQ_IsOk[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 8, xValue := stDumper.fbGS1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 9, xValue := stDumper.fbQR[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 10, xValue := stDumper.fbQR[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 11, xValue := stDumper.fbYS1.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 12, xValue := stDumper.xStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 13, xValue := stDumper.xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 211, iBitIndex := 14, xValue := stDumper.xStateRemoteRepair);
@@ -428,11 +375,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 GLOBAL.awModbusInputRegisters[230] := TO_WORD(eDumperStageToSCADA);
 
 // Отвалообразователь - Поворот (240-269)
-// Регистры 240-241: BOOL флаги управления поворотом
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 240, iBitIndex := 0, xValue := stDumper.fbBtnTurnLeft.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 240, iBitIndex := 1, xValue := stDumper.fbBtnTurnRight.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 240, iBitIndex := 2, xValue := stDumper.fbEndSwitchRight.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 240, iBitIndex := 3, xValue := stDumper.fbEndSwitchLeft.qxSignal);
+// Регистры 240-241: BOOL флаги управления поворотом (данные перенесены в DI модули)
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 242, rValue := stDumper.MotorRotation[1].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 244, rValue := stDumper.MotorRotation[1].VFD.rActualFrequency);
@@ -447,32 +390,9 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 1, xValue := stConveyor.xStateFailure);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 2, xValue := stConveyor.xStateEnable);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 3, xValue := stConveyor.xStateStarting);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 4, xValue := stConveyor.fbBtnStart.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 5, xValue := stConveyor.fbBtnStop.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 6, xValue := stConveyor.fbBtnEmergencyStop.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 7, xValue := stConveyor.xHLA);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 8, xValue := stConveyor.xSoundAlarm);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 9, xValue := stConveyor.fbYE1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 10, xValue := stConveyor.fbZQAlarm[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 11, xValue := stConveyor.fbZQAlarm[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 12, xValue := stConveyor.fbZQAlarm[3].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 13, xValue := stConveyor.fbZQAlarm[4].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 14, xValue := stConveyor.fbZQWarning[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 270, iBitIndex := 15, xValue := stConveyor.fbZQWarning[2].qxSignal);
 
 // Регистр 271: дополнительные сигналы обратной связи конвейера
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 0, xValue := stConveyor.fbZQWarning[3].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 1, xValue := stConveyor.fbZQWarning[4].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 2, xValue := stConveyor.fbHQ_IsOk[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 3, xValue := stConveyor.fbHQ_IsOk[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 4, xValue := stConveyor.fbHQ_IsOk[3].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 5, xValue := stConveyor.fbHQ_IsOk[4].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 6, xValue := stConveyor.fbSQ_IsOk[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 7, xValue := stConveyor.fbSQ_IsOk[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 8, xValue := stConveyor.fbGS1.qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 9, xValue := stConveyor.fbQR[1].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 10, xValue := stConveyor.fbQR[2].qxSignal);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 11, xValue := stConveyor.fbYS1.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 12, xValue := stConveyor.xStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 13, xValue := stConveyor.xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 271, iBitIndex := 14, xValue := stConveyor.xStateRemoteRepair);
@@ -485,3 +405,334 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 282, rValue := stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag);
 
 GLOBAL.awModbusInputRegisters[290] := TO_WORD(eConveyorStageToSCADA);
+
+// DI MODULES MAPPING (300-399)
+
+// Модуль DI1 (300-301): Бункер 1 - Вибропитатели и вибраторы
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 0, xValue := stBunker[1].fbStateHatch.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 1, xValue := stBunker[1].MotorVibFeeder[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 2, xValue := stBunker[1].MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 3, xValue := stBunker[1].MotorVibFeeder[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 4, xValue := stBunker[1].MotorVibFeeder[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 5, xValue := stBunker[1].MotorVibFeeder[1].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 6, xValue := stBunker[1].MotorVibFeeder[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 7, xValue := stBunker[1].MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 8, xValue := stBunker[1].MotorVibFeeder[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 9, xValue := stBunker[1].MotorVibFeeder[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 10, xValue := stBunker[1].MotorVibFeeder[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 11, xValue := stBunker[1].MotorVibrator[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 12, xValue := stBunker[1].MotorVibrator[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 13, xValue := stBunker[1].MotorVibrator[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 14, xValue := stBunker[1].MotorVibrator[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 300, iBitIndex := 15, xValue := stBunker[1].MotorVibrator[1].fbStateKM.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 0, xValue := stBunker[1].MotorVibrator[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 1, xValue := stBunker[1].MotorVibrator[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 2, xValue := stBunker[1].MotorVibrator[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 3, xValue := stBunker[1].MotorVibrator[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 4, xValue := stBunker[1].MotorVibrator[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 5, xValue := stBunker[1].MotorVibrator[3].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 6, xValue := stBunker[1].MotorVibrator[3].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 7, xValue := stBunker[1].MotorVibrator[3].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 8, xValue := stBunker[1].MotorVibrator[3].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 9, xValue := stBunker[1].MotorVibrator[3].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 10, xValue := stBunker[1].MotorVibrator[4].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 11, xValue := stBunker[1].MotorVibrator[4].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 12, xValue := stBunker[1].MotorVibrator[4].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 13, xValue := stBunker[1].MotorVibrator[4].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 301, iBitIndex := 14, xValue := stBunker[1].MotorVibrator[4].fbStateKM.qxSignal);
+
+// Модуль DI2 (302-303): Бункер 2 - Вибропитатели и вибраторы
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 0, xValue := stBunker[2].fbStateHatch.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 1, xValue := stBunker[2].MotorVibFeeder[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 2, xValue := stBunker[2].MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 3, xValue := stBunker[2].MotorVibFeeder[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 4, xValue := stBunker[2].MotorVibFeeder[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 5, xValue := stBunker[2].MotorVibFeeder[1].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 6, xValue := stBunker[2].MotorVibFeeder[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 7, xValue := stBunker[2].MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 8, xValue := stBunker[2].MotorVibFeeder[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 9, xValue := stBunker[2].MotorVibFeeder[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 10, xValue := stBunker[2].MotorVibFeeder[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 11, xValue := stBunker[2].MotorVibrator[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 12, xValue := stBunker[2].MotorVibrator[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 13, xValue := stBunker[2].MotorVibrator[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 14, xValue := stBunker[2].MotorVibrator[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 302, iBitIndex := 15, xValue := stBunker[2].MotorVibrator[1].fbStateKM.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 0, xValue := stBunker[2].MotorVibrator[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 1, xValue := stBunker[2].MotorVibrator[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 2, xValue := stBunker[2].MotorVibrator[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 3, xValue := stBunker[2].MotorVibrator[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 4, xValue := stBunker[2].MotorVibrator[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 5, xValue := stBunker[2].MotorVibrator[3].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 6, xValue := stBunker[2].MotorVibrator[3].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 7, xValue := stBunker[2].MotorVibrator[3].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 8, xValue := stBunker[2].MotorVibrator[3].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 9, xValue := stBunker[2].MotorVibrator[3].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 10, xValue := stBunker[2].MotorVibrator[4].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 11, xValue := stBunker[2].MotorVibrator[4].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 12, xValue := stBunker[2].MotorVibrator[4].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 13, xValue := stBunker[2].MotorVibrator[4].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 303, iBitIndex := 14, xValue := stBunker[2].MotorVibrator[4].fbStateKM.qxSignal);
+
+// Модуль DI3 (304-305): Бункер 3 - Вибропитатели и вибраторы
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 0, xValue := stBunker[3].fbStateHatch.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 1, xValue := stBunker[3].MotorVibFeeder[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 2, xValue := stBunker[3].MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 3, xValue := stBunker[3].MotorVibFeeder[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 4, xValue := stBunker[3].MotorVibFeeder[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 5, xValue := stBunker[3].MotorVibFeeder[1].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 6, xValue := stBunker[3].MotorVibFeeder[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 7, xValue := stBunker[3].MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 8, xValue := stBunker[3].MotorVibFeeder[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 9, xValue := stBunker[3].MotorVibFeeder[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 10, xValue := stBunker[3].MotorVibFeeder[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 11, xValue := stBunker[3].MotorVibrator[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 12, xValue := stBunker[3].MotorVibrator[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 13, xValue := stBunker[3].MotorVibrator[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 14, xValue := stBunker[3].MotorVibrator[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 304, iBitIndex := 15, xValue := stBunker[3].MotorVibrator[1].fbStateKM.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 0, xValue := stBunker[3].MotorVibrator[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 1, xValue := stBunker[3].MotorVibrator[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 2, xValue := stBunker[3].MotorVibrator[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 3, xValue := stBunker[3].MotorVibrator[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 4, xValue := stBunker[3].MotorVibrator[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 5, xValue := stBunker[3].MotorVibrator[3].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 6, xValue := stBunker[3].MotorVibrator[3].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 7, xValue := stBunker[3].MotorVibrator[3].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 8, xValue := stBunker[3].MotorVibrator[3].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 9, xValue := stBunker[3].MotorVibrator[3].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 10, xValue := stBunker[3].MotorVibrator[4].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 11, xValue := stBunker[3].MotorVibrator[4].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 12, xValue := stBunker[3].MotorVibrator[4].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 13, xValue := stBunker[3].MotorVibrator[4].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 305, iBitIndex := 14, xValue := stBunker[3].MotorVibrator[4].fbStateKM.qxSignal);
+
+// Модуль DI4 (306-307): Конвейер - Датчики и моторы
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 0, xValue := stConveyor.fbSQ_IsOk[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 1, xValue := stConveyor.fbSQ_IsOk[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 2, xValue := stConveyor.fbHQ_IsOk[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 3, xValue := stConveyor.fbHQ_IsOk[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 4, xValue := stConveyor.fbHQ_IsOk[3].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 5, xValue := stConveyor.fbHQ_IsOk[4].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 6, xValue := stConveyor.fbZQWarning[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 7, xValue := stConveyor.fbZQAlarm[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 8, xValue := stConveyor.fbZQWarning[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 9, xValue := stConveyor.fbZQAlarm[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 10, xValue := stConveyor.fbZQWarning[3].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 11, xValue := stConveyor.fbZQAlarm[3].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 12, xValue := stConveyor.fbZQWarning[4].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 13, xValue := stConveyor.fbZQAlarm[4].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 14, xValue := stConveyor.fbGS1.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 306, iBitIndex := 15, xValue := stConveyor.fbYS1.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 0, xValue := stConveyor.fbQR[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 1, xValue := stConveyor.fbQR[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 2, xValue := stConveyor.fbYE1.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 3, xValue := stConveyor.MotorConveyor[1].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 4, xValue := stConveyor.MotorConveyor[2].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 5, xValue := stConveyor.MotorConveyor[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 6, xValue := stConveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 7, xValue := stConveyor.MotorConveyor[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 8, xValue := stConveyor.MotorConveyor[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 9, xValue := stConveyor.MotorConveyor[1].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 10, xValue := stConveyor.MotorConveyor[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 11, xValue := stConveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 12, xValue := stConveyor.MotorConveyor[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 13, xValue := stConveyor.MotorConveyor[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 307, iBitIndex := 14, xValue := stConveyor.MotorConveyor[2].fbStateKM.qxSignal);
+
+// Модуль DI5 (308-309): Отвалообразователь - Датчики и перегрев
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 0, xValue := stDumper.fbSQ_IsOk[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 1, xValue := stDumper.fbSQ_IsOk[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 2, xValue := stDumper.fbHQ_IsOk[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 3, xValue := stDumper.fbHQ_IsOk[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 4, xValue := stDumper.fbHQ_IsOk[3].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 5, xValue := stDumper.fbHQ_IsOk[4].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 6, xValue := stDumper.fbZQWarning[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 7, xValue := stDumper.fbZQAlarm[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 8, xValue := stDumper.fbZQWarning[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 9, xValue := stDumper.fbZQAlarm[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 10, xValue := stDumper.fbZQWarning[3].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 11, xValue := stDumper.fbZQAlarm[3].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 12, xValue := stDumper.fbZQWarning[4].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 13, xValue := stDumper.fbZQAlarm[4].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 14, xValue := stDumper.fbGS1.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 308, iBitIndex := 15, xValue := stDumper.fbYS1.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 0, xValue := stDumper.fbQR[1].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 1, xValue := stDumper.fbQR[2].qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 2, xValue := stDumper.fbEndSwitchLeft.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 3, xValue := stDumper.fbEndSwitchRight.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 4, xValue := stDumper.MotorConveyor[1].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 5, xValue := stDumper.MotorConveyor[2].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 6, xValue := stDumper.MotorRotation[1].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 309, iBitIndex := 7, xValue := stDumper.MotorRotation[2].fbStatorOverheat.qxSignal);
+
+// Модуль DI6 (310-311): Отвалообразователь - Моторы и общие сигналы
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 0, xValue := stDumper.MotorConveyor[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 1, xValue := stDumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 2, xValue := stDumper.MotorConveyor[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 3, xValue := stDumper.MotorConveyor[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 4, xValue := stDumper.MotorConveyor[1].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 5, xValue := stDumper.MotorConveyor[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 6, xValue := stDumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 7, xValue := stDumper.MotorConveyor[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 8, xValue := stDumper.MotorConveyor[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 9, xValue := stDumper.MotorConveyor[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 10, xValue := stDumper.MotorRotation[1].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 11, xValue := stDumper.MotorRotation[1].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 12, xValue := stDumper.MotorRotation[1].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 13, xValue := stDumper.MotorRotation[1].fbRotationStatus.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 14, xValue := stDumper.MotorRotation[1].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 310, iBitIndex := 15, xValue := stDumper.MotorRotation[1].fbStateKM.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 0, xValue := stDumper.MotorRotation[2].VFD.fbStateRdyToStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 1, xValue := stDumper.MotorRotation[2].VFD.fbStateIsWorking.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 2, xValue := stDumper.MotorRotation[2].VFD.fbStateFailure.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 3, xValue := stDumper.MotorRotation[2].fbRotationStatus.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 4, xValue := stDumper.MotorRotation[2].fbStateQF.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 5, xValue := stDumper.MotorRotation[2].fbStateKM.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 6, xValue := stCommonSignals.fbRealyCurrentControl.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 7, xValue := stCommonSignals.fb9QF1.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 8, xValue := stCommonSignals.fb10QF1.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 9, xValue := stCommonSignals.fb11QF1.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 311, iBitIndex := 10, xValue := stCommonSignals.fbQF1.qxSignal);
+
+// Модуль DI7 (312-313): Кнопки управления
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 0, xValue := stBunker[1].fbBtnStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 1, xValue := stBunker[1].fbBtnStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 2, xValue := stBunker[1].fbBtnEmergencyStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 3, xValue := stBunker[2].fbBtnStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 4, xValue := stBunker[2].fbBtnStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 5, xValue := stBunker[2].fbBtnEmergencyStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 6, xValue := stBunker[3].fbBtnStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 7, xValue := stBunker[3].fbBtnStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 8, xValue := stBunker[3].fbBtnEmergencyStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 9, xValue := stConveyor.fbBtnStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 10, xValue := stConveyor.fbBtnStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 11, xValue := stConveyor.fbBtnEmergencyStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 12, xValue := stDumper.fbBtnStart.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 13, xValue := stDumper.fbBtnStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 14, xValue := stDumper.fbBtnTurnLeft.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 312, iBitIndex := 15, xValue := stDumper.fbBtnTurnRight.qxSignal);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 313, iBitIndex := 0, xValue := stDumper.fbBtnEmergencyStop.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 313, iBitIndex := 1, xValue := stCommonSignals.fbEmergencyStopBtn.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 313, iBitIndex := 2, xValue := stCommonSignals.fbRemoteModeBtn.qxSignal);
+
+// Модуль DI8 (314-315): Перегрев вибропитателей и выключатели
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 0, xValue := stBunker[1].MotorVibFeeder[1].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 1, xValue := stBunker[1].MotorVibFeeder[2].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 2, xValue := stBunker[2].MotorVibFeeder[1].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 3, xValue := stBunker[2].MotorVibFeeder[2].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 4, xValue := stBunker[3].MotorVibFeeder[1].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 5, xValue := stBunker[3].MotorVibFeeder[2].fbStatorOverheat.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 6, xValue := stConveyor.fbBreakerConveyor.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 7, xValue := stDumper.fbBreakerConveyor.qxSignal);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 314, iBitIndex := 8, xValue := stDumper.fbBreakerRotation.qxSignal);
+
+
+// DO MODULES MAPPING (350-399)
+
+// Модуль DO1 (350-351): Бункеры 1-2 - Управление ЧРП
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 0, xValue := stBunker[1].MotorVibFeeder[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 1, xValue := stBunker[1].MotorVibFeeder[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 2, xValue := stBunker[1].MotorVibFeeder[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 3, xValue := stBunker[1].MotorVibFeeder[2].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 4, xValue := stBunker[1].MotorVibrator[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 5, xValue := stBunker[1].MotorVibrator[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 6, xValue := stBunker[1].MotorVibrator[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 7, xValue := stBunker[1].MotorVibrator[2].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 8, xValue := stBunker[1].MotorVibrator[3].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 9, xValue := stBunker[1].MotorVibrator[3].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 10, xValue := stBunker[1].MotorVibrator[4].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 11, xValue := stBunker[1].MotorVibrator[4].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 12, xValue := stBunker[2].MotorVibFeeder[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 13, xValue := stBunker[2].MotorVibFeeder[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 14, xValue := stBunker[2].MotorVibFeeder[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 350, iBitIndex := 15, xValue := stBunker[2].MotorVibFeeder[2].VFD.qxResetFailure);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 0, xValue := stBunker[2].MotorVibrator[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 1, xValue := stBunker[2].MotorVibrator[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 2, xValue := stBunker[2].MotorVibrator[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 3, xValue := stBunker[2].MotorVibrator[2].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 4, xValue := stBunker[2].MotorVibrator[3].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 5, xValue := stBunker[2].MotorVibrator[3].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 6, xValue := stBunker[2].MotorVibrator[4].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 351, iBitIndex := 7, xValue := stBunker[2].MotorVibrator[4].VFD.qxResetFailure);
+
+// Модуль DO2 (352-353): Бункер 3, Конвейер, Отвалообразователь - Управление ЧРП
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 0, xValue := stBunker[3].MotorVibFeeder[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 1, xValue := stBunker[3].MotorVibFeeder[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 2, xValue := stBunker[3].MotorVibFeeder[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 3, xValue := stBunker[3].MotorVibFeeder[2].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 4, xValue := stBunker[3].MotorVibrator[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 5, xValue := stBunker[3].MotorVibrator[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 6, xValue := stBunker[3].MotorVibrator[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 7, xValue := stBunker[3].MotorVibrator[2].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 8, xValue := stBunker[3].MotorVibrator[3].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 9, xValue := stBunker[3].MotorVibrator[3].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 10, xValue := stBunker[3].MotorVibrator[4].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 11, xValue := stBunker[3].MotorVibrator[4].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 12, xValue := stConveyor.MotorConveyor[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 13, xValue := stConveyor.MotorConveyor[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 14, xValue := stConveyor.MotorConveyor[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 352, iBitIndex := 15, xValue := stConveyor.MotorConveyor[2].VFD.qxResetFailure);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 0, xValue := stDumper.MotorConveyor[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 1, xValue := stDumper.MotorConveyor[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 2, xValue := stDumper.MotorConveyor[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 3, xValue := stDumper.MotorConveyor[2].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 4, xValue := stDumper.MotorRotation[1].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 5, xValue := stDumper.MotorRotation[1].qxVFDReverseStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 6, xValue := stDumper.MotorRotation[1].VFD.qxResetFailure);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 7, xValue := stDumper.MotorRotation[2].VFD.qxStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 8, xValue := stDumper.MotorRotation[2].qxVFDReverseStart);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 353, iBitIndex := 9, xValue := stDumper.MotorRotation[2].VFD.qxResetFailure);
+
+// Модуль DO3 (354-355): Контакторы и общие выходы
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 0, xValue := stConveyor.MotorConveyor[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 1, xValue := stConveyor.MotorConveyor[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 2, xValue := stDumper.MotorConveyor[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 3, xValue := stDumper.MotorConveyor[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 4, xValue := stDumper.MotorRotation[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 5, xValue := stDumper.MotorRotation[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 6, xValue := stBunker[1].MotorVibFeeder[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 7, xValue := stBunker[1].MotorVibFeeder[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 8, xValue := stBunker[1].MotorVibrator[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 9, xValue := stBunker[1].MotorVibrator[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 10, xValue := stBunker[1].MotorVibrator[3].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 11, xValue := stBunker[1].MotorVibrator[4].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 12, xValue := stBunker[2].MotorVibFeeder[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 13, xValue := stBunker[2].MotorVibFeeder[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 14, xValue := stBunker[2].MotorVibrator[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 354, iBitIndex := 15, xValue := stBunker[2].MotorVibrator[2].qxKM_Power);
+
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 0, xValue := stBunker[2].MotorVibrator[3].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 1, xValue := stBunker[2].MotorVibrator[4].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 2, xValue := stBunker[3].MotorVibFeeder[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 3, xValue := stBunker[3].MotorVibFeeder[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 4, xValue := stBunker[3].MotorVibrator[1].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 5, xValue := stBunker[3].MotorVibrator[2].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 6, xValue := stBunker[3].MotorVibrator[3].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 7, xValue := stBunker[3].MotorVibrator[4].qxKM_Power);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 8, xValue := stConveyor.xHLA);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 9, xValue := stDumper.xHLA);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 10, xValue := stCommonSignals.qx6KM1);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 11, xValue := stConveyor.qxBreakerConveyor);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 12, xValue := stDumper.qxBreakerConveyor);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 13, xValue := stDumper.qxBreakerRotation);
+
+// Модуль DO4 (356-357): Светофоры бункеров
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 0, xValue := stBunker[1].qxLightRed);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 1, xValue := stBunker[1].qxLightYellow);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 2, xValue := stBunker[1].qxLightGreen);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 3, xValue := stBunker[2].qxLightRed);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 4, xValue := stBunker[2].qxLightYellow);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 5, xValue := stBunker[2].qxLightGreen);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 6, xValue := stBunker[3].qxLightRed);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 7, xValue := stBunker[3].qxLightYellow);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 8, xValue := stBunker[3].qxLightGreen);
