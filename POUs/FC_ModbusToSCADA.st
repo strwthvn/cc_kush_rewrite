@@ -1,12 +1,17 @@
 FUNCTION FC_ModbusToSCADA : BOOL
 VAR_INPUT
-    stBunker : ARRAY [1..3] OF ST_Bunker;
-    stDumper : ST_DUMPER;
-    stConveyor : ST_Conveyor;
-    stCommands : ST_Commands;
+    stBunker : REFERENCE TO ARRAY [1..3] OF ST_Bunker;
+    stDumper : REFERENCE TO ST_DUMPER;
+    stConveyor : REFERENCE TO ST_ConveyorPrefabricated;
+    stCommonSignals : REFERENCE TO ST_CommonSignals;
+	stCommands : REFERENCE TO ST_Commands;
+	eBunkerStageToSCADA : REFERENCE TO ARRAY[1..3] OF E_ScadaStatesDevice;
+	eConveyorStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA конвейера
+	eDumperStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA отвалообразователя
+	
 END_VAR
 VAR
-
+	rTempTime : REAL;
 END_VAR
 
 // ========================================
@@ -277,7 +282,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 80, rValue := stBunker[1].MotorVibFeeder[2].rTempBearing[1]);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 82, rValue := stBunker[1].MotorVibFeeder[2].rTempBearing[2]);
 
-GLOBAL.awModbusInputRegisters[84] := TO_WORD(eBunkerStageToSCADA[1]);
+FC_ModbusWriteUInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 84, uValue := eBunkerStageToSCADA[1]);
 
 // Бункер 2 (90-149)
 // Регистры 90-91: BOOL флаги статусов бункера 2
@@ -313,7 +318,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 140, rValue := stBunker[2].MotorVibFeeder[2].rTempBearing[1]);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 142, rValue := stBunker[2].MotorVibFeeder[2].rTempBearing[2]);
 
-GLOBAL.awModbusInputRegisters[144] := TO_WORD(eBunkerStageToSCADA[2]);
+FC_ModbusWriteUInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 144, uValue := eBunkerStageToSCADA[2]);
 
 // Бункер 3 (150-209)
 // Регистры 150-151: BOOL флаги статусов бункера 3
@@ -349,7 +354,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 200, rValue := stBunker[3].MotorVibFeeder[2].rTempBearing[1]);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 202, rValue := stBunker[3].MotorVibFeeder[2].rTempBearing[2]);
 
-GLOBAL.awModbusInputRegisters[204] := TO_WORD(eBunkerStageToSCADA[3]);
+FC_ModbusWriteUInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 204, uValue := eBunkerStageToSCADA[3]);
 
 // Отвалообразователь - Конвейер (210-239)
 // Регистры 210-211: BOOL флаги статусов отвалообразователя
@@ -372,7 +377,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 220, rValue := stDumper.MotorConveyor[2].VFD.rActualFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 222, rValue := stDumper.MotorConveyor[2].VFD.wMotorCurrent.rTag);
 
-GLOBAL.awModbusInputRegisters[230] := TO_WORD(eDumperStageToSCADA);
+FC_ModbusWriteUInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 230, uValue := eDumperStageToSCADA);
 
 // Отвалообразователь - Поворот (240-269)
 // Регистры 240-241: BOOL флаги управления поворотом (данные перенесены в DI модули)
@@ -404,7 +409,7 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 280, rValue := stConveyor.MotorConveyor[2].VFD.rActualFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 282, rValue := stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag);
 
-GLOBAL.awModbusInputRegisters[290] := TO_WORD(eConveyorStageToSCADA);
+FC_ModbusWriteUInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 290, uValue := eConveyorStageToSCADA);
 
 // DI MODULES MAPPING (300-399)
 

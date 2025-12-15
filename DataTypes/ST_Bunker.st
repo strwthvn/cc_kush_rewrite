@@ -44,6 +44,11 @@ STRUCT
 	cmdSetModeRepair, // Установить режим "Ремонт"
 	cmdSetModeManual, // Установить режим "Ручной"
 	cmdSetModeAuto : BOOL; // Установить режим "Авто"
+	// Команды для вибраторов
+	cmdVibratorSetModeRepair, // Установить режим "Ремонт"
+	cmdVibratorSetModeManual, // Установить режим "Ручной"
+	cmdVibratorSetModeAuto : BOOL; // Установить режим "Авто"
+	
 	cmdAddVib1 : BOOL; // Включить управление вибратора 1 
 	cmdAddVib2 : BOOL; // Включить управление вибратора 2
 	cmdAddVib3 : BOOL; // Включить управление вибратора 3
@@ -54,7 +59,10 @@ STRUCT
 	// == Генерация состояний ==
 	eLightColor : E_LightColor; // Текущий сигнал светофора
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
+	eVibratorStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
 	xStateRemoteAuto, xStateRemoteManual, xStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
+	xVibratorStateRemoteAuto, xVibratorStateRemoteManual, xVibratorStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
+	
 	
 	wLightColor : WORD; // Передача сигнала светофора по ModbusTCP
 	
