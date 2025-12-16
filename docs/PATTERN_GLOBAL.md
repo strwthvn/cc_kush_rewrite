@@ -157,7 +157,7 @@ IO → Device → Unit → Adapter → SCADA
 
 | Префикс | Тип | Пример |
 |---------|-----|--------|
-| `b` | BOOL | `bReady`, `bFault` |
+| `x` | BOOL | `xReady`, `xFault` |
 | `n` | INT / UINT / SINT / DINT | `nCount`, `nIndex` |
 | `r` | REAL / LREAL | `rTemperature`, `rPressure` |
 | `t` | TIME / TON / TOF / TP | `tDelay`, `tTimeout` |
@@ -263,8 +263,8 @@ VAR_INPUT
     cmdReset    : BOOL;
     
     // Внешние статусы (от других FB)
-    bMotorReady : BOOL;
-    bMotorFault : BOOL;
+    xMotorReady : BOOL;
+    xMotorFault : BOOL;
 END_VAR
 
 VAR_OUTPUT
@@ -347,13 +347,13 @@ fbAI_Pressure();
 // 2. Устройства (Level 1)
 fbMotor(
     cmdStart := fbUnit.cmdMotorStart,
-    bFeedback := fbDI_Running.bValue
+    xFeedback := fbDI_Running.bValue
 );
 
 // 3. Агрегат (Level 2)
 fbUnit(
-    bMotorReady := fbMotor.stReady,
-    bMotorRunning := fbMotor.stRunning
+    xMotorReady := fbMotor.stReady,
+    xMotorRunning := fbMotor.stRunning
 );
 
 // 4. Оркестрация (Level 3)
@@ -532,9 +532,9 @@ VAR_INPUT
     pAddress    : POINTER TO BOOL;  // Или прямая привязка
 END_VAR
 VAR_OUTPUT
-    bValue      : BOOL;             // Нормализованное значение
-    bValid      : BOOL;             // Сигнал валиден
-    bFault      : BOOL;             // Диагностика
+    xValue      : BOOL;             // Нормализованное значение
+    xValid      : BOOL;             // Сигнал валиден
+    xFault      : BOOL;             // Диагностика
 END_VAR
 ```
 
@@ -551,8 +551,8 @@ VAR_INPUT
 END_VAR
 VAR_OUTPUT
     rValue      : REAL;             // Масштабированное значение
-    bValid      : BOOL;             // В пределах нормы
-    bFault      : BOOL;             // Обрыв / КЗ
+    xValid      : BOOL;             // В пределах нормы
+    xFault      : BOOL;             // Обрыв / КЗ
 END_VAR
 ```
 
