@@ -418,6 +418,12 @@ END_IF
 // АВТОМАТ ПУСКА ОТВАЛООБРАЗОВАТЕЛЯ
 // ========================================
 
+// ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
+// Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
+IF xEmergencyStop THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
 		// Сброс целевой частоты
@@ -613,6 +619,10 @@ CASE STAGE OF
 		Dumper.qxBreakerConveyor := FALSE;
 		Dumper.qxBreakerRotation := FALSE;
 
+		// Разборка схем контакторов (аварийная остановка)
+		xCircuitBuilt := FALSE;
+		xCircuitBuiltRotation := FALSE;
+
 		// Сброс подстадий для следующего запуска
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
@@ -625,7 +635,11 @@ CASE STAGE OF
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
 
 		// Сброс ошибки и переход в IDLE при отсутствии ошибок
-		IF xReset AND NOT Dumper.xStateFailure THEN
+		// Для выхода из ERROR требуется:
+		// 1. Команда сброса (xReset)
+		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStop)
+		// 3. Отсутствие ошибок оборудования (NOT Dumper.xStateFailure)
+		IF xReset AND NOT xEmergencyStop AND NOT Dumper.xStateFailure THEN
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF
 END_CASE;

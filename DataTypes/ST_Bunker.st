@@ -37,8 +37,9 @@ STRUCT
 	cmdStopFeeder : BOOL; // Команда "Стоп питателя"
 	cmdStartVibrator : BOOL; // Команда "Пуск виратора"
 	cmdStopVibrator : BOOL; // Команда "Стоп вибратора"
-	
-	cmdEmergencyStopFeeder : BOOL; // Команда "Аварийная остановка"
+
+	cmdEmergencyStopVibFeeder : BOOL; // Команда "Аварийная остановка вибропитателей" (КРИТИЧЕСКАЯ - переводит в ERROR)
+	cmdEmergencyStopVibrator : BOOL; // Команда "Аварийная остановка вибраторов" (НЕКРИТИЧЕСКАЯ - только отключает вибраторы)
 	cmdDumpingPrecent : REAL; // Задание процентного соотношения сбрасывания
 	cmdReset : BOOL; // Сброс ошибок
 	cmdSetModeRepair, // Установить режим "Ремонт"

@@ -2,7 +2,8 @@ FUNCTION_BLOCK FB_ConveyorControl
 VAR_INPUT
 	Conveyor : REFERENCE TO ST_ConveyorPrefabricated;
 	xStart : BOOL; // Команда запуска конвейера
-	xStop : BOOL; // Команда остановки (аварийная остановка)
+	xStop : BOOL; // Команда остановки
+	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
 END_VAR
 VAR_OUTPUT
@@ -258,6 +259,12 @@ END_IF
 // АВТОМАТ ПУСКА КОНВЕЙЕРА
 // ========================================
 
+// ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
+// Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
+IF xEmergencyStop THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
 		// Установка тормозов в активное состояние (FALSE = тормоз активен)
@@ -410,16 +417,22 @@ CASE STAGE OF
 		END_CASE;
 
 	E_StageWithPreStartAlarm.ERROR:
-		// Аварийная остановка - снимаем команды с VFD и активируем тормоза
+		// Состояние ошибки - аварийная остановка и ожидание сброса
+		// (используется при серьезных неисправностях, не для штатной остановки)
+
+		// Аварийная остановка: команда СТОП на VFD (FALSE = СТОП)
 		Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
 		Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
-
-		// Активируем тормоз конвейера (FALSE = тормоз активен)
-		Conveyor.qxBreakerConveyor := FALSE;
 
 		// Сброс целевых частот
 		rTargetFreqConv1 := 0.0;
 		rTargetFreqConv2 := 0.0;
+
+		// Активировать тормоз
+		Conveyor.qxBreakerConveyor := FALSE;
+
+		// Разборка схемы контакторов (аварийная остановка)
+		xCircuitBuilt := FALSE;
 
 		// Сброс подстадий для следующего запуска
 		nStartingSubstage := 0;
@@ -427,6 +440,18 @@ CASE STAGE OF
 
 		// Сброс таймера запуска
 		fbTimerStarting(IN := FALSE);
+
+		// Контакторы управляются отдельно через импульсные команды
+		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
+
+		// Сброс ошибки и переход в IDLE при отсутствии ошибок
+		// Для выхода из ERROR требуется:
+		// 1. Команда сброса (xReset)
+		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStop)
+		// 3. Отсутствие ошибок оборудования (NOT Conveyor.xStateFailure)
+		IF xReset AND NOT xEmergencyStop AND NOT Conveyor.xStateFailure THEN
+			STAGE := E_StageWithPreStartAlarm.IDLE;
+		END_IF
 END_CASE;
 
 // Вывод текущей стадии
