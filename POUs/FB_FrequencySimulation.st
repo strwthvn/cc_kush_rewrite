@@ -14,7 +14,7 @@ END_VAR
 IF xProceed THEN
     // Вычисляем разницу между целевым и текущим значением
     rDifference := irTarget - irInputModule;
-    
+
     // Проверяем, не достигли ли мы уже цели
     IF ABS(rDifference) <= ABS(irStep) THEN
         // Если разница меньше или равна шагу, устанавливаем точное значение
@@ -29,6 +29,9 @@ IF xProceed THEN
             irInputModule := irInputModule - ABS(irStep);
         END_IF;
     END_IF;
+ELSE
+    // Если ЧРП не работает, сбрасываем частоту в 0
+    irInputModule := 0.0;
 END_IF;
 
 END_FUNCTION_BLOCK

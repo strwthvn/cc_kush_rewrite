@@ -292,10 +292,11 @@ IF xEnable THEN
 	Dumper.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv2.Q;
 
 	// Обратная связь работы ЧРП моторов поворота отвалообразователя
-	tonVFD_Rot1(IN := Dumper.MotorRotation[1].VFD.qxStart, PT := tFeedbackDelay);
+	// Учитываем как прямое, так и реверсивное вращение
+	tonVFD_Rot1(IN := (Dumper.MotorRotation[1].VFD.qxStart OR Dumper.MotorRotation[1].qxVFDReverseStart), PT := tFeedbackDelay);
 	Dumper.MotorRotation[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot1.Q;
 
-	tonVFD_Rot2(IN := Dumper.MotorRotation[2].VFD.qxStart, PT := tFeedbackDelay);
+	tonVFD_Rot2(IN := (Dumper.MotorRotation[2].VFD.qxStart OR Dumper.MotorRotation[2].qxVFDReverseStart), PT := tFeedbackDelay);
 	Dumper.MotorRotation[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot2.Q;
 
 	// Обратная связь тормозов отвалообразователя
