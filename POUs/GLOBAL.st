@@ -16,7 +16,7 @@ VAR_GLOBAL
 	EFFICIENCY_LIMIT_RATE : REAL := 1; // Коэффицент ограничения производительности (0-1)
 	
 	// Переменные симуляции
-	SIMULATION : BOOL := FALSE;
+	SIMULATION : BOOL := TRUE;
 	
 	// == MODBUS РЕГИСТРЫ ДЛЯ SCADA ==
 	// Массив регистров для передачи данных в SCADA систему
@@ -25,6 +25,9 @@ VAR_GLOBAL
 	
 END_VAR
 VAR_GLOBAL RETAIN 
+	// == КРИТИЧЕСКИЕ НАСТРОЙКИ ==
+	DISABLE_AUTO_STOPPING : BOOL := FALSE;
+
 	// == УСТАВКИ ==
 	VFD_FREQUENCY_MAX : REAL := 50;
 	VFD_FREQUENCY_STEP : REAL := 2;

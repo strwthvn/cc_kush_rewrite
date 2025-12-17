@@ -192,6 +192,7 @@ fbDumper(
 	xStop := xManualStopDumper,
 	xEmergencyStop := stDumper.cmdEmergencyStop,
 	xReset := stCommands.cmdResetAll.qxSignal OR stDumper.cmdReset,
+	xDisableAutoEmergencyStop := DISABLE_AUTO_STOPPING AND (stDumper.eStateRemote = E_StateRemote.Manual),
 	eStage => eDumperStage,
 	eStageToSCADA => eDumperStageToSCADA
 );
@@ -203,6 +204,7 @@ fbConveyor(
 	xStop := xManualStopConveyor,
 	xEmergencyStop := stConveyor.cmdEmergencyStop,
 	xReset := stCommands.cmdResetAll.qxSignal OR stConveyor.cmdReset,
+	xDisableAutoEmergencyStop := DISABLE_AUTO_STOPPING AND (stConveyor.eStateRemote = E_StateRemote.Manual),
 	eStage => eConveyorStage,
 	eStageToSCADA => eConveyorStageToSCADA
 );

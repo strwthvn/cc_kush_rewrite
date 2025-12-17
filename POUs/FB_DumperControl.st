@@ -5,6 +5,7 @@ VAR_INPUT
 	xStop : BOOL; // Команда остановки
 	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
+	xDisableAutoEmergencyStop : BOOL; // Отключение автоматических аварийных остановок по датчикам безопасности
 END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия
@@ -421,6 +422,17 @@ END_IF
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
 // Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
 IF xEmergencyStop THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// КРИТИЧЕСКИЕ ОШИБКИ ДАТЧИКОВ БЕЗОПАСНОСТИ
+// При срабатывании датчиков безопасности немедленная аварийная остановка,
+// если секция НЕ в IDLE (т.е. находится в процессе работы или запуска)
+// Блокируется через вход xDisableAutoEmergencyStop
+IF FC_Dumper_GetErrorSensors(Dumper := Dumper)
+   AND STAGE <> E_StageWithPreStartAlarm.IDLE
+   AND NOT xDisableAutoEmergencyStop
+THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
