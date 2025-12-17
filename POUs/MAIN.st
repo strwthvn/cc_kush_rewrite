@@ -235,7 +235,7 @@ IF 	stDumper.eStateRemote = E_StateRemote.Manual // Находится в реж
 	AND stDumper.cmdStartConveyor // Команда на запуск в ручном режиме
 	AND eDumperStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
 	AND eDumperStage <> E_StageWithPreStartAlarm.STARTING AND eDumperStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	//AND NOT FC_Dumper_GetErrorCommon(Dumper:=stDumper) // Не имеет ошибок
+	AND eDumperStage <> E_StageWithPreStartAlarm.ERROR // Не находится в ошибке
 	THEN
 		xManualStopDumper := FALSE;
 		xStartDumper := TRUE;
@@ -266,7 +266,7 @@ IF 	stConveyor.eStateRemote = E_StateRemote.Manual // Находится в ре
 	AND stConveyor.cmdStartConveyor // Команда на запуск в ручном режиме
 	AND eConveyorStage <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
 	AND eConveyorStage <> E_StageWithPreStartAlarm.STARTING AND eConveyorStage <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	//AND NOT FC_Conveyor_GetErrorCommon(Conveyor:=stConveyor) // Не имеет ошибок
+	AND eConveyorStage <> E_StageWithPreStartAlarm.ERROR // Не находится в ошибке
 	THEN
 		xStartConveyor := TRUE;
 		xManualStopConveyor := FALSE;
@@ -298,7 +298,7 @@ IF stBunker[1].eStateRemote = E_StateRemote.Manual // Находится в ре
 	AND stBunker[1].cmdStartFeeder // Команда на запуск в ручном режиме
 	AND eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
 	AND eBunkerStage[1] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[1] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[1]) // Не имеет ошибок
+	AND eBunkerStage[1] <> E_StageWithPreStartAlarm.ERROR // Не находится в ошибке
 	THEN
 		xManualStopBunker[1] := FALSE;
 		xStartBunker[1] := TRUE;
@@ -330,7 +330,7 @@ IF stBunker[2].eStateRemote = E_StateRemote.Manual // Находится в ре
 	AND stBunker[2].cmdStartFeeder // Команда на запуск в ручном режиме
 	AND eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
 	AND eBunkerStage[2] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[2] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[2]) // Не имеет ошибок
+	AND eBunkerStage[2] <> E_StageWithPreStartAlarm.ERROR // Не находится в ошибке
 	THEN
 		xManualStopBunker[2] := FALSE;
 		xStartBunker[2] := TRUE;
@@ -362,7 +362,7 @@ IF stBunker[3].eStateRemote = E_StateRemote.Manual // Находится в ре
 	AND stBunker[3].cmdStartFeeder // Команда на запуск в ручном режиме
 	AND eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK // Не находится в статусе работы
 	AND eBunkerStage[3] <> E_StageWithPreStartAlarm.STARTING AND eBunkerStage[3] <> E_StageWithPreStartAlarm.PRESTART_ALARM // Не в процессе запуска
-	//AND NOT FC_Bunker_GetErrorBunker(Bunker:=stBunker[3]) // Не имеет ошибок
+	AND eBunkerStage[3] <> E_StageWithPreStartAlarm.ERROR // Не находится в ошибке
 	THEN
 		xManualStopBunker[3] := FALSE;
 		xStartBunker[3] := TRUE;
