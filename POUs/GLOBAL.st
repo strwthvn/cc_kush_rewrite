@@ -165,9 +165,9 @@ VAR_GLOBAL RETAIN
 	BUNKER_3_FREQ_VIBRATOR : REAL := 30;
 	
 	// Светофор бункера
-	BUNKER_WEIGHT_LIGHT_RED : BOOL; // Уставка веса бункера для красного светофора
-	BUNKER_WEIGHT_LIGHT_YELLOW : BOOL; // Уставка веса бункера для жёлтого светофора
-	BUNKER_WEIGHT_LIGHT_GREEN : BOOL; // Уставка веса бункера для зелёного светофора
+	BUNKER_WEIGHT_LIGHT_RED : REAL; // Уставка веса бункера для красного светофора
+	BUNKER_WEIGHT_LIGHT_YELLOW : REAL; // Уставка веса бункера для жёлтого светофора
+	BUNKER_WEIGHT_LIGHT_GREEN : REAL; // Уставка веса бункера для зелёного светофора
 	
 	// Константы
 	AMOUNT_BUNKER_MOTOR_VIBFEEDER : INT := 2;

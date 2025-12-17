@@ -152,7 +152,7 @@ fbBunker[1](
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1],
 	xEmergencyStopVibFeeder := stBunker[1].cmdEmergencyStopVibFeeder,
 	xEmergencyStopVibrator := stBunker[1].cmdEmergencyStopVibrator,
-	xReset := stCommands.cmdResetAll.qxSignal,
+	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[1].cmdReset,
 	irManualFrequency := BUNKER_1_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_1_FREQ_VIBRATOR,
 	eStage => eBunkerStage[1],
@@ -165,7 +165,7 @@ fbBunker[2](
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2],
 	xEmergencyStopVibFeeder := stBunker[2].cmdEmergencyStopVibFeeder,
 	xEmergencyStopVibrator := stBunker[2].cmdEmergencyStopVibrator,
-	xReset := stCommands.cmdResetAll.qxSignal,
+	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[2].cmdReset,
 	irManualFrequency := BUNKER_2_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_2_FREQ_VIBRATOR,
 	eStage => eBunkerStage[2],
@@ -178,7 +178,7 @@ fbBunker[3](
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3],
 	xEmergencyStopVibFeeder := stBunker[3].cmdEmergencyStopVibFeeder,
 	xEmergencyStopVibrator := stBunker[3].cmdEmergencyStopVibrator,
-	xReset := stCommands.cmdResetAll.qxSignal,
+	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[3].cmdReset,
 	irManualFrequency := BUNKER_3_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_3_FREQ_VIBRATOR,
 	eStage => eBunkerStage[3],
@@ -191,7 +191,7 @@ fbDumper(
 	xStart := xStartDumper,
 	xStop := xManualStopDumper,
 	xEmergencyStop := stDumper.cmdEmergencyStop,
-	xReset := stCommands.cmdResetAll.qxSignal,
+	xReset := stCommands.cmdResetAll.qxSignal OR stDumper.cmdReset,
 	eStage => eDumperStage,
 	eStageToSCADA => eDumperStageToSCADA
 );
@@ -202,7 +202,7 @@ fbConveyor(
 	xStart := xStartConveyor,
 	xStop := xManualStopConveyor,
 	xEmergencyStop := stConveyor.cmdEmergencyStop,
-	xReset := stCommands.cmdResetAll.qxSignal,
+	xReset := stCommands.cmdResetAll.qxSignal OR stConveyor.cmdReset,
 	eStage => eConveyorStage,
 	eStageToSCADA => eConveyorStageToSCADA
 );
