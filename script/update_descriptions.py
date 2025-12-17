@@ -53,6 +53,18 @@ DESCRIPTIONS = {
     "cmdStartCommon": "Команда общего пуска",
     "cmdStopCommon": "Команда общего останова",
     "cmdEmergencyStopCommon": "Команда общей аварийной остановки",
+    "cmdSetToRepair": "Команда переключения в режим \"Ремонт\"",
+    "cmdSetToManual": "Команда переключения в режим \"Ручной\"",
+    "cmdSetToAuto": "Команда переключения в режим \"Автоматический\"",
+    "cmdBuildCircuitOn": "Команда \"Собрать цепь\"",
+    "cmdBuildCircuitOff": "Команда \"Разобрать цепь\"",
+    "cmdStartVibrator": "Команда \"Пуск вибраторов\"",
+    "cmdStopVibrator": "Команда \"Стоп вибраторов\"",
+    "cmdEmergencyStopVibrator": "Команда \"Аварийная остановка вибраторов\"",
+    "cmdAddVib1": "Команда \"Добавить вибратор 1\"",
+    "cmdAddVib2": "Команда \"Добавить вибратор 2\"",
+    "cmdAddVib3": "Команда \"Добавить вибратор 3\"",
+    "cmdAddVib4": "Команда \"Добавить вибратор 4\"",
 
     # === ST_CommonSignals ===
     "fbEmergencyStopBtn": "Кнопка \"Аварийная остановка\"",
@@ -69,6 +81,9 @@ DESCRIPTIONS = {
     "xStateEmergencyStop": "Система была аварийно остановлена",
     "xStateErrorCheckReady": "Проверки стадии готовности к пуску провалились",
     "xStateErrorAcceptIdle": "Невозможно принять коэффицент шихтования по заданию оператора - сумма коэффицентов не равна 100",
+    "xStateRemoteAuto": "Режим управления \"Автоматический\"",
+    "xStateRemoteManual": "Режим управления \"Ручной\"",
+    "xStateRemoteRepair": "Режим управления \"Ремонт\"",
 
     # === ST_Bunker ===
     "rWeight": "Весы бункера",
