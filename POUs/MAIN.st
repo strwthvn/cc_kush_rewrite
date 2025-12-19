@@ -895,13 +895,14 @@ END_IF;
 // ========================================
 
 FC_ModbusToSCADA(
-	stBunker:= stBunker, 
-	stDumper:= stDumper, 
-	stConveyor:= stConveyor, 
-	stCommonSignals:= stCommonSignals, 
-	stCommands:= stCommands, 
-	eBunkerStageToSCADA:= eBunkerStageToSCADA, 
-	eConveyorStageToSCADA:= eConveyorStageToSCADA, 
-	eDumperStageToSCADA:= eDumperStageToSCADA);
+	stBunker:= stBunker,
+	stDumper:= stDumper,
+	stConveyor:= stConveyor,
+	stCommonSignals:= stCommonSignals,
+	stCommands:= stCommands,
+	eBunkerStageToSCADA:= eBunkerStageToSCADA,
+	eConveyorStageToSCADA:= eConveyorStageToSCADA,
+	eDumperStageToSCADA:= eDumperStageToSCADA,
+	fbScadaCommunication:= fbScadaCommunication);
 
 END_PROGRAM

@@ -8,7 +8,8 @@ VAR_INPUT
 	eBunkerStageToSCADA : REFERENCE TO ARRAY[1..3] OF E_ScadaStatesDevice;
 	eConveyorStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA конвейера
 	eDumperStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA отвалообразователя
-	
+	fbScadaCommunication : REFERENCE TO FB_ScadaCommunication; // Функциональный блок контроля связи со SCADA
+
 END_VAR
 VAR
 	rTempTime : REAL;
@@ -26,6 +27,8 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 1, xValue => stCommands.cmdStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 2, xValue => stCommands.cmdEmergencyStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 3, xValue => stCommands.cmdResetAll.ixSignal);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 4, xValue => SCADA_HEARTBEAT);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue => DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 8, xValue => stCommands.cmdSetToRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 9, xValue => stCommands.cmdSetToManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 10, xValue => stCommands.cmdSetToAuto);
@@ -75,7 +78,10 @@ FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 148, rValue => MOTOR_ROTATION_CURRENT_POINTS.L_Value);
 
 // Уставки времени (150-179)
-// Регистры 150-151: BOOL флаги (резерв)
+// Регистры 150-151: Уставки связи со SCADA
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 150, rValue => rTempTime);
+SCADA_HEARTBEAT_TIMEOUT := REAL_TO_TIME(rTempTime * 1000); // Таймаут потери связи (секунды)
+
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 152, rValue => MOTOR_ROTATION_CURRENT_POINTS.H_Value);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 154, rValue => MOTOR_ROTATION_CURRENT_POINTS.HH_Value);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 156, rValue => rTempTime);
@@ -248,6 +254,9 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 1, xValue := xStateEmergencyStop);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 2, xValue := xStateErrorCheckReady);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 3, xValue := xStateErrorAcceptIdle);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 4, xValue := fbScadaCommunication.qxCommunicationOk);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue := fbScadaCommunication.qxCommunicationLost); 
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 6, xValue := fbScadaCommunication.qxSignalChanged);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 7, xValue := stCommonSignals.fbQF1.qxSignal);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 12, xValue := (stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto));
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 13, xValue := NOT(stBunker[1].xStateRemoteAuto AND stBunker[2].xStateRemoteAuto AND stBunker[3].xStateRemoteAuto AND stDumper.xStateRemoteAuto AND stConveyor.xStateRemoteAuto));
