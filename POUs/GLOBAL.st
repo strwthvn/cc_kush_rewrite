@@ -24,9 +24,10 @@ VAR_GLOBAL
 	awModbusHoldingRegisters : ARRAY [0..511] OF WORD; // Modbus Holding регистры
 	
 END_VAR
-VAR_GLOBAL RETAIN 
+VAR_GLOBAL RETAIN
 	// == КРИТИЧЕСКИЕ НАСТРОЙКИ ==
 	DISABLE_AUTO_STOPPING : BOOL := FALSE;
+	BUNKER_INSTANT_STOP : BOOL := FALSE; // Флаг мгновенной остановки бункеров (TRUE = одновременная остановка всех 3-х бункеров, FALSE = последовательная остановка)
 
 	// == УСТАВКИ ==
 	VFD_FREQUENCY_MAX : REAL := 50;
@@ -156,7 +157,7 @@ VAR_GLOBAL RETAIN
 	BUNKER_WORK_PRECENT_3 : REAL; // Уставка пропорции шихтования для бункера 3
 	BUNKER_VIBFEEDER_START_FREQUENCY : REAL := 10.0; // Минимальная частота для запуска вибропитателей (Гц)
 	BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM : REAL := 50.0; // Целевая суммарная частота вибропитателей (Гц)
-    BUNKER_ENABLE_PID : BOOL := FALSE;
+    BUNKER_ENABLE_PID : BOOL := TRUE;
     BUNKER_ENABLE_PROPORTION_MONITORING : BOOL := TRUE;
 
 	// Ручное задание частоты на бункер (работает в ручном режиме управления)

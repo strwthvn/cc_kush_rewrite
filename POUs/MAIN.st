@@ -558,91 +558,149 @@ CASE AUTO_STEP OF
 		// Нормальная работа
 		xStateAutoWorking := TRUE;
 
-		// === ОБЫЧНАЯ ОСТАНОВКА (последовательная, обратная от запуска) ===
+		// === ОБЫЧНАЯ ОСТАНОВКА ===
 		IF xAutoStopping THEN
-			CASE nStopSubstage OF
-				0: // Шаг 0: Остановка бункера 1
-					IF BUNKER_WORK_PRECENT_1 > 0 THEN
-						xManualStopBunker[1] := TRUE;
-						IF eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK THEN
+			// Выбор режима остановки бункеров
+			IF BUNKER_INSTANT_STOP THEN
+				// === МГНОВЕННАЯ ОСТАНОВКА ВСЕХ БУНКЕРОВ (параллельно) ===
+				CASE nStopSubstage OF
+					0: // Шаг 0: Одновременная остановка всех 3-х бункеров
+						IF BUNKER_WORK_PRECENT_1 > 0 THEN xManualStopBunker[1] := TRUE; END_IF
+						IF BUNKER_WORK_PRECENT_2 > 0 THEN xManualStopBunker[2] := TRUE; END_IF
+						IF BUNKER_WORK_PRECENT_3 > 0 THEN xManualStopBunker[3] := TRUE; END_IF
+
+						// Ожидание остановки всех активных бункеров
+						IF (BUNKER_WORK_PRECENT_1 = 0 OR eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK)
+						AND (BUNKER_WORK_PRECENT_2 = 0 OR eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK)
+						AND (BUNKER_WORK_PRECENT_3 = 0 OR eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK)
+						THEN
 							xManualStopBunker[1] := FALSE;
-							nStopSubstage := 1; // Бункер 1 остановлен → задержка
-						END_IF
-					ELSE
-						nStopSubstage := 2; // Бункер 1 не используется → переход к бункеру 2 без задержки
-					END_IF
-
-				1: // Шаг 1: Задержка после бункера 1
-					ton_AutoTimer.IN := TRUE;
-					IF ton_AutoTimer.Q THEN
-						ton_AutoTimer.IN := FALSE;
-						nStopSubstage := 2; // Переход к бункеру 2
-					END_IF
-
-				2: // Шаг 2: Остановка бункера 2
-					IF BUNKER_WORK_PRECENT_2 > 0 THEN
-						xManualStopBunker[2] := TRUE;
-						IF eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK THEN
 							xManualStopBunker[2] := FALSE;
-							nStopSubstage := 3; // Бункер 2 остановлен → задержка
-						END_IF
-					ELSE
-						nStopSubstage := 4; // Бункер 2 не используется → переход к бункеру 3 без задержки
-					END_IF
-
-				3: // Шаг 3: Задержка после бункера 2
-					ton_AutoTimer.IN := TRUE;
-					IF ton_AutoTimer.Q THEN
-						ton_AutoTimer.IN := FALSE;
-						nStopSubstage := 4; // Переход к бункеру 3
-					END_IF
-
-				4: // Шаг 4: Остановка бункера 3
-					IF BUNKER_WORK_PRECENT_3 > 0 THEN
-						xManualStopBunker[3] := TRUE;
-						IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK THEN
 							xManualStopBunker[3] := FALSE;
-							nStopSubstage := 5; // Бункер 3 остановлен → задержка
+							nStopSubstage := 1; // Все бункеры остановлены → задержка
 						END_IF
-					ELSE
-						nStopSubstage := 6; // Бункер 3 не используется → переход к конвейеру без задержки
-					END_IF
 
-				5: // Шаг 5: Задержка после бункера 3
-					ton_AutoTimer.IN := TRUE;
-					IF ton_AutoTimer.Q THEN
+					1: // Шаг 1: Задержка после остановки бункеров
+						ton_AutoTimer.IN := TRUE;
+						IF ton_AutoTimer.Q THEN
+							ton_AutoTimer.IN := FALSE;
+							nStopSubstage := 6; // Переход к остановке конвейера (пропускаем шаги 2-5)
+						END_IF
+
+					6: // Шаг 6: Остановка конвейера
+						xManualStopConveyor := TRUE;
+						IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopConveyor := FALSE;
+							nStopSubstage := 7; // Конвейер остановлен → задержка
+						END_IF
+
+					7: // Шаг 7: Задержка после конвейера
+						ton_AutoTimer.IN := TRUE;
+						IF ton_AutoTimer.Q THEN
+							ton_AutoTimer.IN := FALSE;
+							nStopSubstage := 8; // Переход к отвалообразователю
+						END_IF
+
+					8: // Шаг 8: Остановка отвалообразователя
+						xManualStopDumper := TRUE;
+						IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopDumper := FALSE;
+							nStopSubstage := 9; // Отвалообразователь остановлен → завершение
+						END_IF
+
+					9: // Шаг 9: Завершение остановки
 						ton_AutoTimer.IN := FALSE;
-						nStopSubstage := 6; // Переход к конвейеру
-					END_IF
+						xAutoStopping := FALSE;
+						xStateAutoWorking := FALSE;
+						nStopSubstage := 0; // Сброс для следующего цикла
+						AUTO_STEP := IDLE; // Возврат в IDLE
+				END_CASE
+			ELSE
+				// === ПОСЛЕДОВАТЕЛЬНАЯ ОСТАНОВКА БУНКЕРОВ (обратная от запуска: 3→2→1) ===
+				CASE nStopSubstage OF
+					0: // Шаг 0: Остановка бункера 3
+						IF BUNKER_WORK_PRECENT_3 > 0 THEN
+							xManualStopBunker[3] := TRUE;
+							IF eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK THEN
+								xManualStopBunker[3] := FALSE;
+								nStopSubstage := 1; // Бункер 3 остановлен → задержка
+							END_IF
+						ELSE
+							nStopSubstage := 2; // Бункер 3 не используется → переход к бункеру 2 без задержки
+						END_IF
 
-				6: // Шаг 6: Остановка конвейера
-					xManualStopConveyor := TRUE;
-					IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN
-						xManualStopConveyor := FALSE;
-						nStopSubstage := 7; // Конвейер остановлен → задержка
-					END_IF
+					1: // Шаг 1: Задержка после бункера 3
+						ton_AutoTimer.IN := TRUE;
+						IF ton_AutoTimer.Q THEN
+							ton_AutoTimer.IN := FALSE;
+							nStopSubstage := 2; // Переход к бункеру 2
+						END_IF
 
-				7: // Шаг 7: Задержка после конвейера
-					ton_AutoTimer.IN := TRUE;
-					IF ton_AutoTimer.Q THEN
+					2: // Шаг 2: Остановка бункера 2
+						IF BUNKER_WORK_PRECENT_2 > 0 THEN
+							xManualStopBunker[2] := TRUE;
+							IF eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK THEN
+								xManualStopBunker[2] := FALSE;
+								nStopSubstage := 3; // Бункер 2 остановлен → задержка
+							END_IF
+						ELSE
+							nStopSubstage := 4; // Бункер 2 не используется → переход к бункеру 1 без задержки
+						END_IF
+
+					3: // Шаг 3: Задержка после бункера 2
+						ton_AutoTimer.IN := TRUE;
+						IF ton_AutoTimer.Q THEN
+							ton_AutoTimer.IN := FALSE;
+							nStopSubstage := 4; // Переход к бункеру 1
+						END_IF
+
+					4: // Шаг 4: Остановка бункера 1
+						IF BUNKER_WORK_PRECENT_1 > 0 THEN
+							xManualStopBunker[1] := TRUE;
+							IF eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK THEN
+								xManualStopBunker[1] := FALSE;
+								nStopSubstage := 5; // Бункер 1 остановлен → задержка
+							END_IF
+						ELSE
+							nStopSubstage := 6; // Бункер 1 не используется → переход к конвейеру без задержки
+						END_IF
+
+					5: // Шаг 5: Задержка после бункера 1
+						ton_AutoTimer.IN := TRUE;
+						IF ton_AutoTimer.Q THEN
+							ton_AutoTimer.IN := FALSE;
+							nStopSubstage := 6; // Переход к конвейеру
+						END_IF
+
+					6: // Шаг 6: Остановка конвейера
+						xManualStopConveyor := TRUE;
+						IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopConveyor := FALSE;
+							nStopSubstage := 7; // Конвейер остановлен → задержка
+						END_IF
+
+					7: // Шаг 7: Задержка после конвейера
+						ton_AutoTimer.IN := TRUE;
+						IF ton_AutoTimer.Q THEN
+							ton_AutoTimer.IN := FALSE;
+							nStopSubstage := 8; // Переход к отвалообразователю
+						END_IF
+
+					8: // Шаг 8: Остановка отвалообразователя
+						xManualStopDumper := TRUE;
+						IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN
+							xManualStopDumper := FALSE;
+							nStopSubstage := 9; // Отвалообразователь остановлен → завершение
+						END_IF
+
+					9: // Шаг 9: Завершение остановки
 						ton_AutoTimer.IN := FALSE;
-						nStopSubstage := 8; // Переход к отвалообразователю
-					END_IF
-
-				8: // Шаг 8: Остановка отвалообразователя
-					xManualStopDumper := TRUE;
-					IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN
-						xManualStopDumper := FALSE;
-						nStopSubstage := 9; // Отвалообразователь остановлен → завершение
-					END_IF
-
-				9: // Шаг 9: Завершение остановки
-					ton_AutoTimer.IN := FALSE;
-					xAutoStopping := FALSE;
-					xStateAutoWorking := FALSE;
-					nStopSubstage := 0; // Сброс для следующего цикла
-					AUTO_STEP := IDLE; // Возврат в IDLE
-			END_CASE
+						xAutoStopping := FALSE;
+						xStateAutoWorking := FALSE;
+						nStopSubstage := 0; // Сброс для следующего цикла
+						AUTO_STEP := IDLE; // Возврат в IDLE
+				END_CASE
+			END_IF
 		END_IF
 		
 
@@ -763,7 +821,7 @@ IF BUNKER_ENABLE_PID THEN
 	// Это снижает частоту обновления и делает регулирование более плавным
 
 	tonPidTimer(
-		IN := NOT xPidTimerPulse AND (AUTO_STEP = WORK),
+		IN := NOT xPidTimerPulse AND (AUTO_STEP = WORK) AND NOT xAutoStopping AND NOT xAutoEmergencyStopping,
 		PT := T#500MS
 	);
 
@@ -781,9 +839,10 @@ IF BUNKER_ENABLE_PID THEN
 	// ВЫЗОВ ПИД-РЕГУЛЯТОРА ПО ИМПУЛЬСУ
 	// ========================================
 	// ПИД вызывается только при переднем фронте импульса (каждые 500 мс)
+	// ВАЖНО: ПИД отключается при любой остановке (обычной или аварийной)
 	IF rtPidPulse.Q OR AUTO_STEP <> WORK THEN
 		fbProportionPid(
-			xEnable:= AUTO_STEP = WORK,
+			xEnable:= (AUTO_STEP = WORK) AND NOT xAutoStopping AND NOT xAutoEmergencyStopping,
 			xReset:= stCommands.cmdResetAll.qxRisingEdge,
 
 			rProportionTarget_1:= BUNKER_WORK_PRECENT_1 / 100.0,
