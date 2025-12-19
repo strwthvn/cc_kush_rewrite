@@ -376,6 +376,10 @@ Dumper.fbPreStartAlarm(
 	qxAlarmPower => Dumper.xHLA
 );
 
+// Световая сигнализация во время активной работы поворота
+// xHLA включается как при предпусковой сигнализации, так и при повороте
+Dumper.xHLA := Dumper.fbPreStartAlarm.qxAlarmPower OR (nRotationSubstage = 4);
+
 Dumper.xStateEnable := STAGE = E_StageWithPreStartAlarm.WORK;
 Dumper.xStateStarting := STAGE = E_StageWithPreStartAlarm.STARTING OR STAGE = PRESTART_ALARM;
 

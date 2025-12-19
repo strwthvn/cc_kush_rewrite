@@ -430,7 +430,7 @@ xStateErrorCheckReady :=
 // Аварийная остановка (приоритет)
 IF stCommands.cmdEmergencyStopCommon.qxSignal
 	OR (
-		NOT DISABLE_AUTO_STOPPING
+		NOT DISABLE_AUTO_STOPPING_DEPENDENCIES
 		AND (
 			(NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
 			AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK

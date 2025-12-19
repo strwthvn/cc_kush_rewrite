@@ -26,7 +26,8 @@ VAR_GLOBAL
 END_VAR
 VAR_GLOBAL RETAIN
 	// == КРИТИЧЕСКИЕ НАСТРОЙКИ ==
-	DISABLE_AUTO_STOPPING : BOOL := FALSE;
+	DISABLE_AUTO_STOPPING : BOOL := FALSE; // Отключение автоматических блокировок по цепям безопасности механизмов
+	DISABLE_AUTO_STOPPING_DEPENDENCIES : BOOL := FALSE; // Отключение автоматических блокировок по блокировочным зависимостям
 	BUNKER_INSTANT_STOP : BOOL := FALSE; // Флаг мгновенной остановки бункеров (TRUE = одновременная остановка всех 3-х бункеров, FALSE = последовательная остановка)
 
 	// == УСТАВКИ ==
