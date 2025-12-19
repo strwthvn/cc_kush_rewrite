@@ -758,9 +758,9 @@ IF BUNKER_ENABLE_PID THEN
 		xEnable:= AUTO_STEP = WORK,
 		xReset:= stCommands.cmdResetAll.qxRisingEdge,
 
-		rProportionTarget_1:= BUNKER_WORK_PRECENT_1,
-		rProportionTarget_2:= BUNKER_WORK_PRECENT_2,
-		rProportionTarget_3:= BUNKER_WORK_PRECENT_3,
+		rProportionTarget_1:= BUNKER_WORK_PRECENT_1 / 100.0,
+		rProportionTarget_2:= BUNKER_WORK_PRECENT_2 / 100.0,
+		rProportionTarget_3:= BUNKER_WORK_PRECENT_3 / 100.0,
 
 		rProportionActual_1:= stBunker[1].rProportionActual,
 		rProportionActual_2:= stBunker[2].rProportionActual,

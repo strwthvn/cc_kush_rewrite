@@ -18,6 +18,16 @@ VAR
 	// Индексы для циклов
 	b, m : INT;
 
+	// === Симуляция веса под бункерами ===
+	// Средняя частота вибропитателей каждого бункера
+	_rAvgFrequencyVibFeeder : ARRAY[1..3] OF REAL;
+
+	// Скорость накопления веса (кг/с) для каждого бункера
+	_rWeightAccumulationRate : ARRAY[1..3] OF REAL;
+
+	// Накопленный вес от каждого бункера (независимо)
+	_rLocalWeightUnderBunker : ARRAY[1..3] OF REAL;
+
 	// === Таймеры отвалообразователя ===
 	// Таймеры обратной связи контакторов (KM)
 	tonKM_Conv1, tonKM_Conv2 : TON;
@@ -224,6 +234,10 @@ IF _xInitRequired THEN
 
 		// Начальный вес бункера (симуляция заполненного бункера)
 		Bunker[b].rWeight := 100.0;
+
+		// Сброс веса под бункером
+		Bunker[b].rWeightUnderBunker := 0.0;
+		_rLocalWeightUnderBunker[b] := 0.0;
 	END_FOR;
 END_IF;
 
@@ -392,6 +406,42 @@ IF xEnable THEN
 			Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.ixSignal := tonVFD_Vibrator[b, m].Q;
 		END_FOR;
 	END_FOR;
+
+	// ========================================
+	// СИМУЛЯЦИЯ ВЕСА ПОД БУНКЕРАМИ
+	// ========================================
+
+	// Упрощенная симуляция: вес прямо пропорционален частоте вибропитателей
+	// Это имитирует стабильное количество материала на конвейере при работе
+	FOR b := 1 TO 3 BY 1 DO
+		// Средняя выходная частота двух вибропитателей бункера
+		// Используем fbAnalogOutput.rEngValue - инженерное значение частоты от аналогового выхода
+		_rAvgFrequencyVibFeeder[b] :=
+			(Bunker[b].MotorVibFeeder[1].VFD.fbAnalogOutput.rEngValue
+		   + Bunker[b].MotorVibFeeder[2].VFD.fbAnalogOutput.rEngValue) / 2.0;
+
+		// Вес пропорционален частоте (не накопление!)
+		// При частоте 50 Гц -> 100 кг (максимальный вес на конвейере)
+		// При частоте 0 Гц -> 0 кг
+		// Линейная зависимость
+		_rLocalWeightUnderBunker[b] := (_rAvgFrequencyVibFeeder[b] / 50.0) * 100.0;
+	END_FOR;
+
+	// --- Формирование кумулятивных весов согласно движению конвейера ---
+	// Конвейер движется: Бункер 3 → Бункер 2 → Бункер 1 → дальше
+	//
+	// rWeightUnderBunker[3] = вес только от бункера 3
+	// rWeightUnderBunker[2] = вес от бункера 3 + вес от бункера 2
+	// rWeightUnderBunker[1] = вес от бункера 3 + вес от бункера 2 + вес от бункера 1
+
+	Bunker[3].rWeightUnderBunker := _rLocalWeightUnderBunker[3];
+
+	Bunker[2].rWeightUnderBunker := _rLocalWeightUnderBunker[3]
+	                              + _rLocalWeightUnderBunker[2];
+
+	Bunker[1].rWeightUnderBunker := _rLocalWeightUnderBunker[3]
+	                              + _rLocalWeightUnderBunker[2]
+	                              + _rLocalWeightUnderBunker[1];
 END_IF;
 
 END_FUNCTION_BLOCK

@@ -157,7 +157,7 @@ VAR_GLOBAL RETAIN
 	BUNKER_VIBFEEDER_START_FREQUENCY : REAL := 10.0; // Минимальная частота для запуска вибропитателей (Гц)
 	BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM : REAL := 50.0; // Целевая суммарная частота вибропитателей (Гц)
     BUNKER_ENABLE_PID : BOOL := FALSE;
-    BUNKER_ENABLE_PROPORTION_MONITORING : BOOL := FALSE;
+    BUNKER_ENABLE_PROPORTION_MONITORING : BOOL := TRUE;
 
 	// Ручное задание частоты на бункер (работает в ручном режиме управления)
 	BUNKER_1_FREQ_VIBFEEDER : REAL := 30;
