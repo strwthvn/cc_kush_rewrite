@@ -2,6 +2,7 @@ PROGRAM MAIN
 VAR
 	fbSimulation : FB_Simulation;
 	fbEmergencyStopProcess : FB_EmergencyStopProcess;
+	fbScadaCommunication : FB_ScadaCommunication;
 
 	fbBunker : ARRAY [1..3] OF FB_BunkerControl;
 	stBunker : ARRAY [1..3] OF ST_Bunker;
@@ -141,6 +142,13 @@ stCommands.cmdStopCommon(
 stCommands.cmdEmergencyStopCommon(
 	ixSignal := , // Подключить физический вход
 	xEnableRattlingFilter := FALSE // Только edge detection
+);
+
+// == КОНТРОЛЬ СВЯЗИ СО SCADA ==
+fbScadaCommunication(
+	ixHeartbeatSignal := SCADA_HEARTBEAT,
+	itTimeout := SCADA_HEARTBEAT_TIMEOUT,
+	xReset := stCommands.cmdResetAll.qxSignal
 );
 
 // Постоянный внутренний импульс-сигнал
@@ -429,6 +437,7 @@ xStateErrorCheckReady :=
 
 // Аварийная остановка (приоритет)
 IF stCommands.cmdEmergencyStopCommon.qxSignal
+	OR (NOT DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION AND fbScadaCommunication.qxCommunicationLost)
 	OR (
 		NOT DISABLE_AUTO_STOPPING_DEPENDENCIES
 		AND (
