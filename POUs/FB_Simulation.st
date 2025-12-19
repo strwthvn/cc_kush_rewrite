@@ -28,6 +28,21 @@ VAR
 	// Накопленный вес от каждого бункера (независимо)
 	_rLocalWeightUnderBunker : ARRAY[1..3] OF REAL;
 
+	// === Случайные возмущения для бункеров ===
+	// Параметры генератора псевдослучайных чисел (Linear Congruential Generator)
+	_nRandomSeed : ARRAY[1..3] OF DINT := [12345, 67890, 24680]; // Начальные значения
+
+	// Случайное смещение для каждого бункера (-1.0 до +1.0)
+	_rRandomOffset : ARRAY[1..3] OF REAL;
+
+	// Линейный дрейф (медленное изменение характеристик материала)
+	_rDriftOffset : ARRAY[1..3] OF REAL;
+	_rDriftSpeed : ARRAY[1..3] OF REAL := [0.0003, -0.00025, 0.00035]; // Скорость дрейфа за цикл
+
+	// Временные переменные
+	_rNoise : REAL; // Шум ±3%
+	_rDrift : REAL; // Дрейф ±8%
+
 	// === Таймеры отвалообразователя ===
 	// Таймеры обратной связи контакторов (KM)
 	tonKM_Conv1, tonKM_Conv2 : TON;
@@ -238,6 +253,9 @@ IF _xInitRequired THEN
 		// Сброс веса под бункером
 		Bunker[b].rWeightUnderBunker := 0.0;
 		_rLocalWeightUnderBunker[b] := 0.0;
+
+		// Сброс дрейфа
+		_rDriftOffset[b] := 0.0;
 	END_FOR;
 END_IF;
 
@@ -411,8 +429,7 @@ IF xEnable THEN
 	// СИМУЛЯЦИЯ ВЕСА ПОД БУНКЕРАМИ
 	// ========================================
 
-	// Упрощенная симуляция: вес прямо пропорционален частоте вибропитателей
-	// Это имитирует стабильное количество материала на конвейере при работе
+	// Симуляция с случайными возмущениями для тестирования ПИД-регулятора
 	FOR b := 1 TO 3 BY 1 DO
 		// Средняя выходная частота двух вибропитателей бункера
 		// Используем fbAnalogOutput.rEngValue - инженерное значение частоты от аналогового выхода
@@ -420,11 +437,43 @@ IF xEnable THEN
 			(Bunker[b].MotorVibFeeder[1].VFD.fbAnalogOutput.rEngValue
 		   + Bunker[b].MotorVibFeeder[2].VFD.fbAnalogOutput.rEngValue) / 2.0;
 
-		// Вес пропорционален частоте (не накопление!)
-		// При частоте 50 Гц -> 100 кг (максимальный вес на конвейере)
-		// При частоте 0 Гц -> 0 кг
-		// Линейная зависимость
-		_rLocalWeightUnderBunker[b] := (_rAvgFrequencyVibFeeder[b] / 50.0) * 100.0;
+		// --- Генерация случайного шума (Linear Congruential Generator) ---
+		// LCG формула: seed = (a * seed + c) mod m
+		// Параметры: a = 1103515245, c = 12345, m = 2^31
+		_nRandomSeed[b] := (1103515245 * _nRandomSeed[b] + 12345) MOD 2147483647;
+
+		// Преобразование seed в диапазон [-1.0 ... +1.0]
+		_rRandomOffset[b] := (DINT_TO_REAL(_nRandomSeed[b]) / 2147483647.0) * 2.0 - 1.0;
+
+		// Шум ±3% от базового значения
+		_rNoise := _rRandomOffset[b] * 0.03;
+
+		// --- Медленный линейный дрейф (имитация изменения свойств материала) ---
+		// Дрейф накапливается с течением времени, но ограничен диапазоном ±8%
+		_rDriftOffset[b] := _rDriftOffset[b] + _rDriftSpeed[b];
+
+		// Ограничение дрейфа в диапазоне [-0.08 ... +0.08]
+		IF _rDriftOffset[b] > 0.08 THEN
+			_rDriftOffset[b] := 0.08;
+			_rDriftSpeed[b] := -ABS(_rDriftSpeed[b]); // Реверс направления
+		ELSIF _rDriftOffset[b] < -0.08 THEN
+			_rDriftOffset[b] := -0.08;
+			_rDriftSpeed[b] := ABS(_rDriftSpeed[b]); // Реверс направления
+		END_IF;
+
+		_rDrift := _rDriftOffset[b];
+
+		// --- Расчет веса с возмущениями ---
+		// Базовая линейная зависимость: частота 50 Гц -> 100 кг
+		// + Шум ±3%
+		// + Дрейф ±8%
+		_rLocalWeightUnderBunker[b] := (_rAvgFrequencyVibFeeder[b] / 50.0) * 100.0
+		                             * (1.0 + _rNoise + _rDrift);
+
+		// Ограничение минимального значения (вес не может быть отрицательным)
+		IF _rLocalWeightUnderBunker[b] < 0.0 THEN
+			_rLocalWeightUnderBunker[b] := 0.0;
+		END_IF;
 	END_FOR;
 
 	// --- Формирование кумулятивных весов согласно движению конвейера ---

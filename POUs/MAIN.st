@@ -14,6 +14,9 @@ VAR
 	eDumperStageToSCADA : E_ScadaStatesDevice; // Состояние для SCADA отвалообразователя
 
 	fbProportionPid : FB_ProportionPID;
+	tonPidTimer : TON; // Таймер для периодического вызова ПИД
+	xPidTimerPulse : BOOL := FALSE; // Импульс для вызова ПИД
+	rtPidPulse : R_TRIG; // Детектор переднего фронта импульса
 
 	fbConveyor : FB_ConveyorControl;
 	stConveyor : ST_ConveyorPrefabricated;
@@ -753,31 +756,66 @@ IF xAutoEmergencyStopping THEN
 END_IF
 
 IF BUNKER_ENABLE_PID THEN
+	// ========================================
+	// ТАЙМЕР ДЛЯ ПЕРИОДИЧЕСКОГО ВЫЗОВА ПИД
+	// ========================================
+	// Генерация импульса каждые 500 мс для вызова ПИД-регулятора
+	// Это снижает частоту обновления и делает регулирование более плавным
 
-	fbProportionPid(
-		xEnable:= AUTO_STEP = WORK,
-		xReset:= stCommands.cmdResetAll.qxRisingEdge,
-
-		rProportionTarget_1:= BUNKER_WORK_PRECENT_1 / 100.0,
-		rProportionTarget_2:= BUNKER_WORK_PRECENT_2 / 100.0,
-		rProportionTarget_3:= BUNKER_WORK_PRECENT_3 / 100.0,
-
-		rProportionActual_1:= stBunker[1].rProportionActual,
-		rProportionActual_2:= stBunker[2].rProportionActual,
-		rProportionActual_3:= stBunker[3].rProportionActual,
-
-		rFrequencyBase_1:= rInitialFrequency_1,
-		rFrequencyBase_2:= rInitialFrequency_2,
-		rFrequencyBase_3:= rInitialFrequency_3,
-
-		rFrequency_Min:= 5,
-		rFrequency_Max:= 50,
-		rFrequency_TargetSum:= BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM,
-		rDeltaTime:= 0.5
+	tonPidTimer(
+		IN := NOT xPidTimerPulse AND (AUTO_STEP = WORK),
+		PT := T#500MS
 	);
 
+	// Генерация импульса при завершении таймера
+	IF tonPidTimer.Q THEN
+		xPidTimerPulse := TRUE;
+	ELSE
+		xPidTimerPulse := FALSE;
+	END_IF
 
-	// Передача частоты ПИД регулятора 
+	// Детекция переднего фронта импульса
+	rtPidPulse(CLK := xPidTimerPulse);
+
+	// ========================================
+	// ВЫЗОВ ПИД-РЕГУЛЯТОРА ПО ИМПУЛЬСУ
+	// ========================================
+	// ПИД вызывается только при переднем фронте импульса (каждые 500 мс)
+	IF rtPidPulse.Q OR AUTO_STEP <> WORK THEN
+		fbProportionPid(
+			xEnable:= AUTO_STEP = WORK,
+			xReset:= stCommands.cmdResetAll.qxRisingEdge,
+
+			rProportionTarget_1:= BUNKER_WORK_PRECENT_1 / 100.0,
+			rProportionTarget_2:= BUNKER_WORK_PRECENT_2 / 100.0,
+			rProportionTarget_3:= BUNKER_WORK_PRECENT_3 / 100.0,
+
+			rProportionActual_1:= stBunker[1].rProportionActual,
+			rProportionActual_2:= stBunker[2].rProportionActual,
+			rProportionActual_3:= stBunker[3].rProportionActual,
+
+			// Параметры ПИД-регулятора (настройка реакции на ошибку)
+			rPID_Kp:= 0.4,                    // Пропорциональный коэффициент (снижен с 1.0)
+			rPID_Ki:= 0.15,                   // Интегральный коэффициент (снижен с 0.2)
+			rPID_Kd:= 0.01,                   // Дифференциальный коэффициент (снижен с 0.05)
+			rPID_IntegralLimit:= 10.0,        // Ограничение интеграла (anti-windup)
+			rPID_DerivativeFilter:= 0.8,      // Фильтр производной (увеличен с 0.1 для подавления шума)
+
+			rFrequencyBase_1:= rInitialFrequency_1,
+			rFrequencyBase_2:= rInitialFrequency_2,
+			rFrequencyBase_3:= rInitialFrequency_3,
+
+			rFrequency_Min:= 5,
+			rFrequency_Max:= 50,
+			rFrequency_TargetSum:= BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM,
+			rDeltaTime:= 0.5                  // Период вызова ПИД-регулятора, сек
+		);
+	END_IF
+
+	// ========================================
+	// ПЕРЕДАЧА ЧАСТОТЫ ПИД РЕГУЛЯТОРА
+	// ========================================
+	// Частота передается каждый цикл (даже если ПИД не обновился) 
 	stBunker[1].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_1;
 	stBunker[2].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_2;
 	stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
