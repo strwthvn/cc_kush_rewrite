@@ -80,6 +80,10 @@ VAR
 	xAutoEmergencyStopBunker : ARRAY[1..3] OF BOOL; // Автоматическая аварийная остановка бункеров
 	xAutoEmergencyStopConveyor : BOOL; // Автоматическая аварийная остановка конвейера
 	xAutoEmergencyStopDumper : BOOL; // Автоматическая аварийная остановка отвалообразователя
+
+	// Управление светофорами бункеров
+	xCriticalWeightDetected : BOOL := FALSE; // Флаг критически низкого веса (хотя бы один бункер достиг критической уставки)
+	xEmptyBunkerDetected : BOOL := FALSE; // Флаг опустошения (хотя бы один бункер полностью пуст)
 END_VAR
 
 stCommonSignals.qx6KM1 := TRUE;
@@ -467,6 +471,21 @@ CASE AUTO_STEP OF
 
 	IDLE: // Стадия ожидания задания
 
+	// Управление светофорами бункеров в режиме ожидания
+	FOR i := 1 TO 3 DO
+		stBunker[i].eLightColor := FC_Bunker_GetLightColor(
+			irWeight := stBunker[i].rWeight,
+			xCriticalWeightDetected := FALSE, // В режиме IDLE критический вес не проверяется
+			xThisBunkerIsCritical := FALSE,
+			xBunkerWorking := FALSE
+		);
+
+		FC_Bunker_SetLightColor(
+			Bunker := stBunker[i],
+			eColor := stBunker[i].eLightColor
+		);
+	END_FOR;
+
 	IF stCommands.cmdStartCommon.qxSignal AND xStateErrorCheckReady THEN
 		AUTO_STEP := INIT;
 	END_IF;
@@ -770,6 +789,52 @@ CASE AUTO_STEP OF
 				stBunker[2].rProportionActual := 0.0;
 				stBunker[3].rProportionActual := 0.0;
 			END_IF;
+		END_IF;
+
+		// ========================================
+		// УПРАВЛЕНИЕ СВЕТОФОРАМИ БУНКЕРОВ
+		// ========================================
+
+		// 1. Проверка критически низкого веса (хотя бы один бункер достиг уставки BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
+		xCriticalWeightDetected := FC_Bunker_CheckCriticalWeight(
+			Bunker1 := stBunker[1],
+			Bunker2 := stBunker[2],
+			Bunker3 := stBunker[3]
+		);
+
+		// 2. Проверка опустошения (хотя бы один бункер полностью пуст <= BUNKER_MINIMAL_WEIGHT)
+		xEmptyBunkerDetected := FC_Bunker_CheckEmptyBunker(
+			Bunker1 := stBunker[1],
+			Bunker2 := stBunker[2],
+			Bunker3 := stBunker[3]
+		);
+
+		// 3. Определение цвета светофора для каждого бункера
+		FOR i := 1 TO 3 DO
+			stBunker[i].eLightColor := FC_Bunker_GetLightColor(
+				irWeight := stBunker[i].rWeight,
+				xCriticalWeightDetected := xCriticalWeightDetected,
+				xThisBunkerIsCritical := (stBunker[i].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL), // Проверка критичности ЭТОГО бункера
+				xBunkerWorking := (eBunkerStage[i] = E_StageWithPreStartAlarm.WORK)
+			);
+
+			// 4. Применение сигналов светофора
+			FC_Bunker_SetLightColor(
+				Bunker := stBunker[i],
+				eColor := stBunker[i].eLightColor
+			);
+		END_FOR;
+
+		// 5. Автоматическая остановка бункеров при опустошении
+		// Как только один из бункеров становится пустым, останавливаем все бункеры
+		// (конвейер и отвалообразователь продолжают работу для транспортировки остатков)
+		IF xEmptyBunkerDetected THEN
+			// Останавливаем все активные бункеры
+			FOR i := 1 TO 3 DO
+				IF eBunkerStage[i] = E_StageWithPreStartAlarm.WORK THEN
+					xManualStopBunker[i] := TRUE;
+				END_IF;
+			END_FOR;
 		END_IF;
 
 	END_REPORT:
