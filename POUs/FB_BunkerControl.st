@@ -47,6 +47,10 @@ VAR
 	// Флаг активного запуска вибраторов в ручном режиме
 	xVibratorManualRunActive : BOOL := FALSE;
 
+	// Таймеры контроля выполнения команд
+	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
+	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
+
 END_VAR
 
 // ========================================
@@ -479,8 +483,23 @@ IF xEmergencyStopVibFeeder THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
+// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
+// Тайм-аут запуска: не удалось запустить вибропитатели за установленное время
+IF fbTimerStarting.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут остановки: не удалось остановить вибропитатели за установленное время
+IF fbTimerStopping.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
+		// Сброс таймеров запуска и остановки
+		fbTimerStarting(IN := FALSE);
+		fbTimerStopping(IN := FALSE);
+
 		// Сброс целевых частот
 		rTargetFreqVibFeeder1 := 0.0;
 		rTargetFreqVibFeeder2 := 0.0;
@@ -495,6 +514,14 @@ CASE STAGE OF
 		END_IF
 
 	E_StageWithPreStartAlarm.STARTING:
+		// Запуск таймера запуска (тайм-аут на запуск вибропитателей)
+		// Для бункеров используем соответствующую уставку (TIME_AFTER_START_BUNKER_1/2/3)
+		// Но так как это общий FB, используем универсальную уставку
+		fbTimerStarting(
+			IN := TRUE,
+			PT := TIME_AFTER_START_BUNKER_1 // Можно сделать параметром VAR_INPUT если нужно разные уставки для разных бункеров
+		);
+
 		// Команда ПУСК на VFD (TRUE = ПУСК)
 		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
 		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
@@ -514,6 +541,8 @@ CASE STAGE OF
 		IF Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
 		   AND Bunker.MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal
 		THEN
+			// Сброс таймера запуска (успешный запуск)
+			fbTimerStarting(IN := FALSE);
 			STAGE := E_StageWithPreStartAlarm.WORK;
 		END_IF
 
@@ -535,14 +564,33 @@ CASE STAGE OF
 
 		// Обработка команды останова
 		IF xStopCommand THEN
+			// Запуск таймера остановки (тайм-аут на остановку вибропитателей)
+			fbTimerStopping(
+				IN := TRUE,
+				PT := TIME_TIMEOUT_STOP_BUNKER
+			);
+
+			// Остановка VFD
 			Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
 			Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
-			STAGE := E_StageWithPreStartAlarm.IDLE;
+
+			// Проверка остановки VFD (обратная связь)
+			IF NOT Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
+			   AND NOT Bunker.MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal
+			THEN
+				// Сброс таймера остановки (успешная остановка)
+				fbTimerStopping(IN := FALSE);
+				STAGE := E_StageWithPreStartAlarm.IDLE;
+			END_IF;
 		END_IF
 
 	E_StageWithPreStartAlarm.ERROR:
 		// Состояние ошибки - аварийная остановка и ожидание сброса
 		// (используется при серьезных неисправностях, не для штатной остановки)
+
+		// Сброс таймеров
+		fbTimerStarting(IN := FALSE);
+		fbTimerStopping(IN := FALSE);
 
 		// Аварийная остановка: команда СТОП на VFD (FALSE = СТОП)
 		Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;

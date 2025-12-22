@@ -40,8 +40,9 @@ VAR
 	// Состояние схемы контакторов
 	xCircuitBuilt : BOOL := FALSE;
 
-	// Таймер ожидания полного запуска секции
-	fbTimerStarting : TON;
+	// Таймеры контроля выполнения команд
+	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
+	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
 
 	simInit : BOOL;
 	i : INT;
@@ -319,6 +320,17 @@ THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
+// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
+// Тайм-аут запуска: не удалось запустить секцию за установленное время
+IF fbTimerStarting.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут остановки: не удалось остановить секцию за установленное время
+IF fbTimerStopping.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
 		// Установка тормозов в активное состояние (FALSE = тормоз активен)
@@ -332,8 +344,9 @@ CASE STAGE OF
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
 
-		// Сброс таймера запуска
+		// Сброс таймеров запуска и остановки
 		fbTimerStarting(IN := FALSE);
+		fbTimerStopping(IN := FALSE);
 
 		IF xStartCommand THEN
 			STAGE := PRESTART_ALARM;
@@ -418,6 +431,9 @@ CASE STAGE OF
 	E_StageWithPreStartAlarm.WORK:
 		CASE nStoppingSubstage OF
 			0: // Нормальная работа
+				// Сброс таймера остановки
+				fbTimerStopping(IN := FALSE);
+
 				// Обновление целевой частоты конвейера в ручном режиме
 				IF Conveyor.eStateRemote = E_StateRemote.Manual THEN
 					rTargetFreqConv1 := MOTOR_FREQUENCY_CONVEYOR;
@@ -430,6 +446,11 @@ CASE STAGE OF
 				END_IF;
 
 			1: // STOP_VFD - Остановка VFD
+				// Запуск таймера остановки (тайм-аут на остановку секции)
+				fbTimerStopping(
+					IN := TRUE,
+					PT := TIME_TIMEOUT_STOP_CONVEYOR
+				);
 				// Задаем частоту 0
 				rTargetFreqConv1 := 0.0;
 				rTargetFreqConv2 := 0.0;
@@ -465,6 +486,8 @@ CASE STAGE OF
 				nStoppingSubstage := 4;
 
 			4: // Переход в IDLE
+				// Сброс таймера остановки (успешная остановка)
+				fbTimerStopping(IN := FALSE);
 
 				STAGE := E_StageWithPreStartAlarm.IDLE;
 				nStoppingSubstage := 0;
@@ -492,8 +515,9 @@ CASE STAGE OF
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
 
-		// Сброс таймера запуска
+		// Сброс таймеров
 		fbTimerStarting(IN := FALSE);
+		fbTimerStopping(IN := FALSE);
 
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)

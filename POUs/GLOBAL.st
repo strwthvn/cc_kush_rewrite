@@ -84,6 +84,12 @@ VAR_GLOBAL RETAIN
 	TIME_AFTER_START_BUNKER_1 : TIME := T#40S; // Время ожидания после запуска бункера 1
 	TIME_AFTER_START_BUNKER_2 : TIME := T#40S; // Время ожидания после запуска бункера 2
 	TIME_AFTER_START_BUNKER_3 : TIME := T#40S; // Время ожидания после запуска бункера 3
+
+	// Таймеры контроля выполнения команд (тайм-ауты)
+	TIME_TIMEOUT_STOP_DUMPER : TIME := T#30S; // Тайм-аут остановки отвалообразователя (WORK → IDLE)
+	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки конвейера (WORK → IDLE)
+	TIME_TIMEOUT_ROTATION_DUMPER : TIME := T#20S; // Тайм-аут выполнения команд поворота дампера
+	TIME_TIMEOUT_STOP_BUNKER : TIME := T#20S; // Тайм-аут остановки вибропитателей бункера (WORK → IDLE)
 	
 	// Таймер ожидания пропавшего сигнала обратной связи работы механизма
 	TIME_WAITING_FEEDBACK : TIME := T#0S;

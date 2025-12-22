@@ -50,8 +50,10 @@ VAR
 	xCircuitBuilt : BOOL := FALSE;
 	xCircuitBuiltRotation : BOOL := FALSE;
 
-	// Таймер ожидания полного запуска секции
-	fbTimerStarting : TON;
+	// Таймеры контроля выполнения команд
+	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
+	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
+	fbTimerRotation : TON; // Тайм-аут выполнения команд поворота
 
 	// == Управление поворотом ==
 	xRotationLeftActive : BOOL; // Поворот влево активен
@@ -417,8 +419,7 @@ Dumper.xStateStarting := STAGE = E_StageWithPreStartAlarm.STARTING OR STAGE = PR
 // ========================================
 
 // Проверка ошибок оборудования
-
-IF FC_Dumper_GetErrorCommon(Dumper := Dumper) OR fbTimerStarting.Q THEN
+IF FC_Dumper_GetErrorCommon(Dumper := Dumper) THEN
 	Dumper.xStateFailure := TRUE;
 END_IF;
 
@@ -485,6 +486,23 @@ THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
+// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
+// Тайм-аут запуска: не удалось запустить секцию за установленное время
+IF fbTimerStarting.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут остановки: не удалось остановить секцию за установленное время
+IF fbTimerStopping.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут поворота: не удалось выполнить команду поворота за установленное время
+IF fbTimerRotation.Q THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+	nRotationSubstage := 0; // Сброс подстадии поворота
+END_IF;
+
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
 		// Сброс целевой частоты
@@ -497,8 +515,9 @@ CASE STAGE OF
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
 
-		// Сброс таймера запуска
+		// Сброс таймеров запуска и остановки
 		fbTimerStarting(IN := FALSE);
+		fbTimerStopping(IN := FALSE);
 
 		// Тормоза активны (удерживают механизм)
 		Dumper.qxBreakerConveyor := FALSE;
@@ -599,6 +618,9 @@ CASE STAGE OF
 		// Нормальная работа или штатная остановка через подстадии
 		CASE nStoppingSubstage OF
 			0: // Нормальная работа
+				// Сброс таймера остановки
+				fbTimerStopping(IN := FALSE);
+
 				// Обновление целевой частоты конвейера в ручном режиме
 				IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 					rTargetFreqConv1 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
@@ -611,6 +633,11 @@ CASE STAGE OF
 				END_IF;
 
 			1: // STOP_VFD - Остановка VFD
+				// Запуск таймера остановки (тайм-аут на остановку секции)
+				fbTimerStopping(
+					IN := TRUE,
+					PT := TIME_TIMEOUT_STOP_DUMPER
+				);
 				// Установить целевую частоту 0
 				// (FB_FrequencyControl автоматически выберет плавную или прямую остановку через irStep)
 				rTargetFreqConv1 := 0.0;
@@ -653,6 +680,8 @@ CASE STAGE OF
 				nStoppingSubstage := 4;
 
 			4: // Переход в IDLE
+				// Сброс таймера остановки (успешная остановка)
+				fbTimerStopping(IN := FALSE);
 
 				STAGE := E_StageWithPreStartAlarm.IDLE;
 				nStoppingSubstage := 0;
@@ -689,8 +718,10 @@ CASE STAGE OF
 		nStoppingSubstage := 0;
 		nRotationSubstage := 0;
 
-		// Сброс таймера запуска
+		// Сброс таймеров
 		fbTimerStarting(IN := FALSE);
+		fbTimerStopping(IN := FALSE);
+		fbTimerRotation(IN := FALSE);
 
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
@@ -915,6 +946,9 @@ END_IF;
 // Автомат управления поворотом с подстадиями
 CASE nRotationSubstage OF
 	0: // IDLE - Нет активного поворота
+		// Сброс таймера поворота
+		fbTimerRotation(IN := FALSE);
+
 		// Остановка VFD
 		Dumper.MotorRotation[1].VFD.qxStart := FALSE;
 		Dumper.MotorRotation[2].VFD.qxStart := FALSE;
@@ -933,6 +967,12 @@ CASE nRotationSubstage OF
 		xRotationRightActive := FALSE;
 
 	1: // RELEASE_BRAKE - Отпускание тормоза поворота
+		// Запуск таймера поворота (тайм-аут на выполнение команды поворота)
+		fbTimerRotation(
+			IN := TRUE,
+			PT := TIME_TIMEOUT_ROTATION_DUMPER
+		);
+
 		// Отпустить тормоз (1 = тормоз отпущен)
 		Dumper.qxBreakerRotation := TRUE;
 
@@ -1018,6 +1058,9 @@ CASE nRotationSubstage OF
 	7: // ACTIVATE_BRAKE - Активация тормоза
 		// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
 		Dumper.qxBreakerRotation := FALSE;
+
+		// Сброс таймера поворота (успешное выполнение команды)
+		fbTimerRotation(IN := FALSE);
 
 		// Переход в IDLE
 		nRotationSubstage := 0;
