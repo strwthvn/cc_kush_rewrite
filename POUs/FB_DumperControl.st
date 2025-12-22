@@ -1,8 +1,9 @@
 FUNCTION_BLOCK FB_DumperControl
 VAR_INPUT
 	Dumper : REFERENCE TO ST_Dumper;
-	xStart : BOOL; // Команда запуска отвалообразователя
-	xStop : BOOL; // Команда остановки
+	xLocalMode : BOOL; // TRUE = местный режим (ПМУ), FALSE = дистанционный режим (SCADA)
+	xStart : BOOL; // Команда запуска отвалообразователя (дистанционный режим)
+	xStop : BOOL; // Команда остановки (дистанционный режим)
 	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
 	xDisableAutoEmergencyStop : BOOL; // Отключение автоматических аварийных остановок по датчикам безопасности
@@ -14,6 +15,10 @@ END_VAR
 VAR
 	// Состояния
 	STAGE : E_StageWithPreStartAlarm := E_StageWithPreStartAlarm.IDLE;
+
+	// Объединенные команды (ПМУ или SCADA в зависимости от режима)
+	xStartCommand : BOOL; // Фактическая команда запуска (из ПМУ или SCADA)
+	xStopCommand : BOOL; // Фактическая команда остановки (из ПМУ или SCADA)
 
 	// Целевые частоты для моторов
 	rTargetFreqConv1 : REAL := 0.0;
@@ -66,6 +71,37 @@ VAR
 END_VAR
 
 // ========================================
+// FB_DumperControl - Управление отвалообразователем
+// ========================================
+//
+// РЕЖИМЫ УПРАВЛЕНИЯ:
+//
+// 1. МЕСТНЫЙ РЕЖИМ (xLocalMode = TRUE):
+//    - Команды берутся с кнопок ПМУ (Dumper.fbBtnStart, fbBtnStop)
+//    - Конвейер: ПУСК/СТОП по фронтам кнопок
+//    - Поворот: работает пока кнопка ЗАЖАТА (fbBtnTurnLeft/Right)
+//    - Автоматически устанавливает eStateRemote = Manual
+//
+// 2. ДИСТАНЦИОННЫЙ РЕЖИМ (xLocalMode = FALSE):
+//    - Команды берутся из входов ФБ (xStart, xStop)
+//    - Конвейер: ПУСК/СТОП по входам ФБ
+//    - Поворот: импульсные команды через Dumper.cmdTurnLeft/Right/Stop
+//    - Режим устанавливается через SCADA (Manual/Remote/Auto)
+//
+// УПРАВЛЕНИЕ КОНВЕЙЕРОМ:
+// - ПУСК: включение конвейеров отвалообразователя
+// - СТОП: плавная остановка с последовательным выключением VFD и тормозов
+//
+// УПРАВЛЕНИЕ ПОВОРОТОМ:
+// - Местный: поворот пока кнопка зажата (отпустили - остановка)
+// - Дистанционный: импульсные команды от SCADA
+// - Блокировка по концевикам (fbEndSwitchLeft/Right):
+//   * Если концевик сработал (qxSignal = FALSE), команда поворота в эту сторону игнорируется
+//   * Поворот автоматически останавливается при достижении концевика
+//
+// ========================================
+
+// ========================================
 // ИНИЦИАЛИЗАЦИЯ СИГНАЛОВ
 // ========================================
 
@@ -110,13 +146,6 @@ Dumper.fbEndSwitchLeft(
 );
 
 Dumper.fbEndSwitchRight(
-	ixSignal := , // Подключить физический вход
-	xEnableRattlingFilter := TRUE,
-	tStabilityTime := T#100MS
-);
-
-// ПМУ режим управления (0 - Местный, 1 - Дистанционный)
-Dumper.fbBtnRemoteMode(
 	ixSignal := , // Подключить физический вход
 	xEnableRattlingFilter := TRUE,
 	tStabilityTime := T#100MS
@@ -368,7 +397,7 @@ Dumper.fbYS1(
 
 Dumper.fbPreStartAlarm(
 	ixStart := STAGE = PRESTART_ALARM,
-	ixStop := xStop OR xReset,
+	ixStop := xStopCommand OR xReset,
 	itFirstSignal := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL,
 	itPauseAfterFirst := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL_PAUSE,
 	itSecondSignal := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL,
@@ -420,6 +449,22 @@ END_IF
 // Обрабатывается через подстадии в режиме WORK
 
 // ========================================
+// ВЫБОР ИСТОЧНИКА КОМАНД (ПМУ ИЛИ SCADA)
+// ========================================
+
+// В местном режиме (xLocalMode = TRUE) - команды берутся с ПМУ (кнопки)
+// В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
+IF xLocalMode THEN
+	// Местный режим - команды с ПМУ
+	xStartCommand := Dumper.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	xStopCommand := Dumper.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
+ELSE
+	// Дистанционный режим - команды из SCADA
+	xStartCommand := xStart;
+	xStopCommand := xStop;
+END_IF;
+
+// ========================================
 // АВТОМАТ ПУСКА ОТВАЛООБРАЗОВАТЕЛЯ
 // ========================================
 
@@ -459,13 +504,13 @@ CASE STAGE OF
 		Dumper.qxBreakerConveyor := FALSE;
 		Dumper.qxBreakerRotation := FALSE;
 
-		IF xStart THEN
+		IF xStartCommand THEN
 			STAGE := PRESTART_ALARM;
 		END_IF;
 
 	PRESTART_ALARM:
 		// Проверка команды остановки во время предпусковой сигнализации
-		IF xStop THEN
+		IF xStopCommand THEN
 			// Прервать предпусковую сигнализацию и вернуться в IDLE
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		ELSIF Dumper.fbPreStartAlarm.qxComplete THEN
@@ -474,7 +519,7 @@ CASE STAGE OF
 
 	E_StageWithPreStartAlarm.STARTING:
 		// Проверка команды остановки во время запуска
-		IF xStop THEN
+		IF xStopCommand THEN
 			// Прервать запуск и перейти к процедуре остановки
 			STAGE := E_StageWithPreStartAlarm.WORK;
 			nStartingSubstage := 0;
@@ -560,7 +605,7 @@ CASE STAGE OF
 					rTargetFreqConv2 := MOTOR_FREQUENCY_DUMPER_CONVEYOR;
 				END_IF;
 
-				IF xStop THEN
+				IF xStopCommand THEN
 					// Начать штатную остановку
 					nStoppingSubstage := 1;
 				END_IF;
@@ -766,59 +811,105 @@ Dumper.MotorRotation[2].qxKM_Power := xCircuitBuiltRotation;
 // УПРАВЛЕНИЕ МОТОРАМИ ПОВОРОТА
 // ========================================
 
-// Обработка команд поворота (ПМУ - постоянная, АСУТП - импульсная)
-// Команды поворота могут быть активны в любом режиме работы
+// Обработка команд поворота в зависимости от режима управления
 
-// Обработка команды поворота влево
-// ПМУ: постоянная кнопка (qxSignal), АСУТП: импульсная команда (cmdTurnLeft)
-IF (Dumper.fbBtnTurnLeft.qxSignal OR Dumper.cmdTurnLeft) AND nRotationSubstage = 0 THEN
-	// Можем начать поворот влево только если:
-	// 1. Не упёрлись в левый концевик
-	// 2. Нет активного поворота (nRotationSubstage = 0)
-	IF Dumper.fbEndSwitchLeft.qxSignal THEN
-		xRotationLeftActive := TRUE;
-		xRotationRightActive := FALSE;
-		nRotationSubstage := 1; // Начать последовательность запуска
+IF xLocalMode THEN
+	// ========== МЕСТНЫЙ РЕЖИМ (ПМУ) ==========
+	// В местном режиме: поворот работает ПОКА ЗАЖАТА КНОПКА
+
+	// ПУСК поворота влево - при зажатой кнопке и отсутствии активного поворота
+	IF Dumper.fbBtnTurnLeft.qxSignal AND nRotationSubstage = 0 THEN
+		// Можем начать поворот влево только если:
+		// 1. Левый концевик НЕ сработал (qxSignal = TRUE означает концевик в норме, не нажат)
+		// 2. Нет активного поворота
+		IF Dumper.fbEndSwitchLeft.qxSignal THEN
+			xRotationLeftActive := TRUE;
+			xRotationRightActive := FALSE;
+			nRotationSubstage := 1; // Начать последовательность запуска
+		END_IF;
+		// Если концевик сработал (qxSignal = FALSE), команда игнорируется
 	END_IF;
-END_IF;
 
-// Обработка команды поворота вправо
-// ПМУ: постоянная кнопка (qxSignal), АСУТП: импульсная команда (cmdTurnRight)
-IF (Dumper.fbBtnTurnRight.qxSignal OR Dumper.cmdTurnRight) AND nRotationSubstage = 0 THEN
-	// Можем начать поворот вправо только если:
-	// 1. Не упёрлись в правый концевик
-	// 2. Нет активного поворота (nRotationSubstage = 0)
-	IF Dumper.fbEndSwitchRight.qxSignal THEN
-		xRotationRightActive := TRUE;
-		xRotationLeftActive := FALSE;
-		nRotationSubstage := 1; // Начать последовательность запуска
+	// ПУСК поворота вправо - при зажатой кнопке и отсутствии активного поворота
+	IF Dumper.fbBtnTurnRight.qxSignal AND nRotationSubstage = 0 THEN
+		// Можем начать поворот вправо только если:
+		// 1. Правый концевик НЕ сработал (qxSignal = TRUE означает концевик в норме, не нажат)
+		// 2. Нет активного поворота
+		IF Dumper.fbEndSwitchRight.qxSignal THEN
+			xRotationRightActive := TRUE;
+			xRotationLeftActive := FALSE;
+			nRotationSubstage := 1; // Начать последовательность запуска
+		END_IF;
+		// Если концевик сработал (qxSignal = FALSE), команда игнорируется
 	END_IF;
-END_IF;
 
-// Условия остановки поворота:
-// 1. Кнопка ПМУ отпущена (fbBtnTurn.qxSignal = FALSE)
-// 2. Достигнут концевик
-// 3. Импульсная команда остановки (cmdStopRotation)
-IF nRotationSubstage >= 1 AND nRotationSubstage <= 4 THEN
-	// Проверка условий остановки
-	IF (xRotationLeftActive AND NOT Dumper.fbEndSwitchLeft.qxSignal)
-		OR (xRotationRightActive AND NOT Dumper.fbEndSwitchRight.qxSignal)
-		OR Dumper.cmdStopRotation
-	THEN
-		// Начать последовательность остановки
-		nRotationSubstage := 5;
+	// ОСТАНОВКА поворота - когда кнопка отпущена или достигнут концевик
+	IF nRotationSubstage >= 1 AND nRotationSubstage <= 4 THEN
+		// Условия остановки:
+		// 1. Кнопка отпущена (для левого поворота - кнопка влево отпущена, для правого - кнопка вправо)
+		// 2. Достигнут концевик
+		IF (xRotationLeftActive AND (NOT Dumper.fbBtnTurnLeft.qxSignal OR NOT Dumper.fbEndSwitchLeft.qxSignal))
+			OR (xRotationRightActive AND (NOT Dumper.fbBtnTurnRight.qxSignal OR NOT Dumper.fbEndSwitchRight.qxSignal))
+		THEN
+			// Начать последовательность остановки
+			nRotationSubstage := 5;
+		END_IF;
 	END_IF;
-END_IF;
 
-// Сброс импульсных команд от АСУТП
-IF Dumper.cmdTurnLeft THEN
-	Dumper.cmdTurnLeft := FALSE;
-END_IF;
-IF Dumper.cmdTurnRight THEN
-	Dumper.cmdTurnRight := FALSE;
-END_IF;
-IF Dumper.cmdStopRotation THEN
-	Dumper.cmdStopRotation := FALSE;
+ELSE
+	// ========== ДИСТАНЦИОННЫЙ РЕЖИМ (SCADA) ==========
+	// В дистанционном режиме: импульсные команды от АСУТП
+
+	// Обработка команды поворота влево
+	IF Dumper.cmdTurnLeft AND nRotationSubstage = 0 THEN
+		// Можем начать поворот влево только если:
+		// 1. Левый концевик НЕ сработал (qxSignal = TRUE означает концевик в норме, не нажат)
+		// 2. Нет активного поворота
+		IF Dumper.fbEndSwitchLeft.qxSignal THEN
+			xRotationLeftActive := TRUE;
+			xRotationRightActive := FALSE;
+			nRotationSubstage := 1; // Начать последовательность запуска
+		END_IF;
+		// Если концевик сработал (qxSignal = FALSE), команда игнорируется
+	END_IF;
+
+	// Обработка команды поворота вправо
+	IF Dumper.cmdTurnRight AND nRotationSubstage = 0 THEN
+		// Можем начать поворот вправо только если:
+		// 1. Правый концевик НЕ сработал (qxSignal = TRUE означает концевик в норме, не нажат)
+		// 2. Нет активного поворота
+		IF Dumper.fbEndSwitchRight.qxSignal THEN
+			xRotationRightActive := TRUE;
+			xRotationLeftActive := FALSE;
+			nRotationSubstage := 1; // Начать последовательность запуска
+		END_IF;
+		// Если концевик сработал (qxSignal = FALSE), команда игнорируется
+	END_IF;
+
+	// Условия остановки поворота:
+	// 1. Достигнут концевик
+	// 2. Импульсная команда остановки (cmdStopRotation)
+	IF nRotationSubstage >= 1 AND nRotationSubstage <= 4 THEN
+		// Проверка условий остановки
+		IF (xRotationLeftActive AND NOT Dumper.fbEndSwitchLeft.qxSignal)
+			OR (xRotationRightActive AND NOT Dumper.fbEndSwitchRight.qxSignal)
+			OR Dumper.cmdStopRotation
+		THEN
+			// Начать последовательность остановки
+			nRotationSubstage := 5;
+		END_IF;
+	END_IF;
+
+	// Сброс импульсных команд от АСУТП
+	IF Dumper.cmdTurnLeft THEN
+		Dumper.cmdTurnLeft := FALSE;
+	END_IF;
+	IF Dumper.cmdTurnRight THEN
+		Dumper.cmdTurnRight := FALSE;
+	END_IF;
+	IF Dumper.cmdStopRotation THEN
+		Dumper.cmdStopRotation := FALSE;
+	END_IF;
 END_IF;
 
 // Автомат управления поворотом с подстадиями
@@ -931,6 +1022,16 @@ CASE nRotationSubstage OF
 		// Переход в IDLE
 		nRotationSubstage := 0;
 END_CASE;
+
+// ========================================
+// ОБНОВЛЕНИЕ РЕЖИМА УПРАВЛЕНИЯ
+// ========================================
+
+// Если установлен местный режим (xLocalMode = TRUE), то переводим в Manual
+// Manual может работать как дистанционно (от SCADA), так и местно (от ПМУ)
+IF xLocalMode THEN
+	Dumper.eStateRemote := E_StateRemote.Manual;
+END_IF;
 
 // ========================================
 // ПЕРЕДАЧА СОСТОЯНИЙ ДЛЯ SCADA

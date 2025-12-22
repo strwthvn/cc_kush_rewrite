@@ -1,8 +1,9 @@
 FUNCTION_BLOCK FB_BunkerControl
 VAR_INPUT
 	Bunker : REFERENCE TO ST_Bunker;
-	xStart : BOOL; // Команда запуска вибропитателей
-	xStop : BOOL; // Команда остановки
+	xLocalMode : BOOL; // TRUE = местный режим (ПМУ), FALSE = дистанционный режим (SCADA)
+	xStart : BOOL; // Команда запуска вибропитателей (дистанционный режим)
+	xStop : BOOL; // Команда остановки (дистанционный режим)
 	xEmergencyStopVibFeeder : BOOL; // Аварийная остановка вибропитателей (переводит бункер в ERROR)
 	xEmergencyStopVibrator : BOOL; // Аварийная остановка вибраторов (только отключает вибраторы)
 	xReset : BOOL; // Сброс ошибок
@@ -20,6 +21,10 @@ VAR
 	// Локальные переменные для управления в режиме МЕСТНЫЙ
 	_rtStartKM, _rtStopKM : R_TRIG;
 	_rtStartVFD, _rtStopVFD : R_TRIG;
+
+	// Объединенные команды (ПМУ или SCADA в зависимости от режима)
+	xStartCommand : BOOL; // Фактическая команда запуска (из ПМУ или SCADA)
+	xStopCommand : BOOL; // Фактическая команда остановки (из ПМУ или SCADA)
 
 	// ФБ управления
 	fbVibratorControl : FB_VibratorControl;
@@ -43,6 +48,32 @@ VAR
 	xVibratorManualRunActive : BOOL := FALSE;
 
 END_VAR
+
+// ========================================
+// FB_BunkerControl - Управление бункером
+// ========================================
+//
+// РЕЖИМЫ УПРАВЛЕНИЯ:
+//
+// 1. МЕСТНЫЙ РЕЖИМ (xLocalMode = TRUE):
+//    - Команды берутся с кнопок ПМУ (Bunker.fbBtnStart, fbBtnStop)
+//    - ПУСК/СТОП вибропитателей по фронтам кнопок
+//    - Автоматически устанавливает eStateRemote = Manual
+//
+// 2. ДИСТАНЦИОННЫЙ РЕЖИМ (xLocalMode = FALSE):
+//    - Команды берутся из входов ФБ (xStart, xStop)
+//    - Режим устанавливается через SCADA (Manual/Remote/Auto)
+//
+// УПРАВЛЕНИЕ ВИБРОПИТАТЕЛЯМИ:
+// - ПУСК: включение вибропитателей с заданной частотой
+// - СТОП: остановка вибропитателей
+// - Частота: Auto - от ПИД, Manual/Repair - от irManualFrequency
+//
+// УПРАВЛЕНИЕ ВИБРАТОРАМИ:
+// - Независимо от режима вибропитателей
+// - Режимы: Auto (таймер), Manual (выборочно), Repair (остановлены)
+//
+// ========================================
 
 // ========================================
 // ИНИЦИАЛИЗАЦИЯ СИГНАЛОВ С ФИЛЬТРАЦИЕЙ ДРЕБЕЗГА
@@ -423,6 +454,22 @@ Bunker.xStateWarning := Bunker.MotorVibFeeder[1].VFD.fbRangeDiagnostic.qxWarning
                      OR Bunker.MotorVibFeeder[2].fbRangeDiagnostic[2].qxWarningActive;
 
 // ========================================
+// ВЫБОР ИСТОЧНИКА КОМАНД (ПМУ ИЛИ SCADA)
+// ========================================
+
+// В местном режиме (xLocalMode = TRUE) - команды берутся с ПМУ (кнопки)
+// В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
+IF xLocalMode THEN
+	// Местный режим - команды с ПМУ
+	xStartCommand := Bunker.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	xStopCommand := Bunker.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
+ELSE
+	// Дистанционный режим - команды из SCADA
+	xStartCommand := xStart;
+	xStopCommand := xStop;
+END_IF;
+
+// ========================================
 // АВТОМАТ СОСТОЯНИЙ ЗАПУСКА ВИБРОПИТАТЕЛЕЙ
 // ========================================
 
@@ -443,7 +490,7 @@ CASE STAGE OF
 		Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
 
 		// Переход в STARTING при получении команды запуска
-		IF xStart THEN
+		IF xStartCommand THEN
 			STAGE := E_StageWithPreStartAlarm.STARTING;
 		END_IF
 
@@ -487,7 +534,7 @@ CASE STAGE OF
 		END_IF;
 
 		// Обработка команды останова
-		IF xStop THEN
+		IF xStopCommand THEN
 			Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
 			Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
 			STAGE := E_StageWithPreStartAlarm.IDLE;
@@ -524,6 +571,16 @@ END_CASE;
 
 // Выходной параметр - текущая стадия
 eStage := STAGE;
+
+// ========================================
+// ОБНОВЛЕНИЕ РЕЖИМА УПРАВЛЕНИЯ
+// ========================================
+
+// Если установлен местный режим (xLocalMode = TRUE), то переводим в Manual
+// Manual может работать как дистанционно (от SCADA), так и местно (от ПМУ)
+IF xLocalMode THEN
+	Bunker.eStateRemote := E_StateRemote.Manual;
+END_IF;
 
 // ========================================
 // ОБРАБОТКА ЧАСТОТЫ (после установки целевых значений в CASE)

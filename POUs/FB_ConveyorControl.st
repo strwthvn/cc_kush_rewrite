@@ -1,8 +1,9 @@
 FUNCTION_BLOCK FB_ConveyorControl
 VAR_INPUT
 	Conveyor : REFERENCE TO ST_ConveyorPrefabricated;
-	xStart : BOOL; // Команда запуска конвейера
-	xStop : BOOL; // Команда остановки
+	xLocalMode : BOOL; // TRUE = местный режим (ПМУ), FALSE = дистанционный режим (SCADA)
+	xStart : BOOL; // Команда запуска конвейера (дистанционный режим)
+	xStop : BOOL; // Команда остановки (дистанционный режим)
 	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
 	xDisableAutoEmergencyStop : BOOL; // Отключение автоматических аварийных остановок по датчикам безопасности
@@ -14,6 +15,10 @@ END_VAR
 VAR
 	// Состояния
 	STAGE : E_StageWithPreStartAlarm := E_StageWithPreStartAlarm.IDLE;
+
+	// Объединенные команды (ПМУ или SCADA в зависимости от режима)
+	xStartCommand : BOOL; // Фактическая команда запуска (из ПМУ или SCADA)
+	xStopCommand : BOOL; // Фактическая команда остановки (из ПМУ или SCADA)
 
 	// Подстадии запуска
 	nStartingSubstage : INT := 0;
@@ -41,6 +46,27 @@ VAR
 	simInit : BOOL;
 	i : INT;
 END_VAR
+
+// ========================================
+// FB_ConveyorControl - Управление сборным конвейером
+// ========================================
+//
+// РЕЖИМЫ УПРАВЛЕНИЯ:
+//
+// 1. МЕСТНЫЙ РЕЖИМ (xLocalMode = TRUE):
+//    - Команды берутся с кнопок ПМУ (Conveyor.fbBtnStart, fbBtnStop)
+//    - ПУСК/СТОП по фронтам кнопок
+//    - Автоматически устанавливает eStateRemote = Manual
+//
+// 2. ДИСТАНЦИОННЫЙ РЕЖИМ (xLocalMode = FALSE):
+//    - Команды берутся из входов ФБ (xStart, xStop)
+//    - Режим устанавливается через SCADA (Manual/Remote/Auto)
+//
+// УПРАВЛЕНИЕ КОНВЕЙЕРОМ:
+// - ПУСК: включение конвейеров с предпусковой сигнализацией
+// - СТОП: плавная остановка с последовательным выключением VFD и тормозов
+//
+// ========================================
 
 // ========================================
 // ИНИЦИАЛИЗАЦИЯ СИГНАЛОВ
@@ -216,7 +242,7 @@ Conveyor.fbBreakerConveyor(
 
 Conveyor.fbPreStartAlarm(
 	ixStart := STAGE = PRESTART_ALARM,
-	ixStop := xStop OR xReset,
+	ixStop := xStopCommand OR xReset,
 	itFirstSignal := CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL,
 	itPauseAfterFirst := CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL_PAUSE,
 	itSecondSignal := CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL,
@@ -257,6 +283,22 @@ IF xReset THEN
 END_IF
 
 // ========================================
+// ВЫБОР ИСТОЧНИКА КОМАНД (ПМУ ИЛИ SCADA)
+// ========================================
+
+// В местном режиме (xLocalMode = TRUE) - команды берутся с ПМУ (кнопки)
+// В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
+IF xLocalMode THEN
+	// Местный режим - команды с ПМУ
+	xStartCommand := Conveyor.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	xStopCommand := Conveyor.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
+ELSE
+	// Дистанционный режим - команды из SCADA
+	xStartCommand := xStart;
+	xStopCommand := xStop;
+END_IF;
+
+// ========================================
 // АВТОМАТ ПУСКА КОНВЕЙЕРА
 // ========================================
 
@@ -293,13 +335,13 @@ CASE STAGE OF
 		// Сброс таймера запуска
 		fbTimerStarting(IN := FALSE);
 
-		IF xStart THEN
+		IF xStartCommand THEN
 			STAGE := PRESTART_ALARM;
 		END_IF;
 
 	E_StageWithPreStartAlarm.PRESTART_ALARM:
 		// Проверка команды остановки во время предпусковой сигнализации
-		IF xStop THEN
+		IF xStopCommand THEN
 			// Прервать предпусковую сигнализацию и вернуться в IDLE
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		ELSIF Conveyor.fbPreStartAlarm.qxComplete THEN
@@ -308,7 +350,7 @@ CASE STAGE OF
 
 	E_StageWithPreStartAlarm.STARTING:
 		// Проверка команды остановки во время запуска
-		IF xStop THEN
+		IF xStopCommand THEN
 			// Прервать запуск и перейти к процедуре остановки
 			STAGE := E_StageWithPreStartAlarm.WORK;
 			nStartingSubstage := 0;
@@ -383,7 +425,7 @@ CASE STAGE OF
 				END_IF;
 
 				// Проверка команды остановки
-				IF xStop THEN
+				IF xStopCommand THEN
 					nStoppingSubstage := 1;
 				END_IF;
 
@@ -468,6 +510,16 @@ END_CASE;
 
 // Вывод текущей стадии
 eStage := STAGE;
+
+// ========================================
+// ОБНОВЛЕНИЕ РЕЖИМА УПРАВЛЕНИЯ
+// ========================================
+
+// Если установлен местный режим (xLocalMode = TRUE), то переводим в Manual
+// Manual может работать как дистанционно (от SCADA), так и местно (от ПМУ)
+IF xLocalMode THEN
+	Conveyor.eStateRemote := E_StateRemote.Manual;
+END_IF;
 
 // ========================================
 // ПЕРЕДАЧА СОСТОЯНИЙ ДЛЯ SCADA
