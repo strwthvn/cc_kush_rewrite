@@ -52,6 +52,11 @@ FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 64, rValue => BUNKER_WORK_PRECENT_2);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 66, rValue => BUNKER_WORK_PRECENT_3);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 68, rValue => BUNKER_MINIMAL_WEIGHT);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 70, rValue => BUNKER_WEIGHT_LIGHT_RED_SPECIAL);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 72, rValue => BUNKER_WEIGHT_LIGHT_RED);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 74, rValue => BUNKER_WEIGHT_LIGHT_YELLOW);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 76, rValue => BUNKER_WEIGHT_LIGHT_GREEN);
+
 
 // Уставки аварийных значений - Температура (90-119)
 // Регистры 90-91: BOOL флаги (резерв)
@@ -762,11 +767,11 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 6, xValue := stBunker[3].MotorVibrator[3].qxKM_Power);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 7, xValue := stBunker[3].MotorVibrator[4].qxKM_Power);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 8, xValue := stConveyor.xHLA);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 9, xValue := stDumper.xHLA);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 10, xValue := stCommonSignals.qx6KM1);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 11, xValue := stConveyor.qxBreakerConveyor);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 12, xValue := stDumper.qxBreakerConveyor);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 13, xValue := stDumper.qxBreakerRotation);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 10, xValue := stDumper.xHLA);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 11, xValue := stCommonSignals.qx6KM1);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 12, xValue := stConveyor.qxBreakerConveyor);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 13, xValue := stDumper.qxBreakerConveyor);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 14, xValue := stDumper.qxBreakerRotation);
 
 // Модуль DO4 (356-357): Светофоры бункеров
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 0, xValue := stBunker[1].qxLightRed);
