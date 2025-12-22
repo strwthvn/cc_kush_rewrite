@@ -32,7 +32,7 @@ VAR_GLOBAL RETAIN
 	DISABLE_AUTO_STOPPING : BOOL := FALSE; // Отключение автоматических блокировок по цепям безопасности механизмов
 	DISABLE_AUTO_STOPPING_DEPENDENCIES : BOOL := FALSE; // Отключение автоматических блокировок по блокировочным зависимостям
 	DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION : BOOL := TRUE; // Отключение автоматических блокировок по потере связи со SCADA
-	DISABLE_AUTO_STOPPING_CURRENT : BOOL; := FALSE; // Отключение автоматических блокировок по значению тока
+	DISABLE_AUTO_STOPPING_CURRENT : BOOL := FALSE; // Отключение автоматических блокировок по значению тока
 	BUNKER_INSTANT_STOP : BOOL := FALSE; // Флаг мгновенной остановки бункеров (TRUE = одновременная остановка всех 3-х бункеров, FALSE = последовательная остановка)
 
 	// == УСТАВКИ ==
@@ -96,6 +96,9 @@ VAR_GLOBAL RETAIN
 
 	// == ПАРАМЕТРЫ СВЯЗИ СО SCADA ==
 	SCADA_HEARTBEAT_TIMEOUT : TIME := T#5S; // Таймаут отсутствия изменений heartbeat сигнала (потеря связи)
+
+	// Таймаут контроля суммы пропорций в режиме WORK
+	BUNKER_PROPORTION_SUM_TIMEOUT : TIME := T#20S; // Время ожидания корректировки суммы пропорций оператором (сумма должна быть = 100%)
 
 	// Скорость конвейера
 	CONVEYOR_DEAFULT_SPEED : REAL := -1;

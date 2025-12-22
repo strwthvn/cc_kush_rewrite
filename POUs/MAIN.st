@@ -84,6 +84,11 @@ VAR
 	// Управление светофорами бункеров
 	xCriticalWeightDetected : BOOL := FALSE; // Флаг критически низкого веса (хотя бы один бункер достиг критической уставки)
 	xEmptyBunkerDetected : BOOL := FALSE; // Флаг опустошения (хотя бы один бункер полностью пуст)
+
+	// Контроль суммы пропорций в режиме WORK
+	tonProportionSumTimeout : TON; // Таймер контроля суммы пропорций
+	xProportionSumError : BOOL := FALSE; // Флаг ошибки суммы пропорций (сумма не равна 100%)
+	rProportionSum : REAL := 0.0; // Текущая сумма пропорций
 END_VAR
 
 stCommonSignals.qx6KM1 := TRUE;
@@ -448,6 +453,7 @@ xStateErrorCheckReady :=
 // Аварийная остановка (приоритет)
 IF stCommands.cmdEmergencyStopCommon.qxSignal
 	OR (NOT DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION AND fbScadaCommunication.qxCommunicationLost)
+	OR xProportionSumError // Ошибка суммы пропорций (не равна 100%)
 	OR (
 		NOT DISABLE_AUTO_STOPPING_DEPENDENCIES
 		AND (
@@ -470,6 +476,10 @@ END_IF
 CASE AUTO_STEP OF
 
 	IDLE: // Стадия ожидания задания
+
+	// Сброс таймера и флага ошибки пропорций
+	tonProportionSumTimeout.IN := FALSE;
+	xProportionSumError := FALSE;
 
 	// Управление светофорами бункеров в режиме ожидания
 	FOR i := 1 TO 3 DO
@@ -591,6 +601,26 @@ CASE AUTO_STEP OF
 	WORK:
 		// Нормальная работа
 		xStateAutoWorking := TRUE;
+
+		// === КОНТРОЛЬ СУММЫ ПРОПОРЦИЙ ===
+		// Проверка: сумма заданных пропорций должна быть равна 100%
+		rProportionSum := BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3;
+
+		// Запуск таймера, если сумма не равна 100%
+		tonProportionSumTimeout(
+			IN := (rProportionSum < 99.9 OR rProportionSum > 100.1), // Допуск ±0.1%
+			PT := BUNKER_PROPORTION_SUM_TIMEOUT
+		);
+
+		// Установка флага ошибки при истечении таймера
+		IF tonProportionSumTimeout.Q THEN
+			xProportionSumError := TRUE;
+		END_IF
+
+		// Сброс флага ошибки при корректировке пропорций
+		IF rProportionSum >= 99.9 AND rProportionSum <= 100.1 THEN
+			xProportionSumError := FALSE;
+		END_IF
 
 		// === ОБЫЧНАЯ ОСТАНОВКА ===
 		IF xAutoStopping THEN
@@ -850,6 +880,10 @@ CASE AUTO_STEP OF
 		END_IF;
 
 	ERROR:
+
+		// Сброс таймера и флага ошибки пропорций
+		tonProportionSumTimeout.IN := FALSE;
+		xProportionSumError := FALSE;
 
 		// Переход в IDLE при сбросе ошибки
 		IF stCommands.cmdResetAll.qxRisingEdge THEN
