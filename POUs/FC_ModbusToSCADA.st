@@ -28,7 +28,7 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 2, xValue => stCommands.cmdEmergencyStopCommon.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 3, xValue => stCommands.cmdResetAll.ixSignal);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 4, xValue => SCADA_HEARTBEAT);
-// FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue => DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION);
+//FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 5, xValue => DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 8, xValue => stCommands.cmdSetToRepair);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 9, xValue => stCommands.cmdSetToManual);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 0, iBitIndex := 10, xValue => stCommands.cmdSetToAuto);
@@ -440,6 +440,11 @@ FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 278, rValue := stConveyor.MotorConveyor[2].VFD.qrOutFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 280, rValue := stConveyor.MotorConveyor[2].VFD.rActualFrequency);
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 282, rValue := stConveyor.MotorConveyor[2].VFD.wMotorCurrent.rTag);
+
+// Регистры 284-289: Конвейерные весы (накопительные веса под бункерами)
+FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 284, rValue := stBunker[1].rWeightUnderBunker);
+FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 286, rValue := stBunker[2].rWeightUnderBunker);
+FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 288, rValue := stBunker[3].rWeightUnderBunker);
 
 FC_ModbusWriteUInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 290, uValue := eConveyorStageToSCADA);
 
