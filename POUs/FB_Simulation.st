@@ -5,6 +5,7 @@ VAR_INPUT
 	Dumper : REFERENCE TO ST_Dumper; // Структура отвалообразователя
 	Conveyor : REFERENCE TO ST_ConveyorPrefabricated; // Структура сборного конвейера
 	Bunker : REFERENCE TO ARRAY[1..3] OF ST_Bunker; // Массив бункеров
+	Common : ST_CommonSignals; // Общие сигналы
 	tFeedbackDelay : TIME := T#500MS; // Задержка обратной связи
 END_VAR
 VAR
@@ -83,6 +84,14 @@ rtReset(CLK := xReset);
 _xInitRequired := rtEnable.Q OR rtReset.Q;
 
 IF _xInitRequired THEN
+
+	// ========================================
+	// ИНИЦИАЛИЗАЦИЯ ОБЩИЕ СИГНАЛЫ
+	// ========================================
+	
+	// Сигнал ПМУ - режим управления 1 - дистанция, 0 - местный
+	Common.fbRemoteModeBtn.ixSignal := TRUE; 
+
 	// ========================================
 	// ИНИЦИАЛИЗАЦИЯ СИМУЛЯЦИИ ОТВАЛООБРАЗОВАТЕЛЯ
 	// Установка всех сигналов в состояние "нет ошибок"

@@ -164,6 +164,7 @@ END_FOR
 // Бункеры
 fbBunker[1](
 	Bunker := stBunker[1],
+	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[1],
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1],
 	xEmergencyStopVibFeeder := stBunker[1].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[1],
@@ -177,6 +178,7 @@ fbBunker[1](
 
 fbBunker[2](
 	Bunker := stBunker[2],
+	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[2],
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2],
 	xEmergencyStopVibFeeder := stBunker[2].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[2],
@@ -190,6 +192,7 @@ fbBunker[2](
 
 fbBunker[3](
 	Bunker := stBunker[3],
+	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[3],
 	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3],
 	xEmergencyStopVibFeeder := stBunker[3].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[3],
@@ -204,6 +207,7 @@ fbBunker[3](
 // Отвалообразователь
 fbDumper(
 	Dumper := stDumper,
+	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartDumper,
 	xStop := xManualStopDumper,
 	xEmergencyStop := stDumper.cmdEmergencyStop OR xAutoEmergencyStopDumper,
@@ -216,6 +220,7 @@ fbDumper(
 // Конвейер
 fbConveyor(
 	Conveyor := stConveyor,
+	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartConveyor,
 	xStop := xManualStopConveyor,
 	xEmergencyStop := stConveyor.cmdEmergencyStop OR xAutoEmergencyStopConveyor,
@@ -238,7 +243,8 @@ fbSimulation(
 	xReset := ,
 	Dumper := stDumper,
 	Conveyor := stConveyor,
-	Bunker := stBunker
+	Bunker := stBunker,
+	Common := stCommonSignals
 );
 
 // == РУЧНОЙ РЕЖИМ - ДИСТАНЦИЯ ==
