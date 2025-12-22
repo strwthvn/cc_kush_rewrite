@@ -163,7 +163,7 @@ VAR_GLOBAL RETAIN
 	// Частота мотора поворота отвалообразователя
 	MOTOR_FREQUENCY_DUMPER_ROTATION : REAL := -1;
 		
-	BUNKER_MINIMAL_WEIGHT :REAL := -1; // Уставка минимального веса бункера. Результат <= считывается алгоритмом как пустой бункер.
+	BUNKER_MINIMAL_WEIGHT :REAL := 0; // Уставка минимального веса бункера. Результат <= считывается алгоритмом как пустой бункер.
 	
 	// Уставки бункера
 	PNEUMATIC_COLLAPSE_TIME : TIME := T#0S; // Уставка времени таймера пневмообрушения
@@ -184,9 +184,11 @@ VAR_GLOBAL RETAIN
 	BUNKER_3_FREQ_VIBRATOR : REAL := 30;
 	
 	// Светофор бункера
-	BUNKER_WEIGHT_LIGHT_RED : REAL; // Уставка веса бункера для красного светофора
-	BUNKER_WEIGHT_LIGHT_YELLOW : REAL; // Уставка веса бункера для жёлтого светофора
-	BUNKER_WEIGHT_LIGHT_GREEN : REAL; // Уставка веса бункера для зелёного светофора
+	BUNKER_WEIGHT_LIGHT_RED : REAL := 90; // Уставка веса бункера для красного светофора
+	BUNKER_WEIGHT_LIGHT_YELLOW : REAL := 80; // Уставка веса бункера для жёлтого светофора
+	BUNKER_WEIGHT_LIGHT_GREEN : REAL := 50; // Уставка веса бункера для зелёного светофора
+	
+	BUNKER_WEIGHT_LIGHT_RED_SPECIAL := 10; // Уставка веса бункера для красного светофора, когда сырье закончилось и требуется остановить подачу материала в остальные бункеры для будущего алгоритма опустошения
 	
 	// Константы
 	AMOUNT_BUNKER_MOTOR_VIBFEEDER : INT := 2;
