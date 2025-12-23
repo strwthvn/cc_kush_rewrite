@@ -8,6 +8,7 @@ VAR_INPUT
 	eBunkerStageToSCADA : REFERENCE TO ARRAY[1..3] OF E_ScadaStatesDevice;
 	eConveyorStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA конвейера
 	eDumperStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA отвалообразователя
+	eSystemStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Общее состояние системы для SCADA
 	fbScadaCommunication : REFERENCE TO FB_ScadaCommunication; // Функциональный блок контроля связи со SCADA
 
 END_VAR
@@ -269,6 +270,9 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 0, iBitIndex := 15, xValue := SIMULATION);
 
 FC_ModbusWriteReal(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 2, rValue := ICUR_PRECENT);
+
+// Регистр 4: Общее состояние системы для SCADA
+FC_ModbusWriteInt(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 4, iValue := eSystemStageToSCADA);
 
 // Бункер 1 (30-89)
 // Регистры 30-31: BOOL флаги статусов бункера 1

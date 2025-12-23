@@ -17,6 +17,7 @@ VAR_GLOBAL
 	
 	// Переменные симуляции
 	SIMULATION : BOOL := TRUE;
+	SIMULATION_BUNKER_WEIGHT : BOOL := FALSE; // Включение симуляции расхода и пополнения веса бункеров
 	
 	// == MODBUS РЕГИСТРЫ ДЛЯ SCADA ==
 	// Массив регистров для передачи данных в SCADA систему

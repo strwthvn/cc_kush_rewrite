@@ -39,6 +39,7 @@ VAR
 	xStateErrorCheckReady : BOOL := FALSE; // Готовность к пуску (отсутствие ошибок)
 	xStateErrorAcceptIdle : BOOL := FALSE; // Ошибка задания пропорции
 	ICUR_PRECENT : REAL := 0.0; // КИУМ в процентах
+	eSystemStageToSCADA : E_ScadaStatesDevice; // Общее состояние системы для SCADA
 
 	// Шаги автоматического алгоритма
 	AUTO_STEP : (
@@ -508,10 +509,8 @@ CASE AUTO_STEP OF
 		rInitialFrequency_2 := BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM * (BUNKER_WORK_PRECENT_2 / 100.0);
 		rInitialFrequency_3 := BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM * (BUNKER_WORK_PRECENT_3 / 100.0);
 
-		// Установка начальных частот в структуры бункеров
-		stBunker[1].rMotorVibFeederCommonFrequency := rInitialFrequency_1;
-		stBunker[2].rMotorVibFeederCommonFrequency := rInitialFrequency_2;
-		stBunker[3].rMotorVibFeederCommonFrequency := rInitialFrequency_3;
+		// ВАЖНО: Частоты НЕ записываются сразу в структуры бункеров
+		// Они будут установлены индивидуально при запуске каждого бункера в START_VIBFEEDER
 
 		// Переход к запуску отвалообразователя
 		AUTO_STEP := START_DUMPER;
@@ -542,9 +541,12 @@ CASE AUTO_STEP OF
 
 	START_VIBFEEDER:
 		// Последовательный запуск бункеров с задержкой: 3 → задержка → 2 → задержка → 1
+		// ВАЖНО: Частота задаётся ПЕРЕД запуском каждого бункера
 		CASE nBunkerStartStep OF
 			0: // Шаг 0: Запуск бункера 3
 				IF stBunker[3].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_3 > 0 THEN
+					// Установка частоты ПЕРЕД запуском бункера 3
+					stBunker[3].rMotorVibFeederCommonFrequency := rInitialFrequency_3;
 					xStartBunker[3] := TRUE;
 					IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[3] := FALSE;
@@ -564,6 +566,8 @@ CASE AUTO_STEP OF
 
 			2: // Шаг 2: Запуск бункера 2
 				IF stBunker[2].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_2 > 0 THEN
+					// Установка частоты ПЕРЕД запуском бункера 2
+					stBunker[2].rMotorVibFeederCommonFrequency := rInitialFrequency_2;
 					xStartBunker[2] := TRUE;
 					IF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[2] := FALSE;
@@ -583,6 +587,8 @@ CASE AUTO_STEP OF
 
 			4: // Шаг 4: Запуск бункера 1
 				IF stBunker[1].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_1 > 0 THEN
+					// Установка частоты ПЕРЕД запуском бункера 1
+					stBunker[1].rMotorVibFeederCommonFrequency := rInitialFrequency_1;
 					xStartBunker[1] := TRUE;
 					IF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[1] := FALSE;
@@ -893,6 +899,45 @@ CASE AUTO_STEP OF
 END_CASE;
 
 // ========================================
+// ОПРЕДЕЛЕНИЕ ОБЩЕГО СОСТОЯНИЯ СИСТЕМЫ ДЛЯ SCADA
+// ========================================
+
+// Приоритет проверки: от более критичных к менее критичным
+IF AUTO_STEP = ERROR THEN
+	// Ошибка без активной работы
+	eSystemStageToSCADA := E_ScadaStatesDevice.ERROR;
+
+ELSIF AUTO_STEP = WORK AND (stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure) THEN
+	// Система работает с аварией (хотя бы одна секция в состоянии ошибки)
+	eSystemStageToSCADA := E_ScadaStatesDevice.WORK_WITH_ERROR;
+
+ELSIF AUTO_STEP = WORK AND (stDumper.xStateWarning OR stConveyor.xStateWarning OR stBunker[1].xStateWarning OR stBunker[2].xStateWarning OR stBunker[3].xStateWarning) THEN
+	// Система работает с предупреждением (хотя бы одна секция имеет предупреждение)
+	eSystemStageToSCADA := E_ScadaStatesDevice.WORK_WITH_WARNING;
+
+ELSIF AUTO_STEP = WORK THEN
+	// Система работает в норме (нет ошибок и предупреждений)
+	eSystemStageToSCADA := E_ScadaStatesDevice.WORK;
+
+ELSIF (AUTO_STEP = START_DUMPER OR AUTO_STEP = START_CONV OR AUTO_STEP = START_VIBFEEDER OR AUTO_STEP = INIT) THEN
+	// Система в процессе запуска (инициализация или разгон оборудования)
+	eSystemStageToSCADA := E_ScadaStatesDevice.STARTING;
+
+ELSIF AUTO_STEP = IDLE AND (stDumper.xStateWarning OR stConveyor.xStateWarning OR stBunker[1].xStateWarning OR stBunker[2].xStateWarning OR stBunker[3].xStateWarning) THEN
+	// Предупреждение без активной работы
+	eSystemStageToSCADA := E_ScadaStatesDevice.WARNING;
+
+ELSIF AUTO_STEP = IDLE AND (stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure) THEN
+	// Система неготова к запуску (есть ошибки)
+	eSystemStageToSCADA := E_ScadaStatesDevice.NOT_READY;
+
+ELSE
+	// Система готова к запуску (IDLE, нет ошибок и предупреждений)
+	eSystemStageToSCADA := E_ScadaStatesDevice.READY;
+
+END_IF;
+
+// ========================================
 // АВАРИЙНАЯ ОСТАНОВКА (независимо от AUTO_STEP)
 // ========================================
 
@@ -988,10 +1033,13 @@ IF BUNKER_ENABLE_PID THEN
 	// ========================================
 	// ПЕРЕДАЧА ЧАСТОТЫ ПИД РЕГУЛЯТОРА
 	// ========================================
-	// Частота передается каждый цикл (даже если ПИД не обновился) 
-	stBunker[1].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_1;
-	stBunker[2].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_2;
-	stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
+	// ВАЖНО: Частота передается ТОЛЬКО в стадии WORK
+	// В других стадиях (INIT, START_VIBFEEDER) частота устанавливается вручную
+	IF AUTO_STEP = WORK THEN
+		stBunker[1].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_1;
+		stBunker[2].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_2;
+		stBunker[3].rMotorVibFeederCommonFrequency := fbProportionPID.qrFrequency_3;
+	END_IF
 
 END_IF;
 
@@ -1008,6 +1056,7 @@ FC_ModbusToSCADA(
 	eBunkerStageToSCADA:= eBunkerStageToSCADA,
 	eConveyorStageToSCADA:= eConveyorStageToSCADA,
 	eDumperStageToSCADA:= eDumperStageToSCADA,
+	eSystemStageToSCADA:= eSystemStageToSCADA,
 	fbScadaCommunication:= fbScadaCommunication);
 
 END_PROGRAM
