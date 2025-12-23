@@ -5,6 +5,15 @@ venv/
 env/
 ENV/
 .venv/
+script/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
 
 # Excel and CSV files
 *.xlsx
@@ -12,13 +21,18 @@ ENV/
 *.xls
 
 # Other common patterns
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
 .Python
 *.so
 *.egg
 *.egg-info/
 dist/
 build/
+*.manifest
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
