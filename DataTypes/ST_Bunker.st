@@ -56,11 +56,21 @@ STRUCT
 	cmdAddVib4 : BOOL; // Включить управление вибратора 4
 	cmdBuildCircuitOn, cmdBuildCircuitOff  : BOOL; // Команда собрать/разобрать схему
 	cmdBuildCircuitOnVibrator, cmdBuildCircuitOffVibrator  : BOOL; // Команда собрать/разобрать схему вибратора
+	// Команды светофора бункеров
+	cmdLighterSetModeRepair : BOOL; // Установить режим "Ремонт"
+	cmdLighterSetModeAuto : BOOL; // Установить режим "Авто"
+	cmdLighterSetModeManual : BOOL; // Установить режим "Ручной"
+	cmdLighetSetColorRed : BOOL; // Команда "Установить свет КРАСНЫЙ"
+	cmdLighetSetColorYellow : BOOL; // Команда "Установить свет ЖЕЛТЫЙ"
+	cmdLighetSetColorGreen : BOOL; // Команда "Установить свет ЗЕЛЕНЫЙ"
+	cmdLighetSetColorOff : BOOL; // Команда "Выключить светофор"
+	
 	
 	// == Генерация состояний ==
 	eLightColor : E_LightColor; // Текущий сигнал светофора
 	eStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
 	eVibratorStateRemote: E_StateRemote; // Состояние режима управления (авто, ручной, ремонт)
+	eStateRemoteLighter : E_StateRemote; // Состояние режима управления светофора
 	xStateRemoteAuto, xStateRemoteManual, xStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
 	xVibratorStateRemoteAuto, xVibratorStateRemoteManual, xVibratorStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
 	

@@ -843,9 +843,27 @@ ELSIF Bunker.eVibratorStateRemote = E_StateRemote.Manual THEN
 END_IF; // Конец IF NOT xEmergencyStopVibrator
 
 // ========================================
-// УПРАВЛЕНИЕ СВЕТОФОРОМ
+// РУЧНОЕ УПРАВЛЕНИЕ СВЕТОФОРОМ
 // ========================================
-// Управление выходами светофора происходит извне через вызовы отдельных функций
+
+IF Bunker.eStateRemoteLighter = E_StateRemote.Manual THEN
+	// Команда переключения на КРАСНЫЙ
+	IF Bunker.cmdLighetSetColorRed THEN FC_Bunker_SetLightColor(Bunker:= Bunker, eColor:= E_LightColor.RED); 
+	// Команда переключения на ЖЕЛТЫЙ
+	ELSIF Bunker.cmdLighetSetColorYellow THEN FC_Bunker_SetLightColor(Bunker:= Bunker, eColor:= E_LightColor.YELLOW); 
+	// Команда переключения на ЗЕЛЕНЫЙ
+	ELSIF Bunker.cmdLighetSetColorGreen THEN FC_Bunker_SetLightColor(Bunker:= Bunker, eColor:= E_LightColor.GREEN); 
+	// Команда переключения на ВЫКЛЮЧИТЬ
+	ELSIF Bunker.cmdLighetSetColorOff THEN FC_Bunker_SetLightColor(Bunker:= Bunker, eColor:= E_LightColor.OFF); END_IF;
+END_IF;
+
+// Режим управления АВТО
+IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.AUTO; END_IF;
+// Режим управления МЕСТНЫЙ
+IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.AUTO; END_IF;
+// Режим управления РЕМОНТ
+IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.AUTO; END_IF;
+
 
 // ========================================
 // РАСЧЁТ ОШИБОК ОБОРУДОВАНИЯ

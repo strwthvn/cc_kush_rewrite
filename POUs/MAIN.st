@@ -484,17 +484,19 @@ CASE AUTO_STEP OF
 
 	// Управление светофорами бункеров в режиме ожидания
 	FOR i := 1 TO 3 DO
-		stBunker[i].eLightColor := FC_Bunker_GetLightColor(
-			irWeight := stBunker[i].rWeight,
-			xCriticalWeightDetected := FALSE, // В режиме IDLE критический вес не проверяется
-			xThisBunkerIsCritical := FALSE,
-			xBunkerWorking := FALSE
-		);
+		IF stBunker[i].eStateRemoteLighter = E_StateRemote.Auto THEN
+			stBunker[i].eLightColor := FC_Bunker_GetLightColor(
+				irWeight := stBunker[i].rWeight,
+				xCriticalWeightDetected := FALSE, // В режиме IDLE критический вес не проверяется
+				xThisBunkerIsCritical := FALSE,
+				xBunkerWorking := FALSE
+			);
 
-		FC_Bunker_SetLightColor(
-			Bunker := stBunker[i],
-			eColor := stBunker[i].eLightColor
-		);
+			FC_Bunker_SetLightColor(
+				Bunker := stBunker[i],
+				eColor := stBunker[i].eLightColor
+			);
+		END_IF;
 	END_FOR;
 
 	IF stCommands.cmdStartCommon.qxSignal AND xStateErrorCheckReady THEN
@@ -847,18 +849,20 @@ CASE AUTO_STEP OF
 
 		// 3. Определение цвета светофора для каждого бункера
 		FOR i := 1 TO 3 DO
-			stBunker[i].eLightColor := FC_Bunker_GetLightColor(
-				irWeight := stBunker[i].rWeight,
-				xCriticalWeightDetected := xCriticalWeightDetected,
-				xThisBunkerIsCritical := (stBunker[i].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL), // Проверка критичности ЭТОГО бункера
-				xBunkerWorking := (eBunkerStage[i] = E_StageWithPreStartAlarm.WORK)
-			);
+			IF stBunker[i].eStateRemoteLighter = E_StateRemote.Auto THEN
+				stBunker[i].eLightColor := FC_Bunker_GetLightColor(
+					irWeight := stBunker[i].rWeight,
+					xCriticalWeightDetected := xCriticalWeightDetected,
+					xThisBunkerIsCritical := (stBunker[i].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL), // Проверка критичности ЭТОГО бункера
+					xBunkerWorking := (eBunkerStage[i] = E_StageWithPreStartAlarm.WORK)
+				);
 
-			// 4. Применение сигналов светофора
-			FC_Bunker_SetLightColor(
-				Bunker := stBunker[i],
-				eColor := stBunker[i].eLightColor
-			);
+				// 4. Применение сигналов светофора
+				FC_Bunker_SetLightColor(
+					Bunker := stBunker[i],
+					eColor := stBunker[i].eLightColor
+				);
+			END_IF;
 		END_FOR;
 
 		// 5. Автоматическая остановка бункеров при опустошении

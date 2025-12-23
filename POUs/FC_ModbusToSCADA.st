@@ -189,6 +189,9 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 11, xValue => stBunker[1].cmdBuildCircuitOnVibrator);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 271, iBitIndex := 12, xValue => stBunker[1].cmdBuildCircuitOffVibrator);
 
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 272, iBitIndex := 8, xValue => stBunker[1].cmdLighterSetModeRepair);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 272, iBitIndex := 9, xValue => stBunker[1].cmdLighterSetModeManual);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 272, iBitIndex := 10, xValue => stBunker[1].cmdLighterSetModeAuto);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 278, rValue => BUNKER_1_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 282, rValue => BUNKER_1_FREQ_VIBFEEDER);
@@ -219,6 +222,9 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 11, xValue => stBunker[2].cmdBuildCircuitOnVibrator);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 301, iBitIndex := 12, xValue => stBunker[2].cmdBuildCircuitOffVibrator);
 
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 302, iBitIndex := 8, xValue => stBunker[2].cmdLighterSetModeRepair);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 302, iBitIndex := 9, xValue => stBunker[2].cmdLighterSetModeManual);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 302, iBitIndex := 10, xValue => stBunker[2].cmdLighterSetModeAuto);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 308, rValue => BUNKER_2_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 312, rValue => BUNKER_2_FREQ_VIBFEEDER);
@@ -248,6 +254,10 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 10, xValue => stBunker[3].cmdVibratorSetModeAuto);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 11, xValue => stBunker[3].cmdBuildCircuitOnVibrator);
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 331, iBitIndex := 12, xValue => stBunker[3].cmdBuildCircuitOffVibrator);
+
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 332, iBitIndex := 8, xValue => stBunker[3].cmdLighterSetModeRepair);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 332, iBitIndex := 9, xValue => stBunker[3].cmdLighterSetModeManual);
+FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 332, iBitIndex := 10, xValue => stBunker[3].cmdLighterSetModeAuto);
 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 338, rValue => BUNKER_3_FREQ_VIBRATOR);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 342, rValue => BUNKER_3_FREQ_VIBFEEDER);
