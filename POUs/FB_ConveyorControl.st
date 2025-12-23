@@ -26,7 +26,13 @@ VAR
 
 	// Подстадии остановки
 	nStoppingSubstage : INT := 0;
-	// 0 - Normal work, 1 - STOP_VFD, 2 - WAIT_VFD_STOP, 3 - ACTIVATE_BRAKE, 4 - WAIT_BRAKE_FEEDBACK
+	// 0 - Нормальная работа
+	// 1 - SET_FREQUENCY_ZERO: Установка частоты 0 на аналоговый выход
+	// 2 - WAIT_FREQUENCY_ZERO: Ожидание подтверждения частоты 0 с аналогового входа
+	// 3 - STOP_VFD: Остановка VFD (снятие команды пуска)
+	// 4 - WAIT_VFD_STOP: Ожидание остановки VFD (обратная связь)
+	// 5 - ACTIVATE_BRAKE: Активация тормозов
+	// 6 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормозов
 
 	// Целевые частоты для моторов
 	rTargetFreqConv1 : REAL := 0.0;
@@ -445,47 +451,60 @@ CASE STAGE OF
 					nStoppingSubstage := 1;
 				END_IF;
 
-			1: // STOP_VFD - Остановка VFD
+			1: // SET_FREQUENCY_ZERO - Установка частоты 0 на аналоговый выход
 				// Запуск таймера остановки (тайм-аут на остановку секции)
 				fbTimerStopping(
 					IN := TRUE,
 					PT := TIME_TIMEOUT_STOP_CONVEYOR
 				);
-				// Задаем частоту 0
+
+				// Установить целевую частоту 0
+				// (FB_FrequencyControl автоматически выберет плавную или прямую остановку через irStep)
 				rTargetFreqConv1 := 0.0;
 				rTargetFreqConv2 := 0.0;
 
-				IF VFD_SMOOTH_SET_FREQUENCY THEN
-					// Плавная остановка: ждем снижения частоты до нуля
-					IF Conveyor.MotorConveyor[1].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
-						AND Conveyor.MotorConveyor[2].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
-					THEN
-						// Частоты снижены до нуля, снимаем команду ПУСК с ЧРП (FALSE = СТОП)
-						Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
-						Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
-						nStoppingSubstage := 2;
-					END_IF;
-				ELSE
-					// Прямая остановка: сразу снимаем команду ПУСК с ЧРП (FALSE = СТОП)
-					Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
-					Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
-					nStoppingSubstage := 2;
-				END_IF;
+				// Команды пуска VFD остаются активными (TRUE = ПУСК)
+				// VFD продолжают работать, но частота снижается
+				Conveyor.MotorConveyor[1].VFD.qxStart := TRUE;
+				Conveyor.MotorConveyor[2].VFD.qxStart := TRUE;
 
-			2: // WAIT_VFD_STOP - Ожидание остановки VFD
-				// Ждем подтверждения остановки ЧРП
-				IF NOT Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
-					AND NOT Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
+				// Переход к следующей подстадии
+				nStoppingSubstage := 2;
+
+			2: // WAIT_FREQUENCY_ZERO - Ожидание подтверждения частоты 0 с аналогового входа
+				// Ждём, пока фактическая частота (с аналогового входа) не снизится до 0 (+/- 2 Гц)
+				IF Conveyor.MotorConveyor[1].VFD.rActualFrequency <= 2.0
+					AND Conveyor.MotorConveyor[2].VFD.rActualFrequency <= 2.0
 				THEN
+					// Частота подтверждена на 0, переходим к остановке VFD
 					nStoppingSubstage := 3;
 				END_IF;
 
-			3: // ACTIVATE_BRAKE - Активация тормозов
-				// Активируем тормоз конвейера (FALSE = тормоз активен)
-				Conveyor.qxBreakerConveyor := FALSE;
+			3: // STOP_VFD - Остановка VFD (снятие команды пуска)
+				// Отключить команду пуска на VFD (FALSE = СТОП)
+				Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+				Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+
+				// Переход к ожиданию обратной связи VFD
 				nStoppingSubstage := 4;
 
-			4: // Переход в IDLE
+			4: // WAIT_VFD_STOP - Ожидание остановки VFD (обратная связь)
+				// Проверить обратную связь VFD о выключении
+				IF NOT Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+					AND NOT Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
+				THEN
+					// VFD выключены, переход к активации тормозов
+					nStoppingSubstage := 5;
+				END_IF;
+
+			5: // ACTIVATE_BRAKE - Активация тормозов
+				// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
+				Conveyor.qxBreakerConveyor := FALSE;
+
+				// Переход к завершению остановки
+				nStoppingSubstage := 6;
+
+			6: // WAIT_BRAKE_FEEDBACK - Переход в IDLE
 				// Сброс таймера остановки (успешная остановка)
 				fbTimerStopping(IN := FALSE);
 

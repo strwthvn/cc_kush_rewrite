@@ -41,10 +41,12 @@ VAR
 	// Подстадии остановки (для последовательного выключения VFD и тормозов)
 	nStoppingSubstage : INT := 0;
 	// 0 - Нормальная работа
-	// 1 - STOP_VFD: Остановка VFD
-	// 2 - WAIT_VFD_STOP: Ожидание остановки VFD
-	// 3 - ACTIVATE_BRAKE: Активация тормозов
-	// 4 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормозов
+	// 1 - SET_FREQUENCY_ZERO: Установка частоты 0 на аналоговый выход
+	// 2 - WAIT_FREQUENCY_ZERO: Ожидание подтверждения частоты 0 с аналогового входа
+	// 3 - STOP_VFD: Остановка VFD (снятие команды пуска)
+	// 4 - WAIT_VFD_STOP: Ожидание остановки VFD (обратная связь)
+	// 5 - ACTIVATE_BRAKE: Активация тормозов
+	// 6 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормозов
 
 	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
 	xCircuitBuilt : BOOL := FALSE;
@@ -64,9 +66,11 @@ VAR
 	// 2 - WAIT_BRAKE_FEEDBACK: Ожидание обратной связи тормоза
 	// 3 - START_VFD: Запуск VFD поворота
 	// 4 - WORKING: Моторы поворота работают
-	// 5 - STOP_VFD: Остановка VFD поворота
-	// 6 - WAIT_VFD_STOP: Ожидание остановки VFD
-	// 7 - ACTIVATE_BRAKE: Активация тормоза
+	// 5 - SET_FREQUENCY_ZERO: Установка частоты 0 на аналоговый выход
+	// 6 - WAIT_FREQUENCY_ZERO: Ожидание подтверждения частоты 0 с аналогового входа
+	// 7 - STOP_VFD: Остановка VFD поворота (снятие команды пуска)
+	// 8 - WAIT_VFD_STOP: Ожидание остановки VFD (обратная связь)
+	// 9 - ACTIVATE_BRAKE: Активация тормоза
 
 	simInit : BOOL;
 	i : INT;
@@ -423,8 +427,6 @@ IF FC_Dumper_GetErrorCommon(Dumper := Dumper) THEN
 	Dumper.xStateFailure := TRUE;
 END_IF;
 
-
-
 // Проверка предупреждений:
 // 1. Датчики схода ленты ZQ - уровень Warning
 // 2. Контроль тока моторов - уровень L или H
@@ -632,12 +634,13 @@ CASE STAGE OF
 					nStoppingSubstage := 1;
 				END_IF;
 
-			1: // STOP_VFD - Остановка VFD
+			1: // SET_FREQUENCY_ZERO - Установка частоты 0 на аналоговый выход
 				// Запуск таймера остановки (тайм-аут на остановку секции)
 				fbTimerStopping(
 					IN := TRUE,
 					PT := TIME_TIMEOUT_STOP_DUMPER
 				);
+
 				// Установить целевую частоту 0
 				// (FB_FrequencyControl автоматически выберет плавную или прямую остановку через irStep)
 				rTargetFreqConv1 := 0.0;
@@ -645,41 +648,49 @@ CASE STAGE OF
 				rTargetFreqRot1 := 0.0;
 				rTargetFreqRot2 := 0.0;
 
-				IF VFD_SMOOTH_SET_FREQUENCY THEN
-					// Плавная остановка: ждем снижения частоты до 0, затем отключаем VFD
-					IF Dumper.MotorConveyor[1].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
-						AND Dumper.MotorConveyor[2].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
-					THEN
-						// Частота достигла 0, отключаем VFD
-						Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
-						Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
-						nStoppingSubstage := 2;
-					END_IF;
-				ELSE
-					// Прямая остановка: сразу отключаем VFD (частота мгновенно стала 0 через большой шаг)
-					Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
-					Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
-					nStoppingSubstage := 2;
+				// Команды пуска VFD остаются активными (TRUE = ПУСК)
+				// VFD продолжают работать, но частота снижается
+				Dumper.MotorConveyor[1].VFD.qxStart := TRUE;
+				Dumper.MotorConveyor[2].VFD.qxStart := TRUE;
+
+				// Переход к следующей подстадии
+				nStoppingSubstage := 2;
+
+			2: // WAIT_FREQUENCY_ZERO - Ожидание подтверждения частоты 0 с аналогового входа
+				// Ждём, пока фактическая частота (с аналогового входа) не снизится до 0 (+/- 2 Гц)
+				IF Dumper.MotorConveyor[1].VFD.rActualFrequency <= 2.0
+					AND Dumper.MotorConveyor[2].VFD.rActualFrequency <= 2.0
+				THEN
+					// Частота подтверждена на 0, переходим к остановке VFD
+					nStoppingSubstage := 3;
 				END_IF;
 
-			2: // WAIT_VFD_STOP - Ожидание остановки VFD
+			3: // STOP_VFD - Остановка VFD (снятие команды пуска)
+				// Отключить команду пуска на VFD (FALSE = СТОП)
+				Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+				Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+
+				// Переход к ожиданию обратной связи VFD
+				nStoppingSubstage := 4;
+
+			4: // WAIT_VFD_STOP - Ожидание остановки VFD (обратная связь)
 				// Проверить обратную связь VFD о выключении
 				IF NOT Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
 					AND NOT Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
 				THEN
 					// VFD выключены, переход к активации тормозов
-					nStoppingSubstage := 3;
+					nStoppingSubstage := 5;
 				END_IF;
 
-			3: // ACTIVATE_BRAKE - Активация тормозов
+			5: // ACTIVATE_BRAKE - Активация тормозов
 				// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
 				Dumper.qxBreakerConveyor := FALSE;
 				Dumper.qxBreakerRotation := FALSE;
 
-				// Переход к ожиданию обратной связи тормозов
-				nStoppingSubstage := 4;
+				// Переход к завершению остановки
+				nStoppingSubstage := 6;
 
-			4: // Переход в IDLE
+			6: // WAIT_BRAKE_FEEDBACK - Переход в IDLE
 				// Сброс таймера остановки (успешная остановка)
 				fbTimerStopping(IN := FALSE);
 
@@ -1020,42 +1031,45 @@ CASE nRotationSubstage OF
 		rTargetFreqRot1 := MOTOR_FREQUENCY_DUMPER_ROTATION;
 		rTargetFreqRot2 := MOTOR_FREQUENCY_DUMPER_ROTATION;
 
-	5: // STOP_VFD - Остановка VFD поворота
+	5: // SET_FREQUENCY_ZERO - Установка частоты 0 на аналоговый выход
 		// Установить целевую частоту 0
+		// (FB_FrequencyControl автоматически выберет плавную или прямую остановку через irStep)
 		rTargetFreqRot1 := 0.0;
 		rTargetFreqRot2 := 0.0;
 
-		IF VFD_SMOOTH_SET_FREQUENCY THEN
-			// Плавная остановка: ждем снижения частоты до 0, затем отключаем VFD
-			IF Dumper.MotorRotation[1].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
-				AND Dumper.MotorRotation[2].VFD.rActualFrequency <= VFD_FREQUENCY_INACCURANCY
-			THEN
-				// Частота достигла 0, отключаем VFD
-				Dumper.MotorRotation[1].VFD.qxStart := FALSE;
-				Dumper.MotorRotation[2].VFD.qxStart := FALSE;
-				Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
-				Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
-				nRotationSubstage := 6;
-			END_IF;
-		ELSE
-			// Прямая остановка: сразу отключаем VFD
-			Dumper.MotorRotation[1].VFD.qxStart := FALSE;
-			Dumper.MotorRotation[2].VFD.qxStart := FALSE;
-			Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
-			Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
-			nRotationSubstage := 6;
+		// Команды пуска VFD остаются активными (VFD продолжают работать, но частота снижается)
+		// Переход к следующей подстадии
+		nRotationSubstage := 6;
+
+	6: // WAIT_FREQUENCY_ZERO - Ожидание подтверждения частоты 0 с аналогового входа
+		// Ждём, пока фактическая частота (с аналогового входа) не снизится до 0 (+/- 2 Гц)
+		IF Dumper.MotorRotation[1].VFD.rActualFrequency <= 2.0
+			AND Dumper.MotorRotation[2].VFD.rActualFrequency <= 2.0
+		THEN
+			// Частота подтверждена на 0, переходим к остановке VFD
+			nRotationSubstage := 7;
 		END_IF;
 
-	6: // WAIT_VFD_STOP - Ожидание остановки VFD
+	7: // STOP_VFD - Остановка VFD поворота (снятие команды пуска)
+		// Отключить команду пуска на VFD (FALSE = СТОП)
+		Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+		Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+		Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
+		Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+
+		// Переход к ожиданию обратной связи VFD
+		nRotationSubstage := 8;
+
+	8: // WAIT_VFD_STOP - Ожидание остановки VFD (обратная связь)
 		// Проверить обратную связь VFD о выключении
 		IF NOT Dumper.MotorRotation[1].VFD.fbStateIsWorking.qxSignal
 			AND NOT Dumper.MotorRotation[2].VFD.fbStateIsWorking.qxSignal
 		THEN
 			// VFD выключены, переход к активации тормоза
-			nRotationSubstage := 7;
+			nRotationSubstage := 9;
 		END_IF;
 
-	7: // ACTIVATE_BRAKE - Активация тормоза
+	9: // ACTIVATE_BRAKE - Активация тормоза
 		// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
 		Dumper.qxBreakerRotation := FALSE;
 
