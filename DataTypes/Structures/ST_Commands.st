@@ -7,5 +7,7 @@ STRUCT
 	cmdEmergencyStopCommon : FB_UniversalSignal; // Команда общей аварийной остановки
 	
 	cmdSetToAuto, cmdSetToManual, cmdSetToRepair : BOOL; // Команды перевода режима управления
+
+	cmdAutoDisableBlock : BOOL; // Флаг отключения автоматических блокировок в ручном режиме
 END_STRUCT
 END_TYPE

@@ -1,4 +1,4 @@
- FUNCTION_BLOCK FB_Simulation
+FUNCTION_BLOCK FB_Simulation
 VAR_INPUT
 	xEnable : BOOL; // Включение симуляции
 	xReset : BOOL; // Сброс всех переменных (симуляция отсутствия ошибок)
@@ -528,102 +528,102 @@ IF xEnable THEN
 
 	IF SIMULATION_BUNKER_WEIGHT THEN
 		FOR b := 1 TO 3 BY 1 DO
-			// ========================================
-			// 1. РАСХОД ВЕСА (пропорционален частоте вибропитателей)
-			// ========================================
+		// ========================================
+		// 1. РАСХОД ВЕСА (пропорционален частоте вибропитателей)
+		// ========================================
 
-			// Средняя частота вибропитателей
-			_rAvgFrequencyVibFeeder[b] :=
-				(Bunker[b].MotorVibFeeder[1].VFD.rActualFrequency
-			   + Bunker[b].MotorVibFeeder[2].VFD.rActualFrequency) / 2.0;
+		// Средняя частота вибропитателей
+		_rAvgFrequencyVibFeeder[b] :=
+			(Bunker[b].MotorVibFeeder[1].VFD.rActualFrequency
+		   + Bunker[b].MotorVibFeeder[2].VFD.rActualFrequency) / 2.0;
 
-			// Скорость расхода (кг/с): частота * коэффициент
-			// Пример: 50 Гц * 0.02 = 1.0 кг/с
-			_rWeightDischargeRate[b] := _rAvgFrequencyVibFeeder[b] * _rDischargeCoeff;
+		// Скорость расхода (кг/с): частота * коэффициент
+		// Пример: 50 Гц * 0.02 = 1.0 кг/с
+		_rWeightDischargeRate[b] := _rAvgFrequencyVibFeeder[b] * _rDischargeCoeff;
 
-			// Применение расхода к весу бункера (за один цикл ПЛК ~10-50 мс)
-			// Предполагаем цикл ПЛК = 50 мс = 0.05 с
-			Bunker[b].rWeight := Bunker[b].rWeight - (_rWeightDischargeRate[b] * 0.05);
+		// Применение расхода к весу бункера (за один цикл ПЛК ~10-50 мс)
+		// Предполагаем цикл ПЛК = 50 мс = 0.05 с
+		Bunker[b].rWeight := Bunker[b].rWeight - (_rWeightDischargeRate[b] * 0.05);
 
-			// Ограничение минимального веса (не может быть отрицательным)
-			IF Bunker[b].rWeight < 0.0 THEN
-				Bunker[b].rWeight := 0.0;
+		// Ограничение минимального веса (не может быть отрицательным)
+		IF Bunker[b].rWeight < 0.0 THEN
+			Bunker[b].rWeight := 0.0;
+		END_IF;
+
+		// ========================================
+		// 2. ЗАПОЛНЕНИЕ ВЕСА (зависит от цвета светофора)
+		// ========================================
+
+		// Определение скорости заполнения в зависимости от цвета светофора
+		CASE Bunker[b].eLightColor OF
+			E_LightColor.GREEN:
+				// Зелёный - максимальная скорость заполнения (приоритет)
+				_rWeightFillRate[b] := _rFillRateGreen;
+
+			E_LightColor.YELLOW:
+				// Жёлтый - умеренная скорость заполнения
+				_rWeightFillRate[b] := _rFillRateYellow;
+
+			E_LightColor.RED, E_LightColor.OFF:
+				// Красный или выключен - заполнение отсутствует
+				_rWeightFillRate[b] := 0.0;
+		END_CASE;
+
+		// ========================================
+		// 3. ПЕРИОДИЧЕСКОЕ ЗАПОЛНЕНИЕ (раз в N секунд)
+		// ========================================
+
+		// Таймер периода ожидания между заполнениями
+		_tonFillTimer[b](
+			IN := NOT _xFillTimerActive[b] AND (_rWeightFillRate[b] > 0.0),
+			PT := _tFillPeriod
+		);
+
+		// Когда таймер ожидания истёк - запускаем процесс заполнения
+		IF _tonFillTimer[b].Q THEN
+			_xFillTimerActive[b] := TRUE;
+			_tonFillTimer[b].IN := FALSE; // Сброс таймера ожидания
+		END_IF;
+
+		// Таймер длительности заполнения
+		IF _xFillTimerActive[b] THEN
+			// Применение заполнения к весу бункера (за один цикл ПЛК)
+			Bunker[b].rWeight := Bunker[b].rWeight + (_rWeightFillRate[b] * 0.05);
+
+			// Ограничение максимального веса (100 кг = 100%)
+			IF Bunker[b].rWeight > 100.0 THEN
+				Bunker[b].rWeight := 100.0;
 			END_IF;
 
-			// ========================================
-			// 2. ЗАПОЛНЕНИЕ ВЕСА (зависит от цвета светофора)
-			// ========================================
+			// Проверка длительности заполнения
+			_tonFillTimer[b](IN := TRUE, PT := _tFillDuration);
 
-			// Определение скорости заполнения в зависимости от цвета светофора
-			CASE Bunker[b].eLightColor OF
-				E_LightColor.GREEN:
-					// Зелёный - максимальная скорость заполнения (приоритет)
-					_rWeightFillRate[b] := _rFillRateGreen;
-
-				E_LightColor.YELLOW:
-					// Жёлтый - умеренная скорость заполнения
-					_rWeightFillRate[b] := _rFillRateYellow;
-
-				E_LightColor.RED, E_LightColor.OFF:
-					// Красный или выключен - заполнение отсутствует
-					_rWeightFillRate[b] := 0.0;
-			END_CASE;
-
-			// ========================================
-			// 3. ПЕРИОДИЧЕСКОЕ ЗАПОЛНЕНИЕ (раз в N секунд)
-			// ========================================
-
-			// Таймер периода ожидания между заполнениями
-			_tonFillTimer[b](
-				IN := NOT _xFillTimerActive[b] AND (_rWeightFillRate[b] > 0.0),
-				PT := _tFillPeriod
-			);
-
-			// Когда таймер ожидания истёк - запускаем процесс заполнения
+			// Когда заполнение завершено - сбросить флаг
 			IF _tonFillTimer[b].Q THEN
-				_xFillTimerActive[b] := TRUE;
-				_tonFillTimer[b].IN := FALSE; // Сброс таймера ожидания
+				_xFillTimerActive[b] := FALSE;
+				_tonFillTimer[b].IN := FALSE; // Сброс таймера заполнения
 			END_IF;
+		END_IF;
 
-			// Таймер длительности заполнения
-			IF _xFillTimerActive[b] THEN
-				// Применение заполнения к весу бункера (за один цикл ПЛК)
-				Bunker[b].rWeight := Bunker[b].rWeight + (_rWeightFillRate[b] * 0.05);
+		// ========================================
+		// 4. ПРИОРИТЕТ ЗЕЛЁНОГО СВЕТОФОРА
+		// ========================================
+		// Если хотя бы один бункер горит зелёным (критический режим),
+		// то только он получает заполнение, а остальные ждут
 
-				// Ограничение максимального веса (100 кг = 100%)
-				IF Bunker[b].rWeight > 100.0 THEN
-					Bunker[b].rWeight := 100.0;
-				END_IF;
-
-				// Проверка длительности заполнения
-				_tonFillTimer[b](IN := TRUE, PT := _tFillDuration);
-
-				// Когда заполнение завершено - сбросить флаг
-				IF _tonFillTimer[b].Q THEN
-					_xFillTimerActive[b] := FALSE;
-					_tonFillTimer[b].IN := FALSE; // Сброс таймера заполнения
-				END_IF;
+		// Проверка: есть ли бункеры с зелёным светофором в критическом режиме?
+		// (вес <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
+		IF (Bunker[1].eLightColor = E_LightColor.GREEN AND Bunker[1].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
+		OR (Bunker[2].eLightColor = E_LightColor.GREEN AND Bunker[2].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
+		OR (Bunker[3].eLightColor = E_LightColor.GREEN AND Bunker[3].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
+		THEN
+			// Есть критический бункер с зелёным светофором
+			// Отменяем заполнение для всех НЕ критических бункеров
+			IF Bunker[b].eLightColor <> E_LightColor.GREEN OR Bunker[b].rWeight > BUNKER_WEIGHT_LIGHT_RED_SPECIAL THEN
+				_rWeightFillRate[b] := 0.0;
+				_xFillTimerActive[b] := FALSE;
 			END_IF;
-
-			// ========================================
-			// 4. ПРИОРИТЕТ ЗЕЛЁНОГО СВЕТОФОРА
-			// ========================================
-			// Если хотя бы один бункер горит зелёным (критический режим),
-			// то только он получает заполнение, а остальные ждут
-
-			// Проверка: есть ли бункеры с зелёным светофором в критическом режиме?
-			// (вес <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
-			IF (Bunker[1].eLightColor = E_LightColor.GREEN AND Bunker[1].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
-			OR (Bunker[2].eLightColor = E_LightColor.GREEN AND Bunker[2].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
-			OR (Bunker[3].eLightColor = E_LightColor.GREEN AND Bunker[3].rWeight <= BUNKER_WEIGHT_LIGHT_RED_SPECIAL)
-			THEN
-				// Есть критический бункер с зелёным светофором
-				// Отменяем заполнение для всех НЕ критических бункеров
-				IF Bunker[b].eLightColor <> E_LightColor.GREEN OR Bunker[b].rWeight > BUNKER_WEIGHT_LIGHT_RED_SPECIAL THEN
-					_rWeightFillRate[b] := 0.0;
-					_xFillTimerActive[b] := FALSE;
-				END_IF;
-			END_IF;
+		END_IF;
 		END_FOR;
 	END_IF; // IF SIMULATION_BUNKER_WEIGHT THEN
 

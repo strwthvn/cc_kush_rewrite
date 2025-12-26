@@ -91,9 +91,9 @@ SCADA_HEARTBEAT_TIMEOUT := REAL_TO_TIME(rTempTime * 1000); // Таймаут п�
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 152, rValue => MOTOR_ROTATION_CURRENT_POINTS.H_Value);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 154, rValue => MOTOR_ROTATION_CURRENT_POINTS.HH_Value);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 156, rValue => rTempTime);
-VIBRATOR_SETTINGS.TIME_ACTIVE := REAL_TO_TIME(rTempTime * 1000);
+//VIBRATOR_SETTINGS.TIME_ACTIVE := REAL_TO_TIME(rTempTime * 1000);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 158, rValue => rTempTime);
-VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR := REAL_TO_TIME(rTempTime * 1000);
+//VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR := REAL_TO_TIME(rTempTime * 1000);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 160, rValue => rTempTime);
 VIBRATOR_SETTINGS.TIME_PAUSE_FB := REAL_TO_TIME(rTempTime * 1000);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 162, rValue => rTempTime);
@@ -302,7 +302,10 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 13, xValue := stBunker[1].xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 30, iBitIndex := 14, xValue := stBunker[1].xStateRemoteRepair);
 
-// Регистр 31: состояния режима управления вибраторов
+// Регистр 31: состояния режима управления светофора и вибраторов
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 31, iBitIndex := 9, xValue := stBunker[1].xLighterStateRemoteAuto);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 31, iBitIndex := 10, xValue := stBunker[1].xLighterStateRemoteManual);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 31, iBitIndex := 11, xValue := stBunker[1].xLighterStateRemoteRepair);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 31, iBitIndex := 12, xValue := stBunker[1].xVibratorStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 31, iBitIndex := 13, xValue := stBunker[1].xVibratorStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 31, iBitIndex := 14, xValue := stBunker[1].xVibratorStateRemoteRepair);
@@ -343,7 +346,10 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 13, xValue := stBunker[2].xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 90, iBitIndex := 14, xValue := stBunker[2].xStateRemoteRepair);
 
-// Регистр 91: состояния режима управления вибраторов
+// Регистр 91: состояния режима управления светофора и вибраторов
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 91, iBitIndex := 9, xValue := stBunker[2].xLighterStateRemoteAuto);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 91, iBitIndex := 10, xValue := stBunker[2].xLighterStateRemoteManual);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 91, iBitIndex := 11, xValue := stBunker[2].xLighterStateRemoteRepair);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 91, iBitIndex := 12, xValue := stBunker[2].xVibratorStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 91, iBitIndex := 13, xValue := stBunker[2].xVibratorStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 91, iBitIndex := 14, xValue := stBunker[2].xVibratorStateRemoteRepair);
@@ -384,7 +390,10 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 13, xValue := stBunker[3].xStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 150, iBitIndex := 14, xValue := stBunker[3].xStateRemoteRepair);
 
-// Регистр 151: состояния режима управления вибраторов
+// Регистр 151: состояния режима управления светофора и вибраторов
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 151, iBitIndex := 9, xValue := stBunker[3].xLighterStateRemoteAuto);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 151, iBitIndex := 10, xValue := stBunker[3].xLighterStateRemoteManual);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 151, iBitIndex := 11, xValue := stBunker[3].xLighterStateRemoteRepair);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 151, iBitIndex := 12, xValue := stBunker[3].xVibratorStateRemoteAuto);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 151, iBitIndex := 13, xValue := stBunker[3].xVibratorStateRemoteManual);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 151, iBitIndex := 14, xValue := stBunker[3].xVibratorStateRemoteRepair);
@@ -791,7 +800,7 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 6, xValue := stBunker[3].MotorVibrator[3].qxKM_Power);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 7, xValue := stBunker[3].MotorVibrator[4].qxKM_Power);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 8, xValue := stConveyor.xHLA);
-FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 10, xValue := stDumper.xHLA);
+FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 10, xValue := stDumper.xHLA); 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 11, xValue := stCommonSignals.qx6KM1);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 12, xValue := stConveyor.qxBreakerConveyor);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 355, iBitIndex := 13, xValue := stDumper.qxBreakerConveyor);
@@ -807,3 +816,5 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 6, xValue := stBunker[3].qxLightRed);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 7, xValue := stBunker[3].qxLightYellow);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 8, xValue := stBunker[3].qxLightGreen);
+
+END_FUNCTION

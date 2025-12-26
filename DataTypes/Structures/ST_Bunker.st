@@ -73,6 +73,7 @@ STRUCT
 	eStateRemoteLighter : E_StateRemote; // Состояние режима управления светофора
 	xStateRemoteAuto, xStateRemoteManual, xStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
 	xVibratorStateRemoteAuto, xVibratorStateRemoteManual, xVibratorStateRemoteRepair : BOOL; // Состояния режима управления для передачи в SCADA
+	xLighterStateRemoteAuto, xLighterStateRemoteManual, xLighterStateRemoteRepair : BOOL; // Состояния режима управления светофора для передачи в SCADA
 	
 	
 	wLightColor : WORD; // Передача сигнала светофора по ModbusTCP

@@ -50,6 +50,8 @@ VAR
 	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
 	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
 
+	tonTimerEnableBreakerConveyor : TON; // Задержка включения тормоза на конвейере
+	
 	simInit : BOOL;
 	i : INT;
 END_VAR
@@ -311,7 +313,9 @@ END_IF;
 
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
 // Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
-IF xEmergencyStop THEN
+// 1. Внешний сигнал аварийной остановки (от SCADA или системы)
+// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата)
+IF xEmergencyStop OR NOT Conveyor.fbBtnEmergencyStop.qxSignal THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
@@ -465,8 +469,8 @@ CASE STAGE OF
 
 				// Команды пуска VFD остаются активными (TRUE = ПУСК)
 				// VFD продолжают работать, но частота снижается
-				Conveyor.MotorConveyor[1].VFD.qxStart := TRUE;
-				Conveyor.MotorConveyor[2].VFD.qxStart := TRUE;
+				Conveyor.MotorConveyor[1].VFD.qxStart := FALSE; // TODO ВРЕМЕННО
+				Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
 
 				// Переход к следующей подстадии
 				nStoppingSubstage := 2;
@@ -498,12 +502,14 @@ CASE STAGE OF
 				END_IF;
 
 			5: // ACTIVATE_BRAKE - Активация тормозов
-				// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
-				Conveyor.qxBreakerConveyor := FALSE;
-
-				// Переход к завершению остановки
-				nStoppingSubstage := 6;
-
+				tonTimerEnableBreakerConveyor(IN:= TRUE, PT:=T#5S);
+				IF tonTimerEnableBreakerConveyor.Q THEN
+					// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
+					Conveyor.qxBreakerConveyor := FALSE;
+					// Переход к завершению остановки
+					tonTimerEnableBreakerConveyor(IN:=  FALSE);
+					nStoppingSubstage := 6;
+				END_IF;
 			6: // WAIT_BRAKE_FEEDBACK - Переход в IDLE
 				// Сброс таймера остановки (успешная остановка)
 				fbTimerStopping(IN := FALSE);
@@ -528,8 +534,10 @@ CASE STAGE OF
 		Conveyor.qxBreakerConveyor := FALSE;
 
 		// Разборка схемы контакторов (аварийная остановка)
-		xCircuitBuilt := FALSE;
-
+		IF Conveyor.eStateRemote = E_StateRemote.Auto THEN
+			xCircuitBuilt := FALSE;
+		END_IF;
+		
 		// Сброс подстадий для следующего запуска
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
@@ -545,8 +553,9 @@ CASE STAGE OF
 		// Для выхода из ERROR требуется:
 		// 1. Команда сброса (xReset)
 		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStop)
-		// 3. Отсутствие ошибок оборудования (NOT Conveyor.xStateFailure)
-		IF xReset AND NOT xEmergencyStop AND NOT Conveyor.xStateFailure THEN
+		// 3. Кнопка аварийной остановки отпущена (NC контакт: TRUE = кнопка отпущена)
+		// 4. Отсутствие ошибок оборудования (NOT Conveyor.xStateFailure)
+		IF xReset AND NOT xEmergencyStop AND Conveyor.fbBtnEmergencyStop.qxSignal AND NOT Conveyor.xStateFailure THEN
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF
 END_CASE;
@@ -653,12 +662,35 @@ Conveyor.MotorConveyor[2].VFD.Frequency(
 // УПРАВЛЕНИЕ КОНТАКТОРАМИ
 // ========================================
 
-// Обработка импульсных команд сборки/разборки схемы
-// Только в ручном режиме
+// РУЧНОЙ РЕЖИМ (Manual):
+// - Схема управляется ТОЛЬКО импульсными командами cmdBuildCircuitOn/Off
+// - Автоматическая сборка/разборка схемы ОТКЛЮЧЕНА
+//
+// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto/Remote):
+// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок секции:
+//   * Нет ошибок по датчикам безопасности (FC_Conveyor_GetErrorSensors = FALSE)
+//   * Секция НЕ в стадии ERROR
+// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок или переходе в ERROR
+
 IF Conveyor.eStateRemote = E_StateRemote.Manual THEN
+	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы
+	// cmdBuildCircuitOn - собрать схему (включить контакторы)
+	// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
 	IF Conveyor.cmdBuildCircuitOn THEN
 		xCircuitBuilt := TRUE;
+		Conveyor.cmdBuildCircuitOn := FALSE; // Сброс импульсной команды
 	ELSIF Conveyor.cmdBuildCircuitOff THEN
+		xCircuitBuilt := FALSE;
+		Conveyor.cmdBuildCircuitOff := FALSE; // Сброс импульсной команды
+	END_IF;
+ELSIF Conveyor.eStateRemote = E_StateRemote.Auto THEN
+	// АВТОМАТИЧЕСКИЙ РЕЖИМ - Автоматическая сборка схемы при отсутствии ошибок
+	// Собираем схему если:
+	// 1. Нет ошибок по датчикам безопасности
+	// 2. Секция НЕ в стадии ERROR
+	IF NOT FC_Conveyor_GetErrorSensors(Conveyor := Conveyor) AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
+		xCircuitBuilt := TRUE;
+	ELSE
 		xCircuitBuilt := FALSE;
 	END_IF;
 END_IF;

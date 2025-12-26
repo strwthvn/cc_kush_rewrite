@@ -27,11 +27,11 @@ VAR
 	xStopCommand : BOOL; // Фактическая команда остановки (из ПМУ или SCADA)
 
 	// ФБ управления
-	fbVibratorControl : FB_VibratorControl;
 	fbPneumoControl : FB_PneumoCollapseControl;
 
-	// Таймер для автоматического отключения вибраторов
-	tonVibratorEnable : TON;
+	// Таймеры для автоматического цикла вибраторов
+	tonVibratorActive : TON;  // Таймер активной работы вибраторов
+	tonVibratorPause : TON;   // Таймер паузы вибраторов
 
 	// Автомат состояний для запуска вибропитателей
 	STAGE : E_StageWithPreStartAlarm := E_StageWithPreStartAlarm.IDLE;
@@ -46,6 +46,9 @@ VAR
 
 	// Флаг активного запуска вибраторов в ручном режиме
 	xVibratorManualRunActive : BOOL := FALSE;
+
+	// Флаг текущей активности вибраторов в автоматическом режиме
+	xVibratorAutoActive : BOOL := FALSE;
 
 	// Таймеры контроля выполнения команд
 	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
@@ -75,7 +78,15 @@ END_VAR
 //
 // УПРАВЛЕНИЕ ВИБРАТОРАМИ:
 // - Независимо от режима вибропитателей
-// - Режимы: Auto (таймер), Manual (выборочно), Repair (остановлены)
+// - Режимы:
+//   * Auto - циклическая работа по таймеру (ACTIVE ↔ PAUSE)
+//     - Работает только в стадии WORK вибропитателей
+//     - Параметры: VIBRATOR_SETTINGS.TIME_ACTIVE, TIME_PAUSE_VIBRATOR
+//     - Частота: irManualFrequencyVibrator
+//   * Manual - выборочное управление через cmdAddVib1..4
+//     - СТАРТ/СТОП по командам cmdStartVibrator/cmdStopVibrator
+//     - Частота: irManualFrequencyVibrator
+//   * Repair - все вибраторы остановлены
 //
 // ========================================
 
@@ -444,8 +455,8 @@ fbPneumoControl(
 // ========================================
 
 // Проверка ошибок вибропитателей (без вибраторов и пневмообрушения)
-Bunker.xStateFailure := FC_Bunker_GetErrorMotorVibFeeder(Bunker := Bunker)
-					 OR FC_Bunker_GetErrorBunker(Bunker := Bunker);
+//	Bunker.xStateFailure := FC_Bunker_GetErrorMotorVibFeeder(Bunker := Bunker)
+//					 OR FC_Bunker_GetErrorBunker(Bunker := Bunker);
 
 // Проверка предупреждений вибропитателей:
 // 1. Контроль тока моторов вибропитателей - уровень L или H
@@ -479,9 +490,11 @@ END_IF;
 
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ ВИБРОПИТАТЕЛЕЙ
 // Аварийная остановка питателей имеет наивысший приоритет и срабатывает в любой стадии
-IF xEmergencyStopVibFeeder THEN
-	STAGE := E_StageWithPreStartAlarm.ERROR;
-END_IF;
+// 1. Внешний сигнал аварийной остановки (от SCADA или системы)
+// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата)
+//	IF xEmergencyStopVibFeeder OR NOT Bunker.fbBtnEmergencyStop.qxSignal THEN
+//	STAGE := E_StageWithPreStartAlarm.ERROR;
+//END_IF;
 
 // ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
 // Тайм-аут запуска: не удалось запустить вибропитатели за установленное время
@@ -493,6 +506,28 @@ END_IF;
 IF fbTimerStopping.Q THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
+
+		// Обработка команды останова
+		IF xStopCommand THEN
+			// Запуск таймера остановки (тайм-аут на остановку вибропитателей)
+			fbTimerStopping(
+				IN := TRUE,
+				PT := TIME_TIMEOUT_STOP_BUNKER
+			);
+
+			// Остановка VFD
+			Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
+			Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
+
+			// Проверка остановки VFD (обратная связь)
+			IF NOT Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
+			   AND NOT Bunker.MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal
+			THEN
+				// Сброс таймера остановки (успешная остановка)
+				fbTimerStopping(IN := FALSE);
+				STAGE := E_StageWithPreStartAlarm.IDLE;
+			END_IF;
+		END_IF
 
 CASE STAGE OF
 	E_StageWithPreStartAlarm.IDLE:
@@ -529,8 +564,8 @@ CASE STAGE OF
 		// Выбор источника частоты в зависимости от режима управления
 		IF Bunker.eStateRemote = E_StateRemote.Auto THEN
 			// Автоматический режим - частота от ПИД
-			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
-			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+			rTargetFreqVibFeeder1 := irManualFrequency; // TODO ВРЕМЕННО Bunker.rMotorVibFeederCommonFrequency
+			rTargetFreqVibFeeder2 := irManualFrequency;
 		ELSE
 			// Ручной/Ремонт режим - частота от входного параметра irManualFrequency
 			rTargetFreqVibFeeder1 := irManualFrequency;
@@ -547,42 +582,17 @@ CASE STAGE OF
 		END_IF
 
 	E_StageWithPreStartAlarm.WORK:
-		// Команда ПУСК остается активной
-		Bunker.MotorVibFeeder[1].VFD.qxStart := TRUE;
-		Bunker.MotorVibFeeder[2].VFD.qxStart := TRUE;
-
+	
 		// Выбор источника частоты в зависимости от режима управления
 		IF Bunker.eStateRemote = E_StateRemote.Auto THEN
 			// Автоматический режим - динамическая частота от ПИД
-			rTargetFreqVibFeeder1 := Bunker.rMotorVibFeederCommonFrequency;
-			rTargetFreqVibFeeder2 := Bunker.rMotorVibFeederCommonFrequency;
+			rTargetFreqVibFeeder1 := irManualFrequency; // TODO ВРЕМЕННО Bunker.rMotorVibFeederCommonFrequency
+			rTargetFreqVibFeeder2 := irManualFrequency; // TODO ВРЕМЕННО Bunker.rMotorVibFeederCommonFrequency
 		ELSE
 			// Ручной/Ремонт режим - частота от входного параметра irManualFrequency
 			rTargetFreqVibFeeder1 := irManualFrequency;
 			rTargetFreqVibFeeder2 := irManualFrequency;
 		END_IF;
-
-		// Обработка команды останова
-		IF xStopCommand THEN
-			// Запуск таймера остановки (тайм-аут на остановку вибропитателей)
-			fbTimerStopping(
-				IN := TRUE,
-				PT := TIME_TIMEOUT_STOP_BUNKER
-			);
-
-			// Остановка VFD
-			Bunker.MotorVibFeeder[1].VFD.qxStart := FALSE;
-			Bunker.MotorVibFeeder[2].VFD.qxStart := FALSE;
-
-			// Проверка остановки VFD (обратная связь)
-			IF NOT Bunker.MotorVibFeeder[1].VFD.fbStateIsWorking.qxSignal
-			   AND NOT Bunker.MotorVibFeeder[2].VFD.fbStateIsWorking.qxSignal
-			THEN
-				// Сброс таймера остановки (успешная остановка)
-				fbTimerStopping(IN := FALSE);
-				STAGE := E_StageWithPreStartAlarm.IDLE;
-			END_IF;
-		END_IF
 
 	E_StageWithPreStartAlarm.ERROR:
 		// Состояние ошибки - аварийная остановка и ожидание сброса
@@ -601,8 +611,9 @@ CASE STAGE OF
 		rTargetFreqVibFeeder2 := 0.0;
 
 		// Разборка схемы контакторов (аварийная остановка)
-		xCircuitBuilt := FALSE;
-
+//		IF Bunker.eStateRemote = E_StateRemote.Auto THEN
+//		 xCircuitBuilt := FALSE;
+//		END_IF;
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
 
@@ -610,8 +621,9 @@ CASE STAGE OF
 		// Для выхода из ERROR требуется:
 		// 1. Команда сброса (xReset)
 		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStopVibFeeder)
-		// 3. Отсутствие ошибок оборудования (NOT Bunker.xStateFailure)
-		IF xReset AND NOT xEmergencyStopVibFeeder AND NOT Bunker.xStateFailure THEN
+		// 3. Кнопка аварийной остановки отпущена (NC контакт: TRUE = кнопка отпущена)
+		// 4. Отсутствие ошибок оборудования (NOT Bunker.xStateFailure)
+		IF xReset AND NOT xEmergencyStopVibFeeder AND Bunker.fbBtnEmergencyStop.qxSignal AND NOT Bunker.xStateFailure THEN
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF
 
@@ -706,26 +718,69 @@ Bunker.xVibratorStateRemoteAuto := Bunker.eVibratorStateRemote = E_StateRemote.A
 Bunker.xVibratorStateRemoteManual := Bunker.eVibratorStateRemote = E_StateRemote.Manual;
 Bunker.xVibratorStateRemoteRepair := Bunker.eVibratorStateRemote = E_StateRemote.Repair;
 
+// Передача состояний режима управления светофора
+Bunker.xLighterStateRemoteAuto := Bunker.eStateRemoteLighter = E_StateRemote.Auto;
+Bunker.xLighterStateRemoteManual := Bunker.eStateRemoteLighter = E_StateRemote.Manual;
+Bunker.xLighterStateRemoteRepair := Bunker.eStateRemoteLighter = E_StateRemote.Repair;
+
 // ========================================
 // УПРАВЛЕНИЕ КОНТАКТОРАМИ
 // ========================================
 
-// Обработка импульсных команд сборки/разборки схемы
-// cmdBuildCircuitOn - собрать схему (включить контакторы)
-// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
+// РУЧНОЙ РЕЖИМ (Manual):
+// - Схема управляется ТОЛЬКО импульсными командами cmdBuildCircuitOn/Off
+// - Автоматическая сборка/разборка схемы ОТКЛЮЧЕНА
+//
+// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto/Remote):
+// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок секции:
+//   * Нет ошибок по оборудованию бункера (FC_Bunker_GetErrorBunker = FALSE)
+//   * Секция НЕ в стадии ERROR
+// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок или переходе в ERROR
+
 IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы вибропитателей
+	// cmdBuildCircuitOn - собрать схему (включить контакторы)
+	// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
 	IF Bunker.cmdBuildCircuitOn THEN
 		xCircuitBuilt := TRUE;
+		Bunker.cmdBuildCircuitOn := FALSE; // Сброс импульсной команды
 	ELSIF Bunker.cmdBuildCircuitOff THEN
 		xCircuitBuilt := FALSE;
+		Bunker.cmdBuildCircuitOff := FALSE; // Сброс импульсной команды
+	END_IF;
+ELSIF Bunker.eStateRemote = E_StateRemote.Auto THEN
+	// АВТОМАТИЧЕСКИЙ РЕЖИМ - Автоматическая сборка схемы при отсутствии ошибок
+	// Собираем схему если:
+	// 1. Нет ошибок по оборудованию бункера (моторы вибропитателей и вибраторов)
+	// 2. Секция НЕ в стадии ERROR
+	IF NOT FC_Bunker_GetErrorBunker(Bunker := Bunker) AND STAGE <> E_StageWithPreStartAlarm.ERROR AND Bunker.eStateRemote = E_StateRemote.Auto THEN
+		xCircuitBuilt := TRUE;
+	//ELSE
+		//xCircuitBuilt := FALSE;
 	END_IF;
 END_IF;
 
-IF Bunker.eStateRemote = E_StateRemote.Manual THEN
+// Управление схемой вибраторов
+IF Bunker.eVibratorStateRemote = E_StateRemote.Manual THEN
+	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы вибраторов
+	// cmdBuildCircuitOnVibrator - собрать схему вибраторов (включить контакторы)
+	// cmdBuildCircuitOffVibrator - разобрать схему вибраторов (выключить контакторы)
 	IF Bunker.cmdBuildCircuitOnVibrator THEN
 		xCircuitBuiltVibrator := TRUE;
+		Bunker.cmdBuildCircuitOnVibrator := FALSE; // Сброс импульсной команды
 	ELSIF Bunker.cmdBuildCircuitOffVibrator THEN
 		xCircuitBuiltVibrator := FALSE;
+		Bunker.cmdBuildCircuitOffVibrator := FALSE; // Сброс импульсной команды
+	END_IF;
+ELSIF Bunker.eVibratorStateRemote = E_StateRemote.Auto THEN
+	// АВТОМАТИЧЕСКИЙ РЕЖИМ - Автоматическая сборка схемы вибраторов при отсутствии ошибок
+	// Собираем схему если:
+	// 1. Нет ошибок по оборудованию бункера (моторы вибропитателей и вибраторов)
+	// 2. Секция НЕ в стадии ERROR
+	IF NOT FC_Bunker_GetErrorBunker(Bunker := Bunker) AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
+		xCircuitBuiltVibrator := TRUE;
+	//ELSE
+		//xCircuitBuiltVibrator := FALSE;
 	END_IF;
 END_IF;
 
@@ -747,12 +802,21 @@ Bunker.MotorVibrator[4].qxKM_Power := xCircuitBuiltVibrator;
 IF Bunker.cmdVibratorSetModeAuto THEN
 	Bunker.eVibratorStateRemote := E_StateRemote.Auto;
 	xVibratorManualRunActive := FALSE; // Сброс флага при смене режима
+	xVibratorAutoActive := FALSE;
+	tonVibratorActive(IN := FALSE);
+	tonVibratorPause(IN := FALSE);
 ELSIF Bunker.cmdVibratorSetModeManual THEN
 	Bunker.eVibratorStateRemote := E_StateRemote.Manual;
 	xVibratorManualRunActive := FALSE; // Сброс флага при смене режима
+	xVibratorAutoActive := FALSE;
+	tonVibratorActive(IN := FALSE);
+	tonVibratorPause(IN := FALSE);
 ELSIF Bunker.cmdVibratorSetModeRepair THEN
 	Bunker.eVibratorStateRemote := E_StateRemote.Repair;
 	xVibratorManualRunActive := FALSE; // Сброс флага при смене режима
+	xVibratorAutoActive := FALSE;
+	tonVibratorActive(IN := FALSE);
+	tonVibratorPause(IN := FALSE);
 END_IF;
 
 // ========================================
@@ -772,69 +836,115 @@ IF xEmergencyStopVibrator THEN
 	// Разборка схемы контакторов вибраторов
 	xCircuitBuiltVibrator := FALSE;
 
-	// Сброс таймера и флагов
-	tonVibratorEnable.IN := FALSE;
+	// Сброс таймеров и флагов
+	tonVibratorActive(IN := FALSE);
+	tonVibratorPause(IN := FALSE);
 	xVibratorManualRunActive := FALSE;
+	xVibratorAutoActive := FALSE;
 END_IF;
-
-// Обработка таймера автоматического отключения (только для автоматического режима)
-tonVibratorEnable(PT := VIBRATOR_SETTINGS.TIME_ACTIVE);
 
 // Нормальная работа вибраторов (если нет аварийной остановки)
 IF NOT xEmergencyStopVibrator THEN
-	// === РЕЖИМ АВТОМАТИЧЕСКИЙ - запуск от SCADA или автоматики ===
+	// === РЕЖИМ АВТОМАТИЧЕСКИЙ - циклическая работа по таймеру ===
 	IF Bunker.eVibratorStateRemote = E_StateRemote.Auto THEN
-	// Управление запуском вибраторов
-	IF Bunker.cmdStartVibrator THEN
-		tonVibratorEnable.IN := TRUE;
-		Bunker.MotorVibrator[1].VFD.qxStart := TRUE;
-		Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
-		Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
-		Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
-	END_IF
+		// Автоматический режим работает только в стадии WORK вибропитателей
+		IF STAGE = E_StageWithPreStartAlarm.WORK THEN
+			// Установка частоты для вибраторов в автоматическом режиме
+			FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBRATOR BY 1 DO
+				Bunker.MotorVibrator[i].VFD.qrOutFrequency := irManualFrequencyVibrator;
+			END_FOR;
 
-	// Управление остановкой вибраторов (по команде или по таймауту)
-	IF Bunker.cmdStopVibrator OR tonVibratorEnable.Q THEN
-		tonVibratorEnable.IN := FALSE;
-		Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
-		Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
-		Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
-		Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
-	END_IF
+			// Таймеры автоматического цикла
+			tonVibratorActive(PT := VIBRATOR_SETTINGS.TIME_ACTIVE);
+			tonVibratorPause(PT := VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR);
 
-// === РЕЖИМ РУЧНОЙ - индивидуальное управление через выбор + старт/стоп ===
-ELSIF Bunker.eVibratorStateRemote = E_StateRemote.Manual THEN
-	// Команда СТАРТ активирует флаг запуска
-	IF Bunker.cmdStartVibrator THEN
-		xVibratorManualRunActive := TRUE;
-	END_IF
+			// Логика автоматического цикла (ACTIVE → PAUSE → ACTIVE → ...)
+			IF NOT xVibratorAutoActive THEN
+				// Состояние PAUSE - ждем окончания паузы
+				IF tonVibratorPause.Q THEN
+					// Пауза завершена - переход в ACTIVE
+					tonVibratorPause(IN := FALSE);
+					tonVibratorActive(IN := TRUE);
+					xVibratorAutoActive := TRUE;
 
-	// Команда СТОП останавливает ВСЕ вибраторы и сбрасывает флаг
-	IF Bunker.cmdStopVibrator THEN
-		xVibratorManualRunActive := FALSE;
-		Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
-		Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
-		Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
-		Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
-	END_IF
+					// Запуск всех вибраторов
+					Bunker.MotorVibrator[1].VFD.qxStart := TRUE;
+					Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
+					Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
+					Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+				ELSIF NOT tonVibratorPause.IN THEN
+					// Первый запуск - сразу в ACTIVE
+					tonVibratorActive(IN := TRUE);
+					xVibratorAutoActive := TRUE;
 
-	// Если флаг запуска активен - управляем вибраторами через галочки выбора
-	IF xVibratorManualRunActive THEN
-		// Каждый вибратор работает только если он выбран (галочка установлена)
-		Bunker.MotorVibrator[1].VFD.qxStart := Bunker.cmdAddVib1;
-		Bunker.MotorVibrator[2].VFD.qxStart := Bunker.cmdAddVib2;
-		Bunker.MotorVibrator[3].VFD.qxStart := Bunker.cmdAddVib3;
-		Bunker.MotorVibrator[4].VFD.qxStart := Bunker.cmdAddVib4;
-	END_IF
+					// Запуск всех вибраторов
+					Bunker.MotorVibrator[1].VFD.qxStart := TRUE;
+					Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
+					Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
+					Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+				END_IF;
+			ELSE
+				// Состояние ACTIVE - ждем окончания активной работы
+				IF tonVibratorActive.Q THEN
+					// Активная работа завершена - переход в PAUSE
+					tonVibratorActive(IN := FALSE);
+					tonVibratorPause(IN := TRUE);
+					xVibratorAutoActive := FALSE;
 
-	// Установка частоты для вибраторов в ручном режиме
-	FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBRATOR BY 1 DO
-		Bunker.MotorVibrator[i].VFD.qrOutFrequency := irManualFrequencyVibrator;
-	END_FOR;
+					// Остановка всех вибраторов
+					Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
+					Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
+					Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
+					Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+				END_IF;
+			END_IF;
+		ELSE
+			// Вне стадии WORK - остановка автоматического цикла
+			tonVibratorActive(IN := FALSE);
+			tonVibratorPause(IN := FALSE);
+			xVibratorAutoActive := FALSE;
+
+			// Остановка всех вибраторов
+			Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
+			Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
+			Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
+			Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+		END_IF;
+
+	// === РЕЖИМ РУЧНОЙ - индивидуальное управление через выбор + старт/стоп ===
+	ELSIF Bunker.eVibratorStateRemote = E_StateRemote.Manual THEN
+		// Команда СТАРТ активирует флаг запуска
+		IF Bunker.cmdStartVibrator THEN
+			xVibratorManualRunActive := TRUE;
+		END_IF
+
+		// Команда СТОП останавливает ВСЕ вибраторы и сбрасывает флаг
+		IF Bunker.cmdStopVibrator THEN
+			xVibratorManualRunActive := FALSE;
+			Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
+			Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
+			Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
+			Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+		END_IF
+
+		// Если флаг запуска активен - управляем вибраторами через галочки выбора
+		IF xVibratorManualRunActive THEN
+			// Каждый вибратор работает только если он выбран (галочка установлена)
+			Bunker.MotorVibrator[1].VFD.qxStart := Bunker.cmdAddVib1;
+			Bunker.MotorVibrator[2].VFD.qxStart := Bunker.cmdAddVib2;
+			Bunker.MotorVibrator[3].VFD.qxStart := Bunker.cmdAddVib3;
+			Bunker.MotorVibrator[4].VFD.qxStart := Bunker.cmdAddVib4;
+		END_IF
+
+		// Установка частоты для вибраторов в ручном режиме
+		FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBRATOR BY 1 DO
+			Bunker.MotorVibrator[i].VFD.qrOutFrequency := irManualFrequencyVibrator;
+		END_FOR;
 
 	// === РЕЖИМ РЕМОНТ - все вибраторы остановлены ===
 	ELSIF Bunker.eVibratorStateRemote = E_StateRemote.Repair THEN
 		xVibratorManualRunActive := FALSE;
+		xVibratorAutoActive := FALSE;
 		Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
 		Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
 		Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
@@ -858,11 +968,11 @@ IF Bunker.eStateRemoteLighter = E_StateRemote.Manual THEN
 END_IF;
 
 // Режим управления АВТО
-IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.AUTO; END_IF;
-// Режим управления МЕСТНЫЙ
-IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.AUTO; END_IF;
+IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.Auto; END_IF;
+// Режим управления РУЧНОЙ
+IF Bunker.cmdLighterSetModeManual THEN Bunker.eStateRemoteLighter := E_StateRemote.Manual; END_IF;
 // Режим управления РЕМОНТ
-IF Bunker.cmdLighterSetModeAuto THEN Bunker.eStateRemoteLighter := E_StateRemote.AUTO; END_IF;
+IF Bunker.cmdLighterSetModeRepair THEN Bunker.eStateRemoteLighter := E_StateRemote.Repair; END_IF;
 
 
 // ========================================

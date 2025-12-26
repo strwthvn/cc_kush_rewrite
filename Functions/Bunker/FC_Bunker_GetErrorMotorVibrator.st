@@ -7,7 +7,7 @@ END_VAR
 FC_Bunker_GetErrorMotorVibrator := (
 	motor.VFD.fbStateFailure.qxInvertedSignal // Ошибка ЧРП (NC: TRUE=норма, инвертированный=TRUE=ошибка)
 	OR motor.VFD.xStateFailureLocal // Ошибка ЧРП, полученная программным путём
-	OR motor.VFD.fbRangeDiagnostic.qxCriticalActive // Критическое значение тока эл. двигателя
+	//OR motor.VFD.fbRangeDiagnostic.qxCriticalActive // Критическое значение тока эл. двигателя
 );
 
 END_FUNCTION

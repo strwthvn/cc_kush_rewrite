@@ -75,6 +75,7 @@ VAR
 
 	xAutoStopping : BOOL; // Процесс остановки
 	xAutoEmergencyStopping : BOOL; // Процесс аварийной остановки
+	xAutoEmergencyStoppingDependecies : BOOL; // Процесс аварийной остановки по блокировочным зависимостям
 	nStopSubstage : INT := 0; // Подшаг последовательной остановки (0=бункер1, 1=задержка, 2=бункер2, 3=задержка, 4=бункер3, 5=задержка, 6=конвейер, 7=задержка, 8=отвалообразователь, 9=готово)
 
 	// Команды автоматической аварийной остановки
@@ -90,9 +91,20 @@ VAR
 	tonProportionSumTimeout : TON; // Таймер контроля суммы пропорций
 	xProportionSumError : BOOL := FALSE; // Флаг ошибки суммы пропорций (сумма не равна 100%)
 	rProportionSum : REAL := 0.0; // Текущая сумма пропорций
+
+	// Контроль минимальной и максимальной частоты вибропитателей (ПИД-регулятор)
+	tonMinFrequencyTimeout : ARRAY[1..3] OF TON; // Таймеры контроля минимальной частоты для каждого бункера
+	xMinFrequencyError : BOOL := FALSE; // Флаг аварии: частота вибропитателя упала ниже минимума
+	tonMaxFrequencyTimeout : ARRAY[1..3] OF TON; // Таймеры контроля максимальной частоты для каждого бункера
+	xMaxFrequencyError : BOOL := FALSE; // Флаг аварии: частота вибропитателя превысила максимум
 END_VAR
 
 stCommonSignals.qx6KM1 := TRUE;
+
+// Временно
+stBunker[1].rWeight := 100;
+stBunker[2].rWeight := 100;
+stBunker[3].rWeight := 100;
 
 // == ИНИЦИАЛИЗАЦИЯ ==
 // Инициализация общих сигналов
@@ -176,9 +188,9 @@ fbBunker[1](
 	Bunker := stBunker[1],
 	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[1],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1],
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1] OR xAutoEmergencyStopBunker[1],
 	xEmergencyStopVibFeeder := stBunker[1].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[1],
-	xEmergencyStopVibrator := stBunker[1].cmdEmergencyStopVibrator,
+	xEmergencyStopVibrator := stBunker[1].cmdEmergencyStopVibrator OR xAutoEmergencyStopBunker[1],
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[1].cmdReset,
 	irManualFrequency := BUNKER_1_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_1_FREQ_VIBRATOR,
@@ -190,9 +202,9 @@ fbBunker[2](
 	Bunker := stBunker[2],
 	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[2],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2],
-	xEmergencyStopVibFeeder := stBunker[2].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[2],
-	xEmergencyStopVibrator := stBunker[2].cmdEmergencyStopVibrator,
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2] OR xAutoEmergencyStopBunker[2],
+	xEmergencyStopVibFeeder := stBunker[2].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[2] OR xAutoEmergencyStopBunker[2],
+	xEmergencyStopVibrator := stBunker[2].cmdEmergencyStopVibrator OR xAutoEmergencyStopBunker[2],
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[2].cmdReset,
 	irManualFrequency := BUNKER_2_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_2_FREQ_VIBRATOR,
@@ -204,9 +216,9 @@ fbBunker[3](
 	Bunker := stBunker[3],
 	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[3],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3],
+	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3] OR xAutoEmergencyStopBunker[3],
 	xEmergencyStopVibFeeder := stBunker[3].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[3],
-	xEmergencyStopVibrator := stBunker[3].cmdEmergencyStopVibrator,
+	xEmergencyStopVibrator := stBunker[3].cmdEmergencyStopVibrator OR xAutoEmergencyStopBunker[3],
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[3].cmdReset,
 	irManualFrequency := BUNKER_3_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_3_FREQ_VIBRATOR,
@@ -455,22 +467,44 @@ xStateErrorCheckReady :=
 IF stCommands.cmdEmergencyStopCommon.qxSignal
 	OR (NOT DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION AND fbScadaCommunication.qxCommunicationLost)
 	OR xProportionSumError // Ошибка суммы пропорций (не равна 100%)
-	OR (
-		NOT DISABLE_AUTO_STOPPING_DEPENDENCIES
-		AND (
-			(NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
-			AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
-			OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
-			OR eBunkerStage[3] = E_StageWithPreStartAlarm.WORK))
-			OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
-		)
-	)
+	//OR xMinFrequencyError // Ошибка минимальной частоты вибропитателя (ПИД упёрся в минимум)
+	//OR xMaxFrequencyError // Ошибка максимальной частоты вибропитателя (ПИД упёрся в максимум)
 THEN
 	xAutoEmergencyStopping := TRUE;
+END_IF;
+
+IF (
+	NOT DISABLE_AUTO_STOPPING_DEPENDENCIES
+	AND (
+		(NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
+		AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
+		OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
+		OR eBunkerStage[3] = E_StageWithPreStartAlarm.WORK))
+		OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
+	)
+)
+THEN
+	xAutoEmergencyStopBunker[1] := (stBunker[1].eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER1 AND stBunker[1].eStateRemote = E_StateRemote.Manual);
+	xAutoEmergencyStopBunker[2] := (stBunker[2].eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER2 AND stBunker[2].eStateRemote = E_StateRemote.Manual);
+	xAutoEmergencyStopBunker[3] := (stBunker[3].eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER3 AND stBunker[3].eStateRemote = E_StateRemote.Manual);
+	xAutoEmergencyStopConveyor := (stConveyor.eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_CONVEYOR AND stConveyor.eStateRemote = E_StateRemote.Manual);
+	xAutoEmergencyStopDumper := (stDumper.eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_DUMPER AND stDumper.eStateRemote = E_StateRemote.Manual);
 END_IF
 
+IF xAutoEmergencyStopBunker[1] AND (eBunkerStage[1]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[1] := FALSE; END_IF;
+IF xAutoEmergencyStopBunker[2] AND (eBunkerStage[2]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[2]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[2] := FALSE; END_IF;
+IF xAutoEmergencyStopBunker[3] AND (eBunkerStage[3]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[3]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[3] := FALSE; END_IF;
+IF xAutoEmergencyStopConveyor AND (eConveyorStage = E_StageWithPreStartAlarm.IDLE OR eConveyorStage = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopConveyor := FALSE; END_IF;
+IF xAutoEmergencyStopDumper AND (eDumperStage = E_StageWithPreStartAlarm.IDLE OR eDumperStage = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopDumper := FALSE; END_IF;
+
 // Обычная остановка
-IF stCommands.cmdStopCommon.qxSignal AND NOT xAutoEmergencyStopping THEN
+IF stCommands.cmdStopCommon.qxSignal AND NOT xAutoEmergencyStopping AND AUTO_STEP <> IDLE THEN
+	xStartBunker[1] := FALSE;
+	xStartBunker[2] := FALSE;
+	xStartBunker[3] := FALSE;
+	xStartConveyor := FALSE;
+	xStartDumper := FALSE;
+	AUTO_STEP := WORK;
 	xAutoStopping := TRUE;
 END_IF
 
@@ -481,6 +515,16 @@ CASE AUTO_STEP OF
 	// Сброс таймера и флага ошибки пропорций
 	tonProportionSumTimeout.IN := FALSE;
 	xProportionSumError := FALSE;
+
+	// Сброс таймеров и флагов ошибки минимальной/максимальной частоты
+	tonMinFrequencyTimeout[1].IN := FALSE;
+	tonMinFrequencyTimeout[2].IN := FALSE;
+	tonMinFrequencyTimeout[3].IN := FALSE;
+	xMinFrequencyError := FALSE;
+	tonMaxFrequencyTimeout[1].IN := FALSE;
+	tonMaxFrequencyTimeout[2].IN := FALSE;
+	tonMaxFrequencyTimeout[3].IN := FALSE;
+	xMaxFrequencyError := FALSE;
 
 	// Управление светофорами бункеров в режиме ожидания
 	FOR i := 1 TO 3 DO
@@ -548,7 +592,7 @@ CASE AUTO_STEP OF
 			0: // Шаг 0: Запуск бункера 3
 				IF stBunker[3].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_3 > 0 THEN
 					// Установка частоты ПЕРЕД запуском бункера 3
-					stBunker[3].rMotorVibFeederCommonFrequency := rInitialFrequency_3;
+					stBunker[3].rMotorVibFeederCommonFrequency := BUNKER_3_FREQ_VIBFEEDER; // TODO ВРЕМЕННО rInitialFrequency_3
 					xStartBunker[3] := TRUE;
 					IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[3] := FALSE;
@@ -569,7 +613,7 @@ CASE AUTO_STEP OF
 			2: // Шаг 2: Запуск бункера 2
 				IF stBunker[2].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_2 > 0 THEN
 					// Установка частоты ПЕРЕД запуском бункера 2
-					stBunker[2].rMotorVibFeederCommonFrequency := rInitialFrequency_2;
+					stBunker[2].rMotorVibFeederCommonFrequency := BUNKER_2_FREQ_VIBFEEDER; // TODO ВРЕМЕННО rInitialFrequency_2
 					xStartBunker[2] := TRUE;
 					IF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[2] := FALSE;
@@ -590,7 +634,7 @@ CASE AUTO_STEP OF
 			4: // Шаг 4: Запуск бункера 1
 				IF stBunker[1].eStateRemote = E_StateRemote.Auto AND BUNKER_WORK_PRECENT_1 > 0 THEN
 					// Установка частоты ПЕРЕД запуском бункера 1
-					stBunker[1].rMotorVibFeederCommonFrequency := rInitialFrequency_1;
+					stBunker[1].rMotorVibFeederCommonFrequency := BUNKER_1_FREQ_VIBFEEDER; // TODO ВРЕМЕННО rInitialFrequency_1
 					xStartBunker[1] := TRUE;
 					IF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN
 						xStartBunker[1] := FALSE;
@@ -628,6 +672,60 @@ CASE AUTO_STEP OF
 		// Сброс флага ошибки при корректировке пропорций
 		IF rProportionSum >= 99.9 AND rProportionSum <= 100.1 THEN
 			xProportionSumError := FALSE;
+		END_IF
+
+		// === КОНТРОЛЬ МИНИМАЛЬНОЙ ЧАСТОТЫ ВИБРОПИТАТЕЛЕЙ ===
+		// Проверка: если частота вибропитателя упала до минимума (<=), запускаем таймер
+		// При истечении таймера - аварийная остановка всего комплекса
+
+		// Бункер 1
+		tonMinFrequencyTimeout[1](
+			IN := (BUNKER_WORK_PRECENT_1 > 0.0 AND fbProportionPid.qrFrequency_1 <= BUNKER_VIBFEEDER_MIN_FREQUENCY_LIMIT),
+			PT := BUNKER_VIBFEEDER_MIN_FREQUENCY_TIMEOUT
+		);
+
+		// Бункер 2
+		tonMinFrequencyTimeout[2](
+			IN := (BUNKER_WORK_PRECENT_2 > 0.0 AND fbProportionPid.qrFrequency_2 <= BUNKER_VIBFEEDER_MIN_FREQUENCY_LIMIT),
+			PT := BUNKER_VIBFEEDER_MIN_FREQUENCY_TIMEOUT
+		);
+
+		// Бункер 3
+		tonMinFrequencyTimeout[3](
+			IN := (BUNKER_WORK_PRECENT_3 > 0.0 AND fbProportionPid.qrFrequency_3 <= BUNKER_VIBFEEDER_MIN_FREQUENCY_LIMIT),
+			PT := BUNKER_VIBFEEDER_MIN_FREQUENCY_TIMEOUT
+		);
+
+		// Установка флага аварии при срабатывании ЛЮБОГО таймера
+		IF tonMinFrequencyTimeout[1].Q OR tonMinFrequencyTimeout[2].Q OR tonMinFrequencyTimeout[3].Q THEN
+			xMinFrequencyError := TRUE;
+		END_IF
+
+		// === КОНТРОЛЬ МАКСИМАЛЬНОЙ ЧАСТОТЫ ВИБРОПИТАТЕЛЕЙ ===
+		// Проверка: если частота вибропитателя превысила максимум (>=), запускаем таймер
+		// При истечении таймера - аварийная остановка всего комплекса
+
+		// Бункер 1
+		tonMaxFrequencyTimeout[1](
+			IN := (BUNKER_WORK_PRECENT_1 > 0.0 AND fbProportionPid.qrFrequency_1 >= BUNKER_VIBFEEDER_MAX_FREQUENCY_LIMIT),
+			PT := BUNKER_VIBFEEDER_MAX_FREQUENCY_TIMEOUT
+		);
+
+		// Бункер 2
+		tonMaxFrequencyTimeout[2](
+			IN := (BUNKER_WORK_PRECENT_2 > 0.0 AND fbProportionPid.qrFrequency_2 >= BUNKER_VIBFEEDER_MAX_FREQUENCY_LIMIT),
+			PT := BUNKER_VIBFEEDER_MAX_FREQUENCY_TIMEOUT
+		);
+
+		// Бункер 3
+		tonMaxFrequencyTimeout[3](
+			IN := (BUNKER_WORK_PRECENT_3 > 0.0 AND fbProportionPid.qrFrequency_3 >= BUNKER_VIBFEEDER_MAX_FREQUENCY_LIMIT),
+			PT := BUNKER_VIBFEEDER_MAX_FREQUENCY_TIMEOUT
+		);
+
+		// Установка флага аварии при срабатывании ЛЮБОГО таймера
+		IF tonMaxFrequencyTimeout[1].Q OR tonMaxFrequencyTimeout[2].Q OR tonMaxFrequencyTimeout[3].Q THEN
+			xMaxFrequencyError := TRUE;
 		END_IF
 
 		// === ОБЫЧНАЯ ОСТАНОВКА ===
@@ -895,6 +993,16 @@ CASE AUTO_STEP OF
 		tonProportionSumTimeout.IN := FALSE;
 		xProportionSumError := FALSE;
 
+		// Сброс таймеров и флагов ошибки минимальной/максимальной частоты
+		tonMinFrequencyTimeout[1].IN := FALSE;
+		tonMinFrequencyTimeout[2].IN := FALSE;
+		tonMinFrequencyTimeout[3].IN := FALSE;
+		xMinFrequencyError := FALSE;
+		tonMaxFrequencyTimeout[1].IN := FALSE;
+		tonMaxFrequencyTimeout[2].IN := FALSE;
+		tonMaxFrequencyTimeout[3].IN := FALSE;
+		xMaxFrequencyError := FALSE;
+
 		// Переход в IDLE при сбросе ошибки
 		IF stCommands.cmdResetAll.qxRisingEdge THEN
 			AUTO_STEP := IDLE;
@@ -1027,8 +1135,8 @@ IF BUNKER_ENABLE_PID THEN
 			rFrequencyBase_2:= rInitialFrequency_2,
 			rFrequencyBase_3:= rInitialFrequency_3,
 
-			rFrequency_Min:= 5,
-			rFrequency_Max:= 50,
+			rFrequency_Min:= BUNKER_VIBFEEDER_MIN_FREQUENCY_LIMIT,  // Минимальная частота из уставки
+			rFrequency_Max:= BUNKER_VIBFEEDER_MAX_FREQUENCY_LIMIT,  // Максимальная частота из уставки
 			rFrequency_TargetSum:= BUNKER_VIBFEEDER_FREQUENCY_TARGET_SUM,
 			rDeltaTime:= 0.5                  // Период вызова ПИД-регулятора, сек
 		);

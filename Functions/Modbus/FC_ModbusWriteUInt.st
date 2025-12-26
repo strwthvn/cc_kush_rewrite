@@ -1,5 +1,3 @@
-// Запись UINT в Modbus регистр
-// Возвращает TRUE при успешной записи
 FUNCTION FC_ModbusWriteUInt : BOOL
 VAR_INPUT
     pRegisters : POINTER TO WORD;  // Указатель на массив Modbus регистров

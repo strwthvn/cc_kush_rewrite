@@ -56,7 +56,7 @@ VAR
     rDistanceToH : REAL;
     rDistanceToHH : REAL;
     rMinDistance : REAL;
-     rRange : REAL;
+    rRange : REAL;
 END_VAR
 
 // =====================================

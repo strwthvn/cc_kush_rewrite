@@ -1,6 +1,6 @@
 FUNCTION FC_Sensor_CheckZQWarning : BOOL
 VAR_INPUT
-	fbZQAlarm : REFERENCE TO ARRAY[1..4] OF FB_UniversalSignal;
+	fbZQWarning : REFERENCE TO ARRAY[1..4] OF FB_UniversalSignal;
 END_VAR
 VAR
 END_VAR

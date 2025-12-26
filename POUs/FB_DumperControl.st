@@ -56,7 +56,11 @@ VAR
 	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
 	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
 	fbTimerRotation : TON; // Тайм-аут выполнения команд поворота
-
+	// Таймер на работу тормоза
+	tonTimerEnableBreakerConveyor : TON; // Задержка включения тормоза на конвейере
+	tonTimerEnableBreakerRotation : TON; // Задержка включения тормоза на повороте
+	
+	
 	// == Управление поворотом ==
 	xRotationLeftActive : BOOL; // Поворот влево активен
 	xRotationRightActive : BOOL; // Поворот вправо активен
@@ -473,7 +477,9 @@ END_IF;
 
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
 // Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
-IF xEmergencyStop THEN
+// 1. Внешний сигнал аварийной остановки (от SCADA или системы)
+// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата)
+IF xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
@@ -523,7 +529,6 @@ CASE STAGE OF
 
 		// Тормоза активны (удерживают механизм)
 		Dumper.qxBreakerConveyor := FALSE;
-		Dumper.qxBreakerRotation := FALSE;
 
 		IF xStartCommand THEN
 			STAGE := PRESTART_ALARM;
@@ -650,8 +655,8 @@ CASE STAGE OF
 
 				// Команды пуска VFD остаются активными (TRUE = ПУСК)
 				// VFD продолжают работать, но частота снижается
-				Dumper.MotorConveyor[1].VFD.qxStart := TRUE;
-				Dumper.MotorConveyor[2].VFD.qxStart := TRUE;
+				Dumper.MotorConveyor[1].VFD.qxStart := FALSE; // TODO ВРЕМЕННО
+				Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
 
 				// Переход к следующей подстадии
 				nStoppingSubstage := 2;
@@ -683,13 +688,16 @@ CASE STAGE OF
 				END_IF;
 
 			5: // ACTIVATE_BRAKE - Активация тормозов
-				// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
-				Dumper.qxBreakerConveyor := FALSE;
-				Dumper.qxBreakerRotation := FALSE;
-
-				// Переход к завершению остановки
-				nStoppingSubstage := 6;
-
+				// Включение таймера на задержку тормоза
+				tonTimerEnableBreakerConveyor(IN:= TRUE, PT:=T#5S);
+				
+				IF tonTimerEnableBreakerConveyor.Q THEN // Снять сигнал с тормоза после таймера (поставить на тормоз: FALSE = активен)
+					Dumper.qxBreakerConveyor := FALSE;
+					Dumper.qxBreakerRotation := FALSE;
+					tonTimerEnableBreakerConveyor(IN:= FALSE);
+					// Переход к завершению остановки
+					nStoppingSubstage := 6;
+				END_IF;
 			6: // WAIT_BRAKE_FEEDBACK - Переход в IDLE
 				// Сброс таймера остановки (успешная остановка)
 				fbTimerStopping(IN := FALSE);
@@ -721,9 +729,10 @@ CASE STAGE OF
 		Dumper.qxBreakerRotation := FALSE;
 
 		// Разборка схем контакторов (аварийная остановка)
-		xCircuitBuilt := FALSE;
-		xCircuitBuiltRotation := FALSE;
-
+		IF Dumper.eStateRemote = E_StateRemote.Auto THEN
+			xCircuitBuilt := FALSE;
+			xCircuitBuiltRotation := FALSE;
+		END_IF;
 		// Сброс подстадий для следующего запуска
 		nStartingSubstage := 0;
 		nStoppingSubstage := 0;
@@ -733,7 +742,8 @@ CASE STAGE OF
 		fbTimerStarting(IN := FALSE);
 		fbTimerStopping(IN := FALSE);
 		fbTimerRotation(IN := FALSE);
-
+		tonTimerEnableBreakerConveyor(IN := FALSE);
+		tonTimerEnableBreakerRotation(IN:= FALSE);
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
 
@@ -741,8 +751,9 @@ CASE STAGE OF
 		// Для выхода из ERROR требуется:
 		// 1. Команда сброса (xReset)
 		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStop)
-		// 3. Отсутствие ошибок оборудования (NOT Dumper.xStateFailure)
-		IF xReset AND NOT xEmergencyStop AND NOT Dumper.xStateFailure THEN
+		// 3. Кнопка аварийной остановки отпущена (NC контакт: TRUE = кнопка отпущена)
+		// 4. Отсутствие ошибок оборудования (NOT Dumper.xStateFailure)
+		IF xReset AND NOT xEmergencyStop AND Dumper.fbBtnEmergencyStop.qxSignal AND NOT Dumper.xStateFailure THEN
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF
 END_CASE;
@@ -817,10 +828,20 @@ eStage := STAGE;
 // УПРАВЛЕНИЕ КОНТАКТОРАМИ
 // ========================================
 
-// Обработка импульсных команд сборки/разборки схемы конвейера
-// cmdBuildCircuitOn - собрать схему (включить контакторы)
-// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
+// РУЧНОЙ РЕЖИМ (Manual):
+// - Схема управляется ТОЛЬКО импульсными командами cmdBuildCircuitOn/Off
+// - Автоматическая сборка/разборка схемы ОТКЛЮЧЕНА
+//
+// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto/Remote):
+// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок секции:
+//   * Нет ошибок по датчикам безопасности (FC_Dumper_GetErrorSensors = FALSE)
+//   * Секция НЕ в стадии ERROR
+// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок или переходе в ERROR
+
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
+	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы конвейера
+	// cmdBuildCircuitOn - собрать схему (включить контакторы)
+	// cmdBuildCircuitOff - разобрать схему (выключить контакторы)
 	IF Dumper.cmdBuildCircuitOn THEN
 		xCircuitBuilt := TRUE;
 		Dumper.cmdBuildCircuitOn := FALSE; // Сброс импульсной команды
@@ -828,15 +849,26 @@ IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 		xCircuitBuilt := FALSE;
 		Dumper.cmdBuildCircuitOff := FALSE; // Сброс импульсной команды
 	END_IF;
+ELSIF Dumper.eStateRemote = E_StateRemote.Auto THEN
+	// АВТОМАТИЧЕСКИЙ РЕЖИМ - Автоматическая сборка схемы при отсутствии ошибок
+	// Собираем схему если:
+	// 1. Нет ошибок по датчикам безопасности
+	// 2. Секция НЕ в стадии ERROR
+	IF NOT FC_Dumper_GetErrorSensors(Dumper := Dumper) AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
+		xCircuitBuilt := TRUE;
+	ELSE
+		xCircuitBuilt := FALSE;
+	END_IF;
 END_IF;
+
 // Моторы конвейера - управление контакторами через состояние схемы
 Dumper.MotorConveyor[1].qxKM_Power := xCircuitBuilt;
 Dumper.MotorConveyor[2].qxKM_Power := xCircuitBuilt;
 
-// Обработка импульсных команд сборки/разборки схемы поворота
-// cmdBuildCircuitOnRotation - собрать схему поворота (включить контакторы)
-// cmdBuildCircuitOffRotation - разобрать схему поворота (выключить контакторы)
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
+	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы поворота
+	// cmdBuildCircuitOnRotation - собрать схему поворота (включить контакторы)
+	// cmdBuildCircuitOffRotation - разобрать схему поворота (выключить контакторы)
 	IF Dumper.cmdBuildCircuitOnRotation THEN
 		xCircuitBuiltRotation := TRUE;
 		Dumper.cmdBuildCircuitOnRotation := FALSE; // Сброс импульсной команды
@@ -844,7 +876,18 @@ IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 		xCircuitBuiltRotation := FALSE;
 		Dumper.cmdBuildCircuitOffRotation := FALSE; // Сброс импульсной команды
 	END_IF;
+ELSIF Dumper.eStateRemote = E_StateRemote.Auto THEN
+	// АВТОМАТИЧЕСКИЙ РЕЖИМ - Автоматическая сборка схемы поворота при отсутствии ошибок
+	// Собираем схему если:
+	// 1. Нет ошибок по датчикам безопасности
+	// 2. Секция НЕ в стадии ERROR
+	IF NOT FC_Dumper_GetErrorSensors(Dumper := Dumper) AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
+		xCircuitBuiltRotation := TRUE;
+	ELSE
+		xCircuitBuiltRotation := FALSE;
+	END_IF;
 END_IF;
+
 // Моторы поворота - управление контакторами через состояние схемы
 Dumper.MotorRotation[1].qxKM_Power := xCircuitBuiltRotation;
 Dumper.MotorRotation[2].qxKM_Power := xCircuitBuiltRotation;
@@ -959,7 +1002,7 @@ CASE nRotationSubstage OF
 	0: // IDLE - Нет активного поворота
 		// Сброс таймера поворота
 		fbTimerRotation(IN := FALSE);
-
+		tonTimerEnableBreakerRotation.IN :=  FALSE;
 		// Остановка VFD
 		Dumper.MotorRotation[1].VFD.qxStart := FALSE;
 		Dumper.MotorRotation[2].VFD.qxStart := FALSE;
@@ -1043,12 +1086,12 @@ CASE nRotationSubstage OF
 
 	6: // WAIT_FREQUENCY_ZERO - Ожидание подтверждения частоты 0 с аналогового входа
 		// Ждём, пока фактическая частота (с аналогового входа) не снизится до 0 (+/- 2 Гц)
-		IF Dumper.MotorRotation[1].VFD.rActualFrequency <= 2.0
-			AND Dumper.MotorRotation[2].VFD.rActualFrequency <= 2.0
-		THEN
+//		IF Dumper.MotorRotation[1].VFD.rActualFrequency <= 2.0
+//			AND Dumper.MotorRotation[2].VFD.rActualFrequency <= 2.0
+//		THEN
 			// Частота подтверждена на 0, переходим к остановке VFD
 			nRotationSubstage := 7;
-		END_IF;
+//		END_IF;
 
 	7: // STOP_VFD - Остановка VFD поворота (снятие команды пуска)
 		// Отключить команду пуска на VFD (FALSE = СТОП)
@@ -1070,14 +1113,16 @@ CASE nRotationSubstage OF
 		END_IF;
 
 	9: // ACTIVATE_BRAKE - Активация тормоза
-		// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
-		Dumper.qxBreakerRotation := FALSE;
-
-		// Сброс таймера поворота (успешное выполнение команды)
-		fbTimerRotation(IN := FALSE);
-
-		// Переход в IDLE
-		nRotationSubstage := 0;
+		tonTimerEnableBreakerRotation(IN:= TRUE, PT:=T#3S);
+		IF tonTimerEnableBreakerRotation.Q THEN
+			// Снять сигнал с тормоза (поставить на тормоз: FALSE = активен)
+			Dumper.qxBreakerRotation := FALSE;
+        	tonTimerEnableBreakerRotation(IN:= FALSE);
+			// Сброс таймера поворота (успешное выполнение команды)
+			fbTimerRotation(IN := FALSE);
+			// Переход в IDLE
+			nRotationSubstage := 0;
+		END_IF;
 END_CASE;
 
 // ========================================
