@@ -94,6 +94,14 @@ python3 generate_html_docs.py
 - ✅ "Allow GitHub Actions to create and approve pull requests" включено
 - ✅ "Workflow permissions" установлено в "Read and write permissions"
 
+### Проблема: "Error: deprecated version of actions/upload-artifact"
+**Решение**: Эта ошибка уже исправлена в текущей версии workflow файла. Если вы видите эту ошибку:
+1. Убедитесь, что `.github/workflows/deploy-docs.yml` использует:
+   - `actions/setup-python@v5`
+   - `actions/upload-pages-artifact@v3`
+   - `actions/deploy-pages@v4`
+2. Сделайте `git pull` для получения обновлённой версии
+
 ---
 
 ## 📊 Технические детали
