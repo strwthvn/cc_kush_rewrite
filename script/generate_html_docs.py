@@ -392,7 +392,11 @@ def generate_html_documentation():
                 columns: [
                     {{
                         data: 'register_type',
-                        render: function(data) {{
+                        render: function(data, type) {{
+                            // Для экспорта возвращаем текст, для отображения - HTML
+                            if (type === 'export') {{
+                                return data === 'holding_registers' ? 'HOLDING' : 'INPUT';
+                            }}
                             const badgeClass = data === 'holding_registers' ? 'badge-holding' : 'badge-input';
                             const label = data === 'holding_registers' ? 'HOLDING' : 'INPUT';
                             return `<span class="badge ${{badgeClass}}">${{label}}</span>`;
@@ -402,7 +406,11 @@ def generate_html_documentation():
                     {{ data: 'address_formatted' }},
                     {{
                         data: 'data_type',
-                        render: function(data) {{
+                        render: function(data, type) {{
+                            // Для экспорта возвращаем только текст
+                            if (type === 'export') {{
+                                return data;
+                            }}
                             let badgeClass = 'badge-int';
                             if (data === 'BOOL') badgeClass = 'badge-bool';
                             else if (data === 'REAL' || data === 'TIME') badgeClass = 'badge-real';
@@ -412,6 +420,10 @@ def generate_html_documentation():
                     {{
                         data: 'variable_name',
                         render: function(data, type, row) {{
+                            // Для экспорта возвращаем имя переменной или RESERVED
+                            if (type === 'export') {{
+                                return row.is_reserved ? 'RESERVED' : data;
+                            }}
                             if (row.is_reserved) {{
                                 return `<span class="badge badge-reserved">RESERVED</span>`;
                             }}
@@ -430,7 +442,18 @@ def generate_html_documentation():
                     {{
                         extend: 'excel',
                         text: '📥 Экспорт в Excel',
-                        filename: 'modbus_registers'
+                        filename: 'modbus_registers',
+                        title: 'Modbus Register Map',
+                        exportOptions: {{
+                            columns: ':visible',
+                            modifier: {{
+                                search: 'applied',
+                                order: 'applied'
+                            }}
+                        }},
+                        customize: function(xlsx) {{
+                            // Дополнительная настройка Excel файла (опционально)
+                        }}
                     }},
                     {{
                         text: '🔄 Сбросить фильтры',
