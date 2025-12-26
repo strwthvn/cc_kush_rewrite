@@ -1039,8 +1039,11 @@ ELSIF AUTO_STEP = IDLE AND (stDumper.xStateWarning OR stConveyor.xStateWarning O
 	// Предупреждение без активной работы
 	eSystemStageToSCADA := E_ScadaStatesDevice.WARNING;
 
-ELSIF AUTO_STEP = IDLE AND (stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure) THEN
-	// Система неготова к запуску (есть ошибки)
+ELSIF AUTO_STEP = IDLE AND 
+	(stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure 
+	OR eDumperStageToSCADA = E_ScadaStatesDevice.ERROR OR eConveyorStageToSCADA = E_ScadaStatesDevice.ERROR OR eBunkerStage[1] = E_ScadaStatesDevice.ERROR OR eBunkerStage[2] = E_ScadaStatesDevice.ERROR OR eBunkerStage[3] = E_ScadaStatesDevice.ERROR) 
+	THEN
+	// Система неготова к запуску (есть ошибки или секции в состоянии ERROR)
 	eSystemStageToSCADA := E_ScadaStatesDevice.NOT_READY;
 
 ELSE
