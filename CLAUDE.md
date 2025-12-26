@@ -65,8 +65,7 @@ Contains the main program and control function blocks:
 - **FB_EmergencyStopProcess.st**: Emergency stop handler with sequential shutdown
 - **FB_VibratorControl.st**: Cyclic vibrator control (active → pause → active)
 - **FB_PneumoCollapseControl.st**: Cyclic pneumatic collapse for material flow
-- **FB_Simulation.st**: Hardware simulation for testing
-- **FB_FrequencySimulation.st**: VFD frequency simulation
+- **FB_Simulation.st**: Hardware simulation for testing (full analog I/O loop simulation)
 
 ### DataTypes/
 
@@ -431,12 +430,6 @@ fbProportionPid(
     qrFrequency_3 => stBunker[3].rMotorVibFeederCommonFrequency
 );
 ```
-
-#### Simulation
-
-**FB_FrequencySimulation** - VFD frequency simulation:
-- Simulates smooth frequency changes
-- Used in simulation mode to mimic VFD behavior
 
 ---
 
@@ -1015,17 +1008,27 @@ Motor.VFD.fbAnalogInput(
 
 ### VFD Simulation
 
-FB_FrequencySimulation mimics smooth VFD frequency changes:
+VFD frequency simulation uses full analog I/O loop to match real hardware:
 
 ```iecst
-Motor.VFD.fbSimFreq(
-    ixEnable := SIMULATION,
-    irFrequencyTarget := Motor.VFD.qrOutFrequency,
-    irFrequencyStep := 1.0,
-    ixPulse := PULSE_RTRIG.Q
+// FB_Simulation.st - Simulation of analog I/O loop:
+// DAC code from analog output → ADC code to analog input
+Dumper.MotorConveyor[1].VFD.nActualFrequencyADC := Dumper.MotorConveyor[1].VFD.nSetOutSignalToModule;
+
+// Then FB_AnalogInput converts ADC → Engineering units
+Motor.VFD.fbAnalogInput(
+    xSimulation := FALSE,                          // No need for special simulation mode
+    iADC_Code := Motor.VFD.nActualFrequencyADC,    // ADC from simulated hardware
+    refEngValue := Motor.VFD.rActualFrequency,     // Result in Hz
+    ...
 );
-Motor.VFD.rSimulatedFrequency := Motor.VFD.fbSimFreq.qrFrequencyCurrent;
 ```
+
+**Advantages:**
+- ✅ Simulates full 4-20mA loop: Engineering → DAC → ADC → Engineering
+- ✅ Tests FB_AnalogOutput and FB_AnalogInput together
+- ✅ Realistic simulation with all conversions and clamping
+- ✅ No special simulation blocks needed
 
 ---
 

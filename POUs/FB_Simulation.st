@@ -299,34 +299,14 @@ IF xEnable THEN
 	// ========================================
 
 	// Симуляция частоты ЧРП моторов конвейера отвалообразователя
-	Dumper.MotorConveyor[1].VFD.fbSimFreq(
-		xProceed := Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorConveyor[1].VFD.rActualFrequency
-	);
-
-	Dumper.MotorConveyor[2].VFD.fbSimFreq(
-		xProceed := Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorConveyor[2].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorConveyor[2].VFD.rActualFrequency
-	);
+	// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
+	Dumper.MotorConveyor[1].VFD.nActualFrequencyADC := Dumper.MotorConveyor[1].VFD.nSetOutSignalToModule;
+	Dumper.MotorConveyor[2].VFD.nActualFrequencyADC := Dumper.MotorConveyor[2].VFD.nSetOutSignalToModule;
 
 	// Симуляция частоты ЧРП моторов поворота отвалообразователя
-	Dumper.MotorRotation[1].VFD.fbSimFreq(
-		xProceed := Dumper.MotorRotation[1].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorRotation[1].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorRotation[1].VFD.rActualFrequency
-	);
-
-	Dumper.MotorRotation[2].VFD.fbSimFreq(
-		xProceed := Dumper.MotorRotation[2].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorRotation[2].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorRotation[2].VFD.rActualFrequency
-	);
+	// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
+	Dumper.MotorRotation[1].VFD.nActualFrequencyADC := Dumper.MotorRotation[1].VFD.nSetOutSignalToModule;
+	Dumper.MotorRotation[2].VFD.nActualFrequencyADC := Dumper.MotorRotation[2].VFD.nSetOutSignalToModule;
 
 	// ========================================
 	// СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ ОТВАЛООБРАЗОВАТЕЛЯ
@@ -375,19 +355,9 @@ IF xEnable THEN
 	// ========================================
 
 	// Симуляция частоты ЧРП моторов конвейера
-	Conveyor.MotorConveyor[1].VFD.fbSimFreq(
-		xProceed := Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Conveyor.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Conveyor.MotorConveyor[1].VFD.rActualFrequency
-	);
-
-	Conveyor.MotorConveyor[2].VFD.fbSimFreq(
-		xProceed := Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Conveyor.MotorConveyor[2].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Conveyor.MotorConveyor[2].VFD.rActualFrequency
-	);
+	// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
+	Conveyor.MotorConveyor[1].VFD.nActualFrequencyADC := Conveyor.MotorConveyor[1].VFD.nSetOutSignalToModule;
+	Conveyor.MotorConveyor[2].VFD.nActualFrequencyADC := Conveyor.MotorConveyor[2].VFD.nSetOutSignalToModule;
 
 	// ========================================
 	// СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ СБОРНОГО КОНВЕЙЕРА
@@ -419,12 +389,8 @@ IF xEnable THEN
 		// --- Вибропитатели (MotorVibFeeder[1..2]) ---
 		FOR m := 1 TO 2 BY 1 DO
 			// Симуляция частоты ЧРП вибропитателя
-			Bunker[b].MotorVibFeeder[m].VFD.fbSimFreq(
-				xProceed := Bunker[b].MotorVibFeeder[m].VFD.fbStateIsWorking.qxSignal,
-				irTarget := Bunker[b].MotorVibFeeder[m].VFD.Frequency.qrCurrentFrequency,
-				irStep := 0.2,
-				irInputModule => Bunker[b].MotorVibFeeder[m].VFD.rActualFrequency
-			);
+			// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
+			Bunker[b].MotorVibFeeder[m].VFD.nActualFrequencyADC := Bunker[b].MotorVibFeeder[m].VFD.nSetOutSignalToModule;
 
 			// Обратная связь контактора вибропитателя
 			tonKM_VibFeeder[b, m](IN := Bunker[b].MotorVibFeeder[m].qxKM_Power, PT := tFeedbackDelay);
@@ -438,12 +404,8 @@ IF xEnable THEN
 		// --- Вибраторы (MotorVibrator[1..4]) ---
 		FOR m := 1 TO 4 BY 1 DO
 			// Симуляция частоты ЧРП вибратора
-			Bunker[b].MotorVibrator[m].VFD.fbSimFreq(
-				xProceed := Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.qxSignal,
-				irTarget := Bunker[b].MotorVibrator[m].VFD.Frequency.qrCurrentFrequency,
-				irStep := 0.2,
-				irInputModule => Bunker[b].MotorVibrator[m].VFD.rActualFrequency
-			);
+			// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
+			Bunker[b].MotorVibrator[m].VFD.nActualFrequencyADC := Bunker[b].MotorVibrator[m].VFD.nSetOutSignalToModule;
 
 			// Обратная связь контактора вибратора
 			tonKM_Vibrator[b, m](IN := Bunker[b].MotorVibrator[m].qxKM_Power, PT := tFeedbackDelay);
@@ -462,10 +424,10 @@ IF xEnable THEN
 	// Симуляция с случайными возмущениями для тестирования ПИД-регулятора
 	FOR b := 1 TO 3 BY 1 DO
 		// Средняя выходная частота двух вибропитателей бункера
-		// Используем fbAnalogOutput.rEngValue - инженерное значение частоты от аналогового выхода
+		// Используем rActualFrequency - актуальная частота от модуля AI (после полного цикла AO → AI)
 		_rAvgFrequencyVibFeeder[b] :=
-			(Bunker[b].MotorVibFeeder[1].VFD.fbAnalogOutput.rEngValue
-		   + Bunker[b].MotorVibFeeder[2].VFD.fbAnalogOutput.rEngValue) / 2.0;
+			(Bunker[b].MotorVibFeeder[1].VFD.rActualFrequency
+		   + Bunker[b].MotorVibFeeder[2].VFD.rActualFrequency) / 2.0;
 
 		// --- Генерация случайного шума (Linear Congruential Generator) ---
 		// LCG формула: seed = (a * seed + c) mod m
