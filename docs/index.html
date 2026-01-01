@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
     <style>
+        /* GitHub Dark Theme */
         * {
             margin: 0;
             padding: 0;
@@ -18,23 +19,26 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0d1117;
             min-height: 100vh;
             padding: 20px;
+            color: #c9d1d9;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: #161b22;
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid #30363d;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             overflow: hidden;
         }
 
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            color: #c9d1d9;
             padding: 30px;
             text-align: center;
         }
@@ -43,11 +47,12 @@
             font-size: 2.5em;
             margin-bottom: 10px;
             font-weight: 700;
+            color: #58a6ff;
         }
 
         header p {
             font-size: 1.1em;
-            opacity: 0.9;
+            color: #8b949e;
         }
 
         .stats {
@@ -55,19 +60,20 @@
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             padding: 30px;
-            background: #f8f9fa;
+            background: #0d1117;
         }
 
         .stat-card {
-            background: white;
+            background: #161b22;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
+            border: 1px solid #30363d;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border-left: 4px solid #1f6feb;
         }
 
         .stat-card h3 {
-            color: #667eea;
+            color: #58a6ff;
             font-size: 0.9em;
             text-transform: uppercase;
             margin-bottom: 10px;
@@ -77,17 +83,18 @@
         .stat-card .number {
             font-size: 2em;
             font-weight: bold;
-            color: #333;
+            color: #c9d1d9;
         }
 
         .stat-card .label {
-            color: #666;
+            color: #8b949e;
             font-size: 0.9em;
             margin-top: 5px;
         }
 
         .content {
             padding: 30px;
+            background: #0d1117;
         }
 
         .filters {
@@ -105,45 +112,126 @@
 
         .filter-group label {
             font-weight: 600;
-            color: #555;
+            color: #8b949e;
             font-size: 0.9em;
         }
 
         .filter-group select {
             padding: 8px 12px;
-            border: 2px solid #ddd;
+            border: 1px solid #30363d;
             border-radius: 6px;
             font-size: 1em;
             cursor: pointer;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, background-color 0.3s;
+            background: #161b22;
+            color: #c9d1d9;
         }
 
         .filter-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #58a6ff;
+            background: #0d1117;
         }
 
+        .filter-group select:hover {
+            background: #0d1117;
+        }
+
+        /* DataTables Overrides for Dark Theme */
         table.dataTable {
             border-collapse: collapse;
             width: 100%;
             font-size: 0.9em;
+            background: #161b22;
+            color: #c9d1d9;
         }
 
         table.dataTable thead th {
-            background: #667eea;
-            color: white;
+            background: #21262d;
+            color: #c9d1d9;
             font-weight: 600;
             padding: 12px 8px;
             text-align: left;
+            border-bottom: 1px solid #30363d;
         }
 
         table.dataTable tbody td {
             padding: 10px 8px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #21262d;
+            background: #0d1117;
+            color: #c9d1d9;
+        }
+
+        table.dataTable tbody tr {
+            background: #0d1117;
         }
 
         table.dataTable tbody tr:hover {
-            background: #f5f5ff;
+            background: #161b22 !important;
+        }
+
+        table.dataTable.stripe tbody tr.odd,
+        table.dataTable.display tbody tr.odd {
+            background: #0d1117;
+        }
+
+        table.dataTable.stripe tbody tr.even,
+        table.dataTable.display tbody tr.even {
+            background: #161b22;
+        }
+
+        /* DataTables Search Box */
+        .dataTables_wrapper .dataTables_filter input {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        /* DataTables Info and Pagination */
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            color: #8b949e;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9 !important;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 0 2px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #21262d !important;
+            border-color: #58a6ff !important;
+            color: #58a6ff !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #1f6feb !important;
+            border-color: #1f6feb !important;
+            color: #ffffff !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            color: #484f58 !important;
         }
 
         .badge {
@@ -155,47 +243,57 @@
         }
 
         .badge-holding {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #1f6feb33;
+            color: #58a6ff;
+            border: 1px solid #1f6feb;
         }
 
         .badge-input {
-            background: #e8f5e9;
-            color: #388e3c;
+            background: #2ea04333;
+            color: #3fb950;
+            border: 1px solid #2ea043;
         }
 
         .badge-bool {
-            background: #fff3e0;
-            color: #f57c00;
+            background: #d2930033;
+            color: #f0883e;
+            border: 1px solid #d29300;
         }
 
         .badge-real {
-            background: #f3e5f5;
-            color: #7b1fa2;
+            background: #a371f733;
+            color: #bc8cff;
+            border: 1px solid #a371f7;
         }
 
         .badge-int {
-            background: #e0f2f1;
-            color: #00796b;
+            background: #388bfd33;
+            color: #58a6ff;
+            border: 1px solid #388bfd;
         }
 
         .badge-reserved {
-            background: #ffebee;
-            color: #c62828;
+            background: #da364633;
+            color: #f85149;
+            border: 1px solid #da3646;
         }
 
         footer {
             text-align: center;
             padding: 20px;
-            background: #f8f9fa;
-            color: #666;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            color: #8b949e;
             font-size: 0.9em;
         }
 
         .var-name {
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
-            color: #d73a49;
+            color: #79c0ff;
+            background: #161b22;
+            padding: 2px 6px;
+            border-radius: 3px;
         }
 
         .dt-buttons {
@@ -203,9 +301,9 @@
         }
 
         .dt-button {
-            background: #667eea !important;
+            background: #238636 !important;
             color: white !important;
-            border: none !important;
+            border: 1px solid #2ea043 !important;
             padding: 8px 16px !important;
             border-radius: 6px !important;
             margin-right: 10px !important;
@@ -214,7 +312,7 @@
         }
 
         .dt-button:hover {
-            background: #5568d3 !important;
+            background: #2ea043 !important;
         }
     </style>
 </head>
