@@ -26,6 +26,7 @@ STRUCT
 	Device : FB_UniversalMechanism; // Универсальный механизм для ЧРП
 	Frequency : FB_FrequencyControl; // Управление частотой
 	fbRangeDiagnostic : FB_RangeDiagnostic; // Диагностика диапазона
+	fbSimFreq : FB_FrequencySimulation; // Симуляция частоты
 	fbAnalogInput : FB_AnalogInput; // Аналоговой вход частотного преобразователя
 	fbAnalogOutput : FB_AnalogOutput; // Аналоговый выход частотного преобразователя
 	

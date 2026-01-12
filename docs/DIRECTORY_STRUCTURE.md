@@ -4,6 +4,7 @@
 newProject/
 ├── POUs/                           # Program Organization Units
 │   ├── MAIN.st                     # Главная программа
+│   ├── GLOBAL.st                   # Глобальные переменные
 │   ├── FB_BunkerControl.st         # Управление бункером
 │   ├── FB_ConveyorControl.st       # Управление конвейером
 │   ├── FB_ConveyorWeight.st        # Обработка данных весов конвейера (Modbus)
@@ -79,14 +80,11 @@ newProject/
 │   │   ├── FC_ModbusReadInt.st
 │   │   ├── FC_ModbusReadReal.st
 │   │   ├── FC_ModbusReadTime.st
-│   │   ├── FC_ModbusReadUdint.st
 │   │   ├── FC_ModbusWriteBool.st
-│   │   ├── FC_ModbusWriteDint.st
 │   │   ├── FC_ModbusWriteInt.st
 │   │   ├── FC_ModbusWriteReal.st
 │   │   ├── FC_ModbusWriteTime.st
-│   │   ├── FC_ModbusWriteUInt.st
-│   │   └── FC_ModbusWriteUdint.st
+│   │   └── FC_ModbusWriteUInt.st
 │   │
 │   ├── Sensors/                    # Функции датчиков
 │   │   ├── FC_Sensor_CheckGS.st    # Контроль заштыбовки
@@ -130,14 +128,15 @@ newProject/
 
 ## Статистика файлов
 
-**Всего файлов:** 90 файлов `.st`
+**Всего файлов:** 88 файлов `.st`
 
 **Распределение по категориям:**
-- **POUs:** 11 файлов (программы и контроллеры оборудования)
+- **POUs:** 12 файлов (программы и контроллеры оборудования)
   - MAIN.st (главная программа)
+  - GLOBAL.st (глобальные переменные)
   - FB_BunkerControl.st (управление бункером)
   - FB_ConveyorControl.st (управление конвейером)
-  - FB_ConveyorWeight.st (обработка данных весов) **[НОВЫЙ]**
+  - FB_ConveyorWeight.st (обработка данных весов)
   - FB_DumperControl.st (управление думпкаром)
   - FB_EmergencyStopProcess.st (процесс аварийной остановки)
   - FB_FrequencySimulation.st (симуляция частотника)
@@ -151,11 +150,11 @@ newProject/
   - Structures: 14 файлов
   - Unions: 3 файла
 
-- **Functions:** 43 файла (чистые функции без состояния)
+- **Functions:** 40 файлов (чистые функции без состояния)
   - Bunker: 10 файлов
   - Conveyor: 4 файла
   - Dumper: 3 файла
-  - Modbus: 13 файлов
+  - Modbus: 10 файлов
   - Sensors: 7 файлов
   - System: 1 файл
   - Utilities: 5 файлов

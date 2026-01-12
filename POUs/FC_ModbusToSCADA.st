@@ -91,9 +91,9 @@ SCADA_HEARTBEAT_TIMEOUT := REAL_TO_TIME(rTempTime * 1000); // Таймаут п�
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 152, rValue => MOTOR_ROTATION_CURRENT_POINTS.H_Value);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 154, rValue => MOTOR_ROTATION_CURRENT_POINTS.HH_Value);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 156, rValue => rTempTime);
-//VIBRATOR_SETTINGS.TIME_ACTIVE := REAL_TO_TIME(rTempTime * 1000);
+VIBRATOR_SETTINGS.TIME_ACTIVE := REAL_TO_TIME(rTempTime * 1000);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 158, rValue => rTempTime);
-//VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR := REAL_TO_TIME(rTempTime * 1000);
+VIBRATOR_SETTINGS.TIME_PAUSE_VIBRATOR := REAL_TO_TIME(rTempTime * 1000);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 160, rValue => rTempTime);
 VIBRATOR_SETTINGS.TIME_PAUSE_FB := REAL_TO_TIME(rTempTime * 1000);
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 162, rValue => rTempTime);
@@ -162,6 +162,12 @@ FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex :=
 
 // Настройка - Конвейер (240-269)
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 242, iBitIndex := 0, xValue => CONVEYOR_PRESTART_ALARM_SETTINGS.OPTION_ENABLE);
+
+// Производительность конвейеров
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 244, rValue => stBunker[1].rWeightUnderBunker);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 246, rValue => stBunker[2].rWeightUnderBunker);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 248, rValue => stBunker[3].rWeightUnderBunker);
+
 
 // Команды - Бункер 1 (270-299)
 // Регистры 270-271: BOOL флаги управления бункером 1

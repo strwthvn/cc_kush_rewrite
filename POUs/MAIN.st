@@ -194,6 +194,8 @@ fbBunker[1](
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[1].cmdReset,
 	irManualFrequency := BUNKER_1_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_1_FREQ_VIBRATOR,
+	cmdCommonSetToAuto := stCommands.cmdSetToAuto,
+	cmdCommonSetToManual := stCommands.cmdSetToManual,
 	eStage => eBunkerStage[1],
 	eStageToSCADA => eBunkerStageToSCADA[1]
 );
@@ -208,6 +210,8 @@ fbBunker[2](
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[2].cmdReset,
 	irManualFrequency := BUNKER_2_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_2_FREQ_VIBRATOR,
+	cmdCommonSetToAuto := stCommands.cmdSetToAuto,
+	cmdCommonSetToManual := stCommands.cmdSetToManual,
 	eStage => eBunkerStage[2],
 	eStageToSCADA => eBunkerStageToSCADA[2]
 );
@@ -222,6 +226,8 @@ fbBunker[3](
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[3].cmdReset,
 	irManualFrequency := BUNKER_3_FREQ_VIBFEEDER,
 	irManualFrequencyVibrator := BUNKER_3_FREQ_VIBRATOR,
+	cmdCommonSetToAuto := stCommands.cmdSetToAuto,
+	cmdCommonSetToManual := stCommands.cmdSetToManual,
 	eStage => eBunkerStage[3],
 	eStageToSCADA => eBunkerStageToSCADA[3]
 );
@@ -496,6 +502,16 @@ IF xAutoEmergencyStopBunker[2] AND (eBunkerStage[2]= E_StageWithPreStartAlarm.ID
 IF xAutoEmergencyStopBunker[3] AND (eBunkerStage[3]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[3]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[3] := FALSE; END_IF;
 IF xAutoEmergencyStopConveyor AND (eConveyorStage = E_StageWithPreStartAlarm.IDLE OR eConveyorStage = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopConveyor := FALSE; END_IF;
 IF xAutoEmergencyStopDumper AND (eDumperStage = E_StageWithPreStartAlarm.IDLE OR eDumperStage = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopDumper := FALSE; END_IF;
+
+IF stCommands.cmdResetAll.qxSignal
+	AND (eBunkerStage[1]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1]= E_StageWithPreStartAlarm.ERROR)
+	AND (eBunkerStage[2]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1]= E_StageWithPreStartAlarm.ERROR)
+	AND (eBunkerStage[3]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1]= E_StageWithPreStartAlarm.ERROR)
+	AND (eConveyorStage = E_StageWithPreStartAlarm.IDLE OR eConveyorStage = E_StageWithPreStartAlarm.ERROR )
+	AND (eDumperStage = E_StageWithPreStartAlarm.IDLE OR eDumperStage = E_StageWithPreStartAlarm.ERROR)
+THEN
+	AUTO_STEP := IDLE;
+END_IF;
 
 // Обычная остановка
 IF stCommands.cmdStopCommon.qxSignal AND NOT xAutoEmergencyStopping AND AUTO_STEP <> IDLE THEN
@@ -1039,11 +1055,8 @@ ELSIF AUTO_STEP = IDLE AND (stDumper.xStateWarning OR stConveyor.xStateWarning O
 	// Предупреждение без активной работы
 	eSystemStageToSCADA := E_ScadaStatesDevice.WARNING;
 
-ELSIF AUTO_STEP = IDLE AND 
-	(stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure 
-	OR eDumperStageToSCADA = E_ScadaStatesDevice.ERROR OR eConveyorStageToSCADA = E_ScadaStatesDevice.ERROR OR eBunkerStage[1] = E_ScadaStatesDevice.ERROR OR eBunkerStage[2] = E_ScadaStatesDevice.ERROR OR eBunkerStage[3] = E_ScadaStatesDevice.ERROR) 
-	THEN
-	// Система неготова к запуску (есть ошибки или секции в состоянии ERROR)
+ELSIF AUTO_STEP = IDLE AND (stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure) THEN
+	// Система неготова к запуску (есть ошибки)
 	eSystemStageToSCADA := E_ScadaStatesDevice.NOT_READY;
 
 ELSE
