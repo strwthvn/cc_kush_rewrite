@@ -1,6 +1,7 @@
 FUNCTION_BLOCK FB_DumperMotorErrors
 VAR_INPUT
 	Dumper : REFERENCE TO ST_Dumper;
+	xReset : BOOL; // Команда сброса зафиксированных ошибок
 END_VAR
 VAR_OUTPUT
 	// Ошибки моторов конвейера
@@ -16,6 +17,19 @@ VAR_OUTPUT
 	// Агрегированный выход
 	xErrorMotors : BOOL; // Любая ошибка моторов
 END_VAR
+VAR
+	// Внутренние переменные для текущих состояний ошибок (без фиксации)
+	_xCurrentErrorMotorConv1 : BOOL;
+	_xCurrentErrorMotorConv2 : BOOL;
+	_xCurrentErrorMotorRot1 : BOOL;
+	_xCurrentErrorMotorRot2 : BOOL;
+
+	// RS-триггеры для фиксации ошибок
+	_fbLatchErrorMotorConv1 : RS;
+	_fbLatchErrorMotorConv2 : RS;
+	_fbLatchErrorMotorRot1 : RS;
+	_fbLatchErrorMotorRot2 : RS;
+END_VAR
 
 // ========================================
 // FB_DumperMotorErrors - Проверка ошибок моторов отвалообразователя
@@ -23,6 +37,7 @@ END_VAR
 //
 // НАЗНАЧЕНИЕ:
 // - Проверка всех моторов отвалообразователя на ошибки
+// - Фиксация ошибок через RS-триггеры (память до сброса)
 // - Формирование индивидуальных флагов ошибок
 // - Агрегирование ошибок
 //
@@ -33,6 +48,11 @@ END_VAR
 // ПРОВЕРЯЕМЫЕ ОШИБКИ:
 // - Ошибка VFD (fbStateFailure: 0 = ошибка, 1 = норма, NC контакт)
 //
+// ЛОГИКА ФИКСАЦИИ:
+// - При возникновении ошибки она фиксируется (SET в RS-триггер)
+// - Ошибка сохраняется даже после устранения неисправности
+// - Сброс всех зафиксированных ошибок через вход xReset
+//
 // ========================================
 
 // ========================================
@@ -41,10 +61,18 @@ END_VAR
 
 // Мотор конвейера 1
 // fbStateFailure - NC контакт: 0 = ошибка VFD, 1 = норма
-xErrorMotorConv1 := NOT Dumper.MotorConveyor[1].VFD.fbStateFailure.qxSignal;
+_xCurrentErrorMotorConv1 := NOT Dumper.MotorConveyor[1].VFD.fbStateFailure.qxSignal;
 
 // Мотор конвейера 2
-xErrorMotorConv2 := NOT Dumper.MotorConveyor[2].VFD.fbStateFailure.qxSignal;
+_xCurrentErrorMotorConv2 := NOT Dumper.MotorConveyor[2].VFD.fbStateFailure.qxSignal;
+
+// Фиксируем ошибки через RS-триггеры (SET при ошибке, RESET по команде xReset)
+_fbLatchErrorMotorConv1(SET := _xCurrentErrorMotorConv1, RESET1 := xReset);
+_fbLatchErrorMotorConv2(SET := _xCurrentErrorMotorConv2, RESET1 := xReset);
+
+// Выходы - зафиксированные ошибки
+xErrorMotorConv1 := _fbLatchErrorMotorConv1.Q1;
+xErrorMotorConv2 := _fbLatchErrorMotorConv2.Q1;
 
 xErrorMotorConv_Any := xErrorMotorConv1 OR xErrorMotorConv2;
 
@@ -53,10 +81,18 @@ xErrorMotorConv_Any := xErrorMotorConv1 OR xErrorMotorConv2;
 // ========================================
 
 // Мотор поворота 1
-xErrorMotorRot1 := NOT Dumper.MotorRotation[1].VFD.fbStateFailure.qxSignal;
+_xCurrentErrorMotorRot1 := NOT Dumper.MotorRotation[1].VFD.fbStateFailure.qxSignal;
 
 // Мотор поворота 2
-xErrorMotorRot2 := NOT Dumper.MotorRotation[2].VFD.fbStateFailure.qxSignal;
+_xCurrentErrorMotorRot2 := NOT Dumper.MotorRotation[2].VFD.fbStateFailure.qxSignal;
+
+// Фиксируем ошибки через RS-триггеры (SET при ошибке, RESET по команде xReset)
+_fbLatchErrorMotorRot1(SET := _xCurrentErrorMotorRot1, RESET1 := xReset);
+_fbLatchErrorMotorRot2(SET := _xCurrentErrorMotorRot2, RESET1 := xReset);
+
+// Выходы - зафиксированные ошибки
+xErrorMotorRot1 := _fbLatchErrorMotorRot1.Q1;
+xErrorMotorRot2 := _fbLatchErrorMotorRot2.Q1;
 
 xErrorMotorRot_Any := xErrorMotorRot1 OR xErrorMotorRot2;
 

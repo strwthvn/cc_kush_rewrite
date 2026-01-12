@@ -95,7 +95,10 @@ fbSensors(
 // ПРОВЕРКА ОШИБОК МОТОРОВ
 // ========================================
 
-fbMotorErrors(Conveyor := Conveyor);
+fbMotorErrors(
+	Conveyor := Conveyor,
+	xReset := xReset
+);
 
 // ========================================
 // ПРЕДПУСКОВАЯ СИГНАЛИЗАЦИЯ
