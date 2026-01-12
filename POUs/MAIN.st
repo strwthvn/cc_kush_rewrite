@@ -3,6 +3,7 @@ VAR
 	fbSimulation : FB_Simulation;
 	fbEmergencyStopProcess : FB_EmergencyStopProcess;
 	fbScadaCommunication : FB_ScadaCommunication;
+	fbModbusToSCADA : FB_ModbusToSCADA;
 
 	fbBunker : ARRAY [1..3] OF FB_BunkerControl;
 	stBunker : ARRAY [1..3] OF ST_Bunker;
@@ -1162,16 +1163,17 @@ END_IF;
 // MODBUS РЕГИСТРЫ
 // ========================================
 
-FC_ModbusToSCADA(
-	stBunker:= stBunker,
-	stDumper:= stDumper,
-	stConveyor:= stConveyor,
-	stCommonSignals:= stCommonSignals,
-	stCommands:= stCommands,
-	eBunkerStageToSCADA:= eBunkerStageToSCADA,
-	eConveyorStageToSCADA:= eConveyorStageToSCADA,
-	eDumperStageToSCADA:= eDumperStageToSCADA,
-	eSystemStageToSCADA:= eSystemStageToSCADA,
-	fbScadaCommunication:= fbScadaCommunication);
+fbModbusToSCADA(
+	stBunker := stBunker,
+	stDumper := stDumper,
+	stConveyor := stConveyor,
+	stCommonSignals := stCommonSignals,
+	stCommands := stCommands,
+	eBunkerStageToSCADA := eBunkerStageToSCADA,
+	eConveyorStageToSCADA := eConveyorStageToSCADA,
+	eDumperStageToSCADA := eDumperStageToSCADA,
+	eSystemStageToSCADA := eSystemStageToSCADA,
+	fbScadaCommunication := fbScadaCommunication
+);
 
 END_PROGRAM

@@ -13,7 +13,7 @@ newProject/
 │   ├── FB_PneumoCollapseControl.st # Управление пневмообрушением
 │   ├── FB_Simulation.st            # Симуляция оборудования
 │   ├── FB_VibratorControl.st       # Управление вибраторами
-│   └── FC_ModbusToSCADA.st         # Функция передачи данных в SCADA
+│   └── FB_ModbusToSCADA.st         # Функциональный блок передачи данных в SCADA
 │
 ├── DataTypes/                      # Типы данных
 │   │
@@ -144,7 +144,7 @@ newProject/
   - FB_PneumoCollapseControl.st (управление пневмообрушением)
   - FB_Simulation.st (симуляция оборудования)
   - FB_VibratorControl.st (управление вибраторами)
-  - FC_ModbusToSCADA.st (функция передачи данных в SCADA)
+  - FB_ModbusToSCADA.st (функциональный блок передачи данных в SCADA)
 
 - **DataTypes:** 25 файлов
   - Enumerations: 8 файлов

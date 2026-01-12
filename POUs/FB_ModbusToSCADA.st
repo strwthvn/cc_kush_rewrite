@@ -1,4 +1,4 @@
-FUNCTION FC_ModbusToSCADA : BOOL
+FUNCTION_BLOCK FB_ModbusToSCADA
 VAR_INPUT
     stBunker : REFERENCE TO ARRAY [1..3] OF ST_Bunker;
     stDumper : REFERENCE TO ST_DUMPER;
@@ -10,7 +10,6 @@ VAR_INPUT
 	eDumperStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Состояние для SCADA отвалообразователя
 	eSystemStageToSCADA : REFERENCE TO E_ScadaStatesDevice; // Общее состояние системы для SCADA
 	fbScadaCommunication : REFERENCE TO FB_ScadaCommunication; // Функциональный блок контроля связи со SCADA
-
 END_VAR
 VAR
 	rTempTime : REAL;
@@ -817,4 +816,4 @@ FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 7, xValue := stBunker[3].qxLightYellow);
 FC_ModbusWriteBool(pRegisters := ADR(awModbusInputRegisters), iRegisterIndex := 356, iBitIndex := 8, xValue := stBunker[3].qxLightGreen);
 
-END_FUNCTION
+END_FUNCTION_BLOCK
