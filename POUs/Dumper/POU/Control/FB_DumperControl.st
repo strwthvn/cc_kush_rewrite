@@ -40,10 +40,6 @@ VAR
 	xCircuitBuilt : BOOL := FALSE;
 	xCircuitBuiltRotation : BOOL := FALSE;
 
-	// Таймеры контроля выполнения команд
-	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
-	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
-
 	simInit : BOOL;
 END_VAR
 
@@ -219,14 +215,28 @@ THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
-// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
-// Тайм-аут запуска: не удалось запустить секцию за установленное время
-IF fbTimerStarting.Q THEN
+// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД (флаги из аппаратных блоков)
+// Тайм-аут запуска моторов конвейера
+IF fbConveyorMotors.xStartingTimeout THEN
+	Dumper.xStateFailure := TRUE;
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
-// Тайм-аут остановки: не удалось остановить секцию за установленное время
-IF fbTimerStopping.Q THEN
+// Тайм-аут остановки моторов конвейера
+IF fbConveyorMotors.xStoppingTimeout THEN
+	Dumper.xStateFailure := TRUE;
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут запуска моторов поворота
+IF fbRotationMotors.xStartingTimeout THEN
+	Dumper.xStateFailure := TRUE;
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут остановки моторов поворота
+IF fbRotationMotors.xStoppingTimeout THEN
+	Dumper.xStateFailure := TRUE;
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
@@ -235,10 +245,6 @@ CASE STAGE OF
 		// Сброс команд управления конвейером
 		xStartConveyor := FALSE;
 		xStopConveyor := FALSE;
-
-		// Сброс таймеров
-		fbTimerStarting(IN := FALSE);
-		fbTimerStopping(IN := FALSE);
 
 		// Команда запуска верхнего уровня
 		IF xStartCommand THEN
@@ -265,40 +271,27 @@ CASE STAGE OF
 			STAGE := E_StageWithPreStartAlarm.WORK; // Переход в WORK для обработки остановки
 		END_IF;
 
-		// Таймер ожидания полного запуска секции
-		fbTimerStarting(
-			IN := TRUE,
-			PT := TIME_AFTER_START_DUMPER
-		);
-
 		// Проверка состояния аппаратного блока конвейера
+		// Тайм-аут запуска контролируется в fbConveyorMotors
 		IF fbConveyorMotors.eStage = E_StageActuator.WORK THEN
 			// Конвейер запущен, переходим в WORK
 			STAGE := E_StageWithPreStartAlarm.WORK;
-			fbTimerStarting(IN := FALSE); // Сброс таймера
 		END_IF;
 
 	E_StageWithPreStartAlarm.WORK:
 		// Нормальная работа
-		fbTimerStopping(IN := FALSE);
 
 		// Команда остановки
 		IF xStopCommand THEN
 			// Начать штатную остановку
 			xStartConveyor := FALSE;
 			xStopConveyor := TRUE;
-
-			// Запуск таймера остановки
-			fbTimerStopping(
-				IN := TRUE,
-				PT := TIME_TIMEOUT_STOP_DUMPER
-			);
 		END_IF;
 
 		// Проверка завершения остановки
+		// Тайм-аут остановки контролируется в fbConveyorMotors
 		IF xStopConveyor AND fbConveyorMotors.eStage = E_StageActuator.IDLE THEN
 			// Конвейер остановлен, переходим в IDLE
-			fbTimerStopping(IN := FALSE);
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF;
 
@@ -320,10 +313,6 @@ CASE STAGE OF
 			xCircuitBuilt := FALSE;
 			xCircuitBuiltRotation := FALSE;
 		END_IF;
-
-		// Сброс таймеров
-		fbTimerStarting(IN := FALSE);
-		fbTimerStopping(IN := FALSE);
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
 

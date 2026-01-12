@@ -16,7 +16,7 @@ VAR_GLOBAL
 	EFFICIENCY_LIMIT_RATE : REAL := 1; // Коэффицент ограничения производительности (0-1)
 	
 	// Переменные симуляции
-	SIMULATION : BOOL := FALSE;
+	SIMULATION : BOOL := TRUE;
 	SIMULATION_BUNKER_WEIGHT : BOOL := FALSE; // Включение симуляции расхода и пополнения веса бункеров
 	
 	// == MODBUS РЕГИСТРЫ ДЛЯ SCADA ==
@@ -93,9 +93,12 @@ VAR_GLOBAL RETAIN
 	TIME_AFTER_START_BUNKER_3 : TIME := T#120S; // Время ожидания после запуска бункера 3
 
 	// Таймеры контроля выполнения команд (тайм-ауты)
-	TIME_TIMEOUT_STOP_DUMPER : TIME := T#30S; // Тайм-аут остановки отвалообразователя (WORK → IDLE)
-	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки конвейера (WORK → IDLE)
-	TIME_TIMEOUT_ROTATION_DUMPER : TIME := T#20S; // Тайм-аут выполнения команд поворота дампера
+	TIME_TIMEOUT_START_DUMPER_CONVEYOR : TIME := T#30S; // Тайм-аут запуска моторов конвейера отвалообразователя (STARTING → WORK)
+	TIME_TIMEOUT_START_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут запуска моторов поворота отвалообразователя (STARTING → WORK)
+	TIME_TIMEOUT_START_CONVEYOR : TIME := T#30S; // Тайм-аут запуска моторов сборного конвейера (STARTING → WORK)
+	TIME_TIMEOUT_STOP_DUMPER_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов конвейера отвалообразователя (STOPPING → IDLE)
+	TIME_TIMEOUT_STOP_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут остановки моторов поворота отвалообразователя (STOPPING → IDLE)
+	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов сборного конвейера (STOPPING → IDLE)
 	TIME_TIMEOUT_STOP_BUNKER : TIME := T#20S; // Тайм-аут остановки вибропитателей бункера (WORK → IDLE)
 	
 	// Таймер ожидания пропавшего сигнала обратной связи работы механизма

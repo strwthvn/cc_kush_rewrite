@@ -10,6 +10,8 @@ END_VAR
 VAR_OUTPUT
 	eStage : E_StageActuator;   // Текущая стадия
 	rCurrentFrequency : REAL;   // Текущая частота моторов (среднее значение)
+	xStartingTimeout : BOOL;    // Флаг тайм-аута запуска (STARTING слишком долго)
+	xStoppingTimeout : BOOL;    // Флаг тайм-аута остановки (STOPPING слишком долго)
 END_VAR
 VAR
 	STAGE : E_StageActuator := E_StageActuator.IDLE;
@@ -30,6 +32,12 @@ VAR
 
 	// Таймер задержки включения тормоза
 	tonTimerEnableBrake : TON;
+
+	// Таймер контроля времени запуска (STARTING → WORK)
+	tonTimerStarting : TON;
+
+	// Таймер контроля времени остановки (STOPPING → IDLE)
+	tonTimerStopping : TON;
 
 	// Флаг запуска таймера (защита от зацикливания)
 	xBrakeTimerStarted : BOOL := FALSE;
@@ -76,7 +84,47 @@ IF xEmergencyStop THEN
 	nStartingSubstage := 0;
 	nStoppingSubstage := 0;
 	tonTimerEnableBrake(IN := FALSE);
+	tonTimerStarting(IN := FALSE);
+	tonTimerStopping(IN := FALSE);
 	xBrakeTimerStarted := FALSE;
+END_IF
+
+// Тайм-аут запуска: если слишком долго в STARTING → аварийная остановка
+tonTimerStarting(
+	IN := (STAGE = E_StageActuator.STARTING),
+	PT := TIME_TIMEOUT_START_CONVEYOR
+);
+
+IF tonTimerStarting.Q THEN
+	xStartingTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+	Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+	// Активация тормоза
+	Conveyor.qxBreakerConveyor := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	nStartingSubstage := 0;
+	tonTimerStarting(IN := FALSE);
+END_IF
+
+// Тайм-аут остановки: если слишком долго в STOPPING → аварийная остановка
+tonTimerStopping(
+	IN := (STAGE = E_StageActuator.STOPPING),
+	PT := TIME_TIMEOUT_STOP_CONVEYOR
+);
+
+IF tonTimerStopping.Q THEN
+	xStoppingTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+	Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+	// Активация тормоза
+	Conveyor.qxBreakerConveyor := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	nStoppingSubstage := 0;
+	tonTimerStopping(IN := FALSE);
 END_IF
 
 // ========================================
@@ -192,6 +240,8 @@ CASE STAGE OF
 		// Выход из FAULT по команде xReset
 		IF xReset THEN
 			STAGE := E_StageActuator.IDLE;
+			xStartingTimeout := FALSE; // Сброс флага тайм-аута запуска
+			xStoppingTimeout := FALSE; // Сброс флага тайм-аута остановки
 		END_IF
 END_CASE;
 

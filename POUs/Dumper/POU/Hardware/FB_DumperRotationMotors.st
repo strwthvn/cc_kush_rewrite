@@ -13,6 +13,8 @@ VAR_OUTPUT
 	rCurrentFrequency : REAL;   // Текущая частота моторов (среднее значение)
 	xRotatingLeft : BOOL;       // Активен поворот влево
 	xRotatingRight : BOOL;      // Активен поворот вправо
+	xStartingTimeout : BOOL;    // Флаг тайм-аута запуска (STARTING слишком долго)
+	xStoppingTimeout : BOOL;    // Флаг тайм-аута остановки (STOPPING слишком долго)
 END_VAR
 VAR
 	STAGE : E_StageActuator := E_StageActuator.IDLE;
@@ -37,6 +39,12 @@ VAR
 
 	// Таймер задержки включения тормоза
 	tonTimerEnableBrake : TON;
+
+	// Таймер контроля времени запуска (STARTING → WORK)
+	tonTimerStarting : TON;
+
+	// Таймер контроля времени остановки (STOPPING → IDLE)
+	tonTimerStopping : TON;
 
 	// Флаг запуска таймера (защита от зацикливания)
 	xBrakeTimerStarted : BOOL := FALSE;
@@ -93,7 +101,57 @@ IF xEmergencyStop THEN
 	nStartingSubstage := 0;
 	nStoppingSubstage := 0;
 	tonTimerEnableBrake(IN := FALSE);
+	tonTimerStarting(IN := FALSE);
+	tonTimerStopping(IN := FALSE);
 	xBrakeTimerStarted := FALSE;
+END_IF
+
+// Тайм-аут запуска: если слишком долго в STARTING → аварийная остановка
+tonTimerStarting(
+	IN := (STAGE = E_StageActuator.STARTING),
+	PT := TIME_TIMEOUT_START_DUMPER_ROTATION
+);
+
+IF tonTimerStarting.Q THEN
+	xStartingTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+	Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+	Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
+	Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+	// Активация тормоза
+	Dumper.qxBreakerRotation := FALSE;
+	// Сброс направления
+	xLeftActive := FALSE;
+	xRightActive := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	nStartingSubstage := 0;
+	tonTimerStarting(IN := FALSE);
+END_IF
+
+// Тайм-аут остановки: если слишком долго в STOPPING → аварийная остановка
+tonTimerStopping(
+	IN := (STAGE = E_StageActuator.STOPPING),
+	PT := TIME_TIMEOUT_STOP_DUMPER_ROTATION
+);
+
+IF tonTimerStopping.Q THEN
+	xStoppingTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Dumper.MotorRotation[1].VFD.qxStart := FALSE;
+	Dumper.MotorRotation[2].VFD.qxStart := FALSE;
+	Dumper.MotorRotation[1].qxVFDReverseStart := FALSE;
+	Dumper.MotorRotation[2].qxVFDReverseStart := FALSE;
+	// Активация тормоза
+	Dumper.qxBreakerRotation := FALSE;
+	// Сброс направления
+	xLeftActive := FALSE;
+	xRightActive := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	nStoppingSubstage := 0;
+	tonTimerStopping(IN := FALSE);
 END_IF
 
 // ========================================
@@ -273,6 +331,8 @@ CASE STAGE OF
 		// Выход из FAULT по команде xReset
 		IF xReset THEN
 			STAGE := E_StageActuator.IDLE;
+			xStartingTimeout := FALSE; // Сброс флага тайм-аута запуска
+			xStoppingTimeout := FALSE; // Сброс флага тайм-аута остановки
 		END_IF
 END_CASE;
 
