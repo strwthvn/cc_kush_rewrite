@@ -93,6 +93,7 @@ fbConveyorMotors(
 	xStart := xStartConveyor,
 	xStop := xStopConveyor,
 	xEmergencyStop := xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal,
+	xReset := xReset,
 	rTargetFrequency := MOTOR_FREQUENCY_DUMPER_CONVEYOR
 );
 
@@ -106,6 +107,7 @@ fbRotationMotors(
 	xTurnRight := xTurnRight,
 	xStop := xStopRotation,
 	xEmergencyStop := xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal,
+	xReset := xReset,
 	rTargetFrequency := MOTOR_FREQUENCY_DUMPER_ROTATION
 );
 
