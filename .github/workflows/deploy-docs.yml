@@ -6,6 +6,7 @@ on:
       - master
       - main
     paths:
+      - 'docs/index.html'
       - 'script/db/modbus_registers.db'
       - 'script/generate_html_docs.py'
       - '.github/workflows/deploy-docs.yml'
