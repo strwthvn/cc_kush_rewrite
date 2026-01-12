@@ -6,7 +6,6 @@ VAR_INPUT
 	xStop : BOOL; // Команда остановки (дистанционный режим)
 	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
-	xDisableAutoEmergencyStop : BOOL; // Отключение автоматических аварийных остановок по датчикам безопасности
 END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия
@@ -160,20 +159,15 @@ END_IF;
 
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
 // Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
-// 1. Внешний сигнал аварийной остановки (от SCADA или системы)
-// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата)
+// 1. Внешний сигнал аварийной остановки (от FB_EmergencyStopCollector)
+//    - включает все настраиваемые источники (датчики, зависимости, и т.д.)
+// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата) - ГАРАНТИРОВАННАЯ
+//
+// ПРИМЕЧАНИЕ: Проверка датчиков безопасности (fbSensors.xErrorSafetySensors) теперь
+// централизована в FB_EmergencyStopCollector и передаётся через вход xEmergencyStop.
+// Настройка источников аварийной остановки выполняется через опции ENABLE_GLOBAL_ESTOP_*
+// в GLOBAL.st (например, ENABLE_GLOBAL_ESTOP_ZQ, ENABLE_GLOBAL_ESTOP_HQ и т.д.).
 IF xEmergencyStop OR NOT Conveyor.fbBtnEmergencyStop.qxSignal THEN
-	STAGE := E_StageWithPreStartAlarm.ERROR;
-END_IF;
-
-// КРИТИЧЕСКИЕ ОШИБКИ ДАТЧИКОВ БЕЗОПАСНОСТИ
-// При срабатывании датчиков безопасности немедленная аварийная остановка,
-// если секция НЕ в IDLE (т.е. находится в процессе работы или запуска)
-// Блокируется через вход xDisableAutoEmergencyStop
-IF fbSensors.xErrorSafetySensors
-   AND STAGE <> E_StageWithPreStartAlarm.IDLE
-   AND NOT xDisableAutoEmergencyStop
-THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 

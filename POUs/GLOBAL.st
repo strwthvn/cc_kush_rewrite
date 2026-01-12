@@ -29,18 +29,38 @@ VAR_GLOBAL
 
 END_VAR
 VAR_GLOBAL RETAIN
-	// == КРИТИЧЕСКИЕ НАСТРОЙКИ ==
-	DISABLE_AUTO_STOPPING : BOOL := FALSE; // Отключение автоматических блокировок по цепям безопасности механизмов
-	DISABLE_AUTO_STOPPING_DEPENDENCIES : BOOL := FALSE; 			// Отключение автоматических блокировок по блокировочным зависимостям
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER1 : BOOL := FALSE; 	// Отключение автоматических блокировок бункера 1
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER2 : BOOL := FALSE; 	// Отключение автоматических блокировок бункера 2
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER3 : BOOL := FALSE; 	// Отключение автоматических блокировок бункера 3
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_CONVEYOR : BOOL := FALSE; 	// Отключение автоматических блокировок сборного конвейера
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_DUMPER : BOOL := FALSE; 		// Отключение автоматических блокировок отвалообразователя
-	
-	DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION : BOOL := TRUE; // Отключение автоматических блокировок по потере связи со SCADA
-	DISABLE_AUTO_STOPPING_CURRENT : BOOL := FALSE; // Отключение автоматических блокировок по значению тока
+	// == НАСТРОЙКИ ОСТАНОВКИ ==
 	BUNKER_INSTANT_STOP : BOOL := FALSE; // Флаг мгновенной остановки бункеров (TRUE = одновременная остановка всех 3-х бункеров, FALSE = последовательная остановка)
+
+	// == ОПЦИИ ВКЛЮЧЕНИЯ ИСТОЧНИКОВ В ГЛОБАЛЬНУЮ АВАРИЙНУЮ ОСТАНОВКУ ==
+	// TRUE = источник включен в цепь глобальной аварийной остановки комплекса
+	// FALSE = источник НЕ вызывает глобальную остановку
+
+	// Датчики безопасности
+	ENABLE_GLOBAL_ESTOP_ZQ : BOOL := TRUE;       // Датчики схода ленты (ZQ Alarm)
+	ENABLE_GLOBAL_ESTOP_HQ : BOOL := TRUE;       // Кабель-тросовые выключатели
+	ENABLE_GLOBAL_ESTOP_SQ : BOOL := FALSE;      // Концевики ограждений барабана
+	ENABLE_GLOBAL_ESTOP_GS : BOOL := FALSE;      // Заштыбовка
+	ENABLE_GLOBAL_ESTOP_YS : BOOL := TRUE;       // Продольный разрыв ленты
+	ENABLE_GLOBAL_ESTOP_YE : BOOL := TRUE;       // Металлодетектор
+	ENABLE_GLOBAL_ESTOP_QR : BOOL := FALSE;      // Датчики скорости
+
+	// Системные сигналы
+	ENABLE_GLOBAL_ESTOP_SCADA_LOSS : BOOL := FALSE;          // Потеря связи со SCADA
+	ENABLE_GLOBAL_ESTOP_PROPORTION : BOOL := FALSE;          // Ошибка суммы пропорций
+	ENABLE_GLOBAL_ESTOP_MOTOR_CURRENT_HH : BOOL := FALSE;    // Аварийный уровень тока (HH)
+
+	// Блокировочные зависимости (глобально)
+	ENABLE_GLOBAL_ESTOP_DEPENDENCIES : BOOL := TRUE;         // Блокировочные зависимости между секциями
+
+	// Блокировочные зависимости (индивидуально по секциям)
+	// TRUE = секция останавливается при нарушении зависимостей
+	// FALSE = секция НЕ останавливается при нарушении зависимостей
+	ENABLE_ESTOP_DEPENDENCIES_DUMPER : BOOL := TRUE;         // Зависимости для отвалообразователя
+	ENABLE_ESTOP_DEPENDENCIES_CONVEYOR : BOOL := TRUE;       // Зависимости для сборного конвейера
+	ENABLE_ESTOP_DEPENDENCIES_BUNKER1 : BOOL := TRUE;        // Зависимости для бункера 1
+	ENABLE_ESTOP_DEPENDENCIES_BUNKER2 : BOOL := TRUE;        // Зависимости для бункера 2
+	ENABLE_ESTOP_DEPENDENCIES_BUNKER3 : BOOL := TRUE;        // Зависимости для бункера 3
 
 	// == УСТАВКИ ==
 	VFD_FREQUENCY_MAX : REAL := 50;

@@ -1,7 +1,7 @@
 PROGRAM MAIN
 VAR
 	fbSimulation : FB_Simulation;
-	fbEmergencyStopProcess : FB_EmergencyStopProcess;
+	fbEmergencyStopCollector : FB_EmergencyStopCollector; // Централизованный сбор сигналов аварийной остановки
 	fbScadaCommunication : FB_ScadaCommunication;
 	fbModbusToSCADA : FB_ModbusToSCADA;
 
@@ -189,8 +189,8 @@ fbBunker[1](
 	Bunker := stBunker[1],
 	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[1],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[1] OR xAutoEmergencyStopBunker[1],
-	xEmergencyStopVibFeeder := stBunker[1].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[1],
+	xStop := xAutoEmergencyStopping OR xManualStopBunker[1] OR xAutoEmergencyStopBunker[1],
+	xEmergencyStop := xAutoEmergencyStopBunker[1],
 	xEmergencyStopVibrator := stBunker[1].cmdEmergencyStopVibrator OR xAutoEmergencyStopBunker[1],
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[1].cmdReset,
 	irManualFrequency := BUNKER_1_FREQ_VIBFEEDER,
@@ -203,8 +203,8 @@ fbBunker[2](
 	Bunker := stBunker[2],
 	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[2],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[2] OR xAutoEmergencyStopBunker[2],
-	xEmergencyStopVibFeeder := stBunker[2].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[2] OR xAutoEmergencyStopBunker[2],
+	xStop := xAutoEmergencyStopping OR xManualStopBunker[2] OR xAutoEmergencyStopBunker[2],
+	xEmergencyStop := xAutoEmergencyStopBunker[2],
 	xEmergencyStopVibrator := stBunker[2].cmdEmergencyStopVibrator OR xAutoEmergencyStopBunker[2],
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[2].cmdReset,
 	irManualFrequency := BUNKER_2_FREQ_VIBFEEDER,
@@ -217,8 +217,8 @@ fbBunker[3](
 	Bunker := stBunker[3],
 	xLocalMode := NOT stCommonSignals.fbRemoteModeBtn.qxSignal, // 1 - Дистанция, 0 - местный
 	xStart := xStartBunker[3],
-	xStop := fbEmergencyStopProcess.qxStateStopProcess OR xManualStopBunker[3] OR xAutoEmergencyStopBunker[3],
-	xEmergencyStopVibFeeder := stBunker[3].cmdEmergencyStopVibFeeder OR xAutoEmergencyStopBunker[3],
+	xStop := xAutoEmergencyStopping OR xManualStopBunker[3] OR xAutoEmergencyStopBunker[3],
+	xEmergencyStop := xAutoEmergencyStopBunker[3],
 	xEmergencyStopVibrator := stBunker[3].cmdEmergencyStopVibrator OR xAutoEmergencyStopBunker[3],
 	xReset := stCommands.cmdResetAll.qxSignal OR stBunker[3].cmdReset,
 	irManualFrequency := BUNKER_3_FREQ_VIBFEEDER,
@@ -235,7 +235,6 @@ fbDumper(
 	xStop := xManualStopDumper,
 	xEmergencyStop := stDumper.cmdEmergencyStop OR xAutoEmergencyStopDumper,
 	xReset := stCommands.cmdResetAll.qxSignal OR stDumper.cmdReset,
-	xDisableAutoEmergencyStop := DISABLE_AUTO_STOPPING AND (stDumper.eStateRemote = E_StateRemote.Manual),
 	eStage => eDumperStage,
 	eStageToSCADA => eDumperStageToSCADA
 );
@@ -248,7 +247,6 @@ fbConveyor(
 	xStop := xManualStopConveyor,
 	xEmergencyStop := stConveyor.cmdEmergencyStop OR xAutoEmergencyStopConveyor,
 	xReset := stCommands.cmdResetAll.qxSignal OR stConveyor.cmdReset,
-	xDisableAutoEmergencyStop := DISABLE_AUTO_STOPPING AND (stConveyor.eStateRemote = E_StateRemote.Manual),
 	eStage => eConveyorStage,
 	eStageToSCADA => eConveyorStageToSCADA
 );
@@ -256,6 +254,64 @@ fbConveyor(
 // Обновление состояния Emergency Stop
 xStateEmergencyStop := stCommonSignals.fbEmergencyStopBtn.qxSignal
 	OR stCommands.cmdEmergencyStopCommon.qxRisingEdge;
+
+// ========================================
+// ОПРЕДЕЛЕНИЕ ОШИБКИ БЛОКИРОВОЧНЫХ ЗАВИСИМОСТЕЙ
+// ========================================
+// ВАЖНО: Вычисляется ДО вызова fbEmergencyStopCollector для использования в текущем цикле
+//
+// Блокировочные зависимости:
+// 1. Бункеры работают, но конвейер или отвалообразователь НЕ в WORK
+// 2. Конвейер работает, но отвалообразователь НЕ в WORK
+xAutoEmergencyStoppingDependecies :=
+	(NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
+	AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
+	OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
+	OR eBunkerStage[3] = E_StageWithPreStartAlarm.WORK))
+	OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK);
+
+// ========================================
+// ЦЕНТРАЛИЗОВАННАЯ ОБРАБОТКА АВАРИЙНОЙ ОСТАНОВКИ
+// ========================================
+
+fbEmergencyStopCollector(
+	// Гарантированные источники (NC контакты: TRUE = норма)
+	ixEStopButton := stCommonSignals.fbEmergencyStopBtn.qxSignal,
+	ixScadaCommand := stCommands.cmdEmergencyStopCommon.qxRisingEdge,
+	ixEStopDumper := stDumper.fbBtnEmergencyStop.qxSignal,
+	ixEStopConveyor := stConveyor.fbBtnEmergencyStop.qxSignal,
+	ixEStopBunker1 := stBunker[1].fbBtnEmergencyStop.qxSignal,
+	ixEStopBunker2 := stBunker[2].fbBtnEmergencyStop.qxSignal,
+	ixEStopBunker3 := stBunker[3].fbBtnEmergencyStop.qxSignal,
+
+	// Системные сигналы
+	ixScadaLoss := fbScadaCommunication.qxCommunicationLost,
+	ixProportionError := xProportionSumError,
+
+	// Ошибки датчиков отвалообразователя (из fbDumper.fbSensors)
+	ixDumperErrorZQ := fbDumper.fbSensors.xErrorZQ_Any,
+	ixDumperErrorHQ := fbDumper.fbSensors.xErrorHQ_Any,
+	ixDumperErrorSQ := fbDumper.fbSensors.xErrorSQ_Any,
+	ixDumperErrorGS := fbDumper.fbSensors.xErrorGS,
+	ixDumperErrorYS := fbDumper.fbSensors.xErrorYS,
+	ixDumperErrorQR := fbDumper.fbSensors.xErrorQR_Any,
+
+	// Ошибки датчиков конвейера (из fbConveyor.fbSensors)
+	ixConveyorErrorZQ := fbConveyor.fbSensors.xErrorZQ_Any,
+	ixConveyorErrorHQ := fbConveyor.fbSensors.xErrorHQ_Any,
+	ixConveyorErrorSQ := fbConveyor.fbSensors.xErrorSQ_Any,
+	ixConveyorErrorGS := fbConveyor.fbSensors.xErrorGS,
+	ixConveyorErrorYS := fbConveyor.fbSensors.xErrorYS,
+	ixConveyorErrorYE := FALSE, // Добавить когда появится металлодетектор
+	ixConveyorErrorQR := fbConveyor.fbSensors.xErrorQR_Any,
+
+	// Зависимости и ток
+	ixDependencyError := xAutoEmergencyStoppingDependecies,
+	ixMotorCurrentHH := FALSE, // Агрегировать из VFD при необходимости
+
+	// Команда сброса
+	ixReset := stCommands.cmdResetAll.qxRisingEdge
+);
 
 // ========================================
 // СИМУЛЯЦИЯ
@@ -461,40 +517,23 @@ xStateErrorCheckReady :=
 	AND BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3 = 100;
 
 // ========================================
-// ОПРЕДЕЛЕНИЕ ТИПА ОСТАНОВКИ (независимо от AUTO_STEP)
+// ОБРАБОТКА ВЫХОДОВ FB_EmergencyStopCollector
 // ========================================
 
-// Аварийная остановка (приоритет)
-IF stCommands.cmdEmergencyStopCommon.qxSignal
-	OR (NOT DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION AND fbScadaCommunication.qxCommunicationLost)
-	OR xProportionSumError // Ошибка суммы пропорций (не равна 100%)
-	//OR xMinFrequencyError // Ошибка минимальной частоты вибропитателя (ПИД упёрся в минимум)
-	//OR xMaxFrequencyError // Ошибка максимальной частоты вибропитателя (ПИД упёрся в максимум)
-THEN
-	xAutoEmergencyStopping := TRUE;
-END_IF;
+// Глобальная аварийная остановка (из централизованного блока)
+xAutoEmergencyStopping := fbEmergencyStopCollector.qxGlobalEmergencyStop;
 
-IF (
-	NOT DISABLE_AUTO_STOPPING_DEPENDENCIES
-	AND (
-		(NOT (eConveyorStage = E_StageWithPreStartAlarm.WORK AND eDumperStage = E_StageWithPreStartAlarm.WORK)
-		AND (eBunkerStage[1] = E_StageWithPreStartAlarm.WORK
-		OR eBunkerStage[2] = E_StageWithPreStartAlarm.WORK
-		OR eBunkerStage[3] = E_StageWithPreStartAlarm.WORK))
-		OR (eConveyorStage = E_StageWithPreStartAlarm.WORK AND NOT eDumperStage = E_StageWithPreStartAlarm.WORK)
-	)
-)
-THEN
-	xAutoEmergencyStopBunker[1] := (stBunker[1].eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER1 AND stBunker[1].eStateRemote = E_StateRemote.Manual);
-	xAutoEmergencyStopBunker[2] := (stBunker[2].eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER2 AND stBunker[2].eStateRemote = E_StateRemote.Manual);
-	xAutoEmergencyStopBunker[3] := (stBunker[3].eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER3 AND stBunker[3].eStateRemote = E_StateRemote.Manual);
-	xAutoEmergencyStopConveyor := (stConveyor.eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_CONVEYOR AND stConveyor.eStateRemote = E_StateRemote.Manual);
-	xAutoEmergencyStopDumper := (stDumper.eStateRemote = E_StateRemote.Auto) OR (NOT DISABLE_AUTO_STOPPING_DEPENDENCIES_DUMPER AND stDumper.eStateRemote = E_StateRemote.Manual);
-END_IF
+// Сигналы остановки по секциям (из централизованного блока)
+xAutoEmergencyStopDumper := fbEmergencyStopCollector.qxSectionStop_Dumper;
+xAutoEmergencyStopConveyor := fbEmergencyStopCollector.qxSectionStop_Conveyor;
+xAutoEmergencyStopBunker[1] := fbEmergencyStopCollector.qxSectionStop_Bunker1;
+xAutoEmergencyStopBunker[2] := fbEmergencyStopCollector.qxSectionStop_Bunker2;
+xAutoEmergencyStopBunker[3] := fbEmergencyStopCollector.qxSectionStop_Bunker3;
 
-IF xAutoEmergencyStopBunker[1] AND (eBunkerStage[1]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[1] := FALSE; END_IF;
-IF xAutoEmergencyStopBunker[2] AND (eBunkerStage[2]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[2]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[2] := FALSE; END_IF;
-IF xAutoEmergencyStopBunker[3] AND (eBunkerStage[3]= E_StageWithPreStartAlarm.IDLE OR eBunkerStage[3]= E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[3] := FALSE; END_IF;
+// Сброс сигналов после остановки секций
+IF xAutoEmergencyStopBunker[1] AND (eBunkerStage[1] = E_StageWithPreStartAlarm.IDLE OR eBunkerStage[1] = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[1] := FALSE; END_IF;
+IF xAutoEmergencyStopBunker[2] AND (eBunkerStage[2] = E_StageWithPreStartAlarm.IDLE OR eBunkerStage[2] = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[2] := FALSE; END_IF;
+IF xAutoEmergencyStopBunker[3] AND (eBunkerStage[3] = E_StageWithPreStartAlarm.IDLE OR eBunkerStage[3] = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopBunker[3] := FALSE; END_IF;
 IF xAutoEmergencyStopConveyor AND (eConveyorStage = E_StageWithPreStartAlarm.IDLE OR eConveyorStage = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopConveyor := FALSE; END_IF;
 IF xAutoEmergencyStopDumper AND (eDumperStage = E_StageWithPreStartAlarm.IDLE OR eDumperStage = E_StageWithPreStartAlarm.ERROR) THEN xAutoEmergencyStopDumper := FALSE; END_IF;
 
