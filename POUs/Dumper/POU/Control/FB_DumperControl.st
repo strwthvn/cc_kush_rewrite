@@ -10,6 +10,11 @@ END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия
 	eStageToSCADA : E_ScadaStatesDevice; // Передача состояния скаде
+
+	// Готовность секции к запуску
+	xSectionReady : BOOL; // Секция готова к запуску (все условия выполнены)
+	xSectionReadyConveyor : BOOL; // Готовность конвейера (VFD готовы, нет ошибок моторов)
+	xSectionReadyRotation : BOOL; // Готовность поворота (VFD готовы, нет ошибок моторов)
 END_VAR
 VAR
 	// I/O обработка
@@ -169,6 +174,32 @@ Dumper.xStateWarning := fbSensors.xWarningSafetySensors
                      OR Dumper.MotorConveyor[2].VFD.fbRangeDiagnostic.qxWarningActive
                      OR Dumper.MotorRotation[1].VFD.fbRangeDiagnostic.qxWarningActive
                      OR Dumper.MotorRotation[2].VFD.fbRangeDiagnostic.qxWarningActive;
+
+// ========================================
+// ОПРЕДЕЛЕНИЕ ГОТОВНОСТИ СЕКЦИИ
+// ========================================
+// Готовность = отсутствие ошибок по сенсорам + отсутствие ошибок моторов +
+//              готовность VFD (дискретный сигнал) + отсутствие ошибок VFD
+
+// Готовность конвейера:
+// - Нет ошибок моторов конвейера (VFD failure)
+// - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
+xSectionReadyConveyor := NOT fbMotorErrors.xErrorMotorConv_Any
+                      AND fbMotorErrors.xVFD_ReadyConv_All;
+
+// Готовность поворота:
+// - Нет ошибок моторов поворота (VFD failure)
+// - VFD моторов поворота готовы к пуску (fbStateRdyToStart)
+xSectionReadyRotation := NOT fbMotorErrors.xErrorMotorRot_Any
+                      AND fbMotorErrors.xVFD_ReadyRot_All;
+
+// Общая готовность секции:
+// - Нет ошибок по датчикам безопасности
+// - Конвейер готов
+// - Поворот готов
+xSectionReady := NOT fbSensors.xErrorSafetySensors
+              AND xSectionReadyConveyor
+              AND xSectionReadyRotation;
 
 // ========================================
 // ОБРАБОТКА ОСТАНОВКИ И СБРОСА
@@ -332,18 +363,22 @@ END_CASE;
 eStage := STAGE;
 
 // ========================================
-// УПРАВЛЕНИЕ КОНТАКТОРАМИ
+// УПРАВЛЕНИЕ КОНТАКТОРАМИ (СБОРКА СХЕМЫ)
 // ========================================
-
+//
+// УСЛОВИЯ СБОРКИ СХЕМЫ (в автоматическом режиме):
+// - Нет ошибок по датчикам безопасности (fbSensors.xErrorSafetySensors = FALSE)
+// - Секция НЕ в стадии ERROR
+// ПРИМЕЧАНИЕ: Готовность VFD и ошибки моторов НЕ влияют на сборку схемы,
+// они влияют на готовность секции к ЗАПУСКУ (xSectionReady).
+//
 // РУЧНОЙ РЕЖИМ (Manual):
 // - Схема управляется ТОЛЬКО импульсными командами cmdBuildCircuitOn/Off
 // - Автоматическая сборка/разборка схемы ОТКЛЮЧЕНА
 //
-// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto/Remote):
-// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок секции:
-//   * Нет ошибок по датчикам безопасности (fbSensors.xErrorSafetySensors = FALSE)
-//   * Секция НЕ в стадии ERROR
-// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок или переходе в ERROR
+// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto):
+// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок по сенсорам и НЕ в ERROR
+// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок по сенсорам или переходе в ERROR
 
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы конвейера
@@ -488,11 +523,15 @@ ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND Dumper.xStateWarning THEN
 	eStageToSCADA := E_ScadaStatesDevice.WARNING;
 
 ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND Dumper.xStateFailure THEN
-	// Секция неготова к запуску (есть ошибки)
+	// Секция неготова к запуску (есть зафиксированные ошибки)
+	eStageToSCADA := E_ScadaStatesDevice.NOT_READY;
+
+ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND NOT xSectionReady THEN
+	// Секция неготова к запуску (VFD не готовы или есть ошибки моторов/сенсоров)
 	eStageToSCADA := E_ScadaStatesDevice.NOT_READY;
 
 ELSE
-	// Секция готова к запуску (IDLE, нет ошибок и предупреждений)
+	// Секция готова к запуску (IDLE, нет ошибок, VFD готовы)
 	eStageToSCADA := E_ScadaStatesDevice.READY;
 
 END_IF;

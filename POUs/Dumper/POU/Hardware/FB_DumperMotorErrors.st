@@ -14,8 +14,19 @@ VAR_OUTPUT
 	xErrorMotorRot2 : BOOL;
 	xErrorMotorRot_Any : BOOL;
 
-	// Агрегированный выход
-	xErrorMotors : BOOL; // Любая ошибка моторов
+	// Агрегированный выход ошибок
+	xErrorMotors : BOOL; // Любая ошибка моторов (VFD failure)
+
+	// Готовность VFD (дискретный сигнал "Готов к пуску")
+	xVFD_ReadyConv1 : BOOL; // VFD мотора конвейера 1 готов
+	xVFD_ReadyConv2 : BOOL; // VFD мотора конвейера 2 готов
+	xVFD_ReadyConv_All : BOOL; // Все VFD конвейера готовы
+
+	xVFD_ReadyRot1 : BOOL; // VFD мотора поворота 1 готов
+	xVFD_ReadyRot2 : BOOL; // VFD мотора поворота 2 готов
+	xVFD_ReadyRot_All : BOOL; // Все VFD поворота готовы
+
+	xVFD_Ready_All : BOOL; // Все VFD готовы к пуску
 END_VAR
 VAR
 	// Внутренние переменные для текущих состояний ошибок (без фиксации)
@@ -47,6 +58,9 @@ END_VAR
 //
 // ПРОВЕРЯЕМЫЕ ОШИБКИ:
 // - Ошибка VFD (fbStateFailure: 0 = ошибка, 1 = норма, NC контакт)
+//
+// ПРОВЕРЯЕМАЯ ГОТОВНОСТЬ:
+// - Готовность VFD (fbStateRdyToStart: 1 = готов, 0 = не готов, NO контакт)
 //
 // ЛОГИКА ФИКСАЦИИ:
 // - При возникновении ошибки она фиксируется (SET в RS-триггер)
@@ -101,5 +115,24 @@ xErrorMotorRot_Any := xErrorMotorRot1 OR xErrorMotorRot2;
 // ========================================
 
 xErrorMotors := xErrorMotorConv_Any OR xErrorMotorRot_Any;
+
+// ========================================
+// ПРОВЕРКА ГОТОВНОСТИ VFD
+// ========================================
+// fbStateRdyToStart - NO контакт: 1 = готов к пуску, 0 = не готов
+// Готовность проверяется в реальном времени (без фиксации)
+
+// Готовность VFD конвейера
+xVFD_ReadyConv1 := Dumper.MotorConveyor[1].VFD.fbStateRdyToStart.qxSignal;
+xVFD_ReadyConv2 := Dumper.MotorConveyor[2].VFD.fbStateRdyToStart.qxSignal;
+xVFD_ReadyConv_All := xVFD_ReadyConv1 AND xVFD_ReadyConv2;
+
+// Готовность VFD поворота
+xVFD_ReadyRot1 := Dumper.MotorRotation[1].VFD.fbStateRdyToStart.qxSignal;
+xVFD_ReadyRot2 := Dumper.MotorRotation[2].VFD.fbStateRdyToStart.qxSignal;
+xVFD_ReadyRot_All := xVFD_ReadyRot1 AND xVFD_ReadyRot2;
+
+// Общая готовность всех VFD
+xVFD_Ready_All := xVFD_ReadyConv_All AND xVFD_ReadyRot_All;
 
 END_FUNCTION_BLOCK
