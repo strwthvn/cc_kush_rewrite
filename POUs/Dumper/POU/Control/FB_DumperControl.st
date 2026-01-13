@@ -142,7 +142,7 @@ fbMotorErrors(
 
 Dumper.fbPreStartAlarm(
 	ixStart := STAGE = PRESTART_ALARM,
-	ixStop := xStopCommand OR xReset,
+	ixStop := xStopCommand OR xReset OR xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal, // Остановка ППЗ при СТОП, СБРОС или АВАРИЙНОЙ ОСТАНОВКЕ
 	itFirstSignal := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL,
 	itPauseAfterFirst := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL_PAUSE,
 	itSecondSignal := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL,

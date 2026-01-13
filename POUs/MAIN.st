@@ -564,11 +564,32 @@ IF xAutoEmergencyStopDumper AND (eDumperStage = E_StageWithPreStartAlarm.IDLE OR
 
 // Обычная остановка
 IF stCommands.cmdStopCommon.qxSignal AND NOT xAutoEmergencyStopping AND AUTO_STEP <> IDLE THEN
+	// Сброс команд запуска
 	xStartBunker[1] := FALSE;
 	xStartBunker[2] := FALSE;
 	xStartBunker[3] := FALSE;
 	xStartConveyor := FALSE;
 	xStartDumper := FALSE;
+
+	// Установка команд остановки для оборудования в процессе запуска
+	// (чтобы прервать ППЗ/запуск)
+	IF AUTO_STEP = START_DUMPER THEN
+		// Отвалообразователь в ППЗ или запуске - остановить его
+		xManualStopDumper := TRUE;
+	ELSIF AUTO_STEP = START_CONV THEN
+		// Конвейер в ППЗ или запуске - остановить его и отвалообразователь
+		xManualStopConveyor := TRUE;
+		xManualStopDumper := TRUE;
+	ELSIF AUTO_STEP = START_VIBFEEDER THEN
+		// Бункеры в процессе запуска - остановить всё
+		IF eBunkerStage[1] = E_StageWithPreStartAlarm.WORK THEN xManualStopBunker[1] := TRUE; END_IF;
+		IF eBunkerStage[2] = E_StageWithPreStartAlarm.WORK THEN xManualStopBunker[2] := TRUE; END_IF;
+		IF eBunkerStage[3] = E_StageWithPreStartAlarm.WORK THEN xManualStopBunker[3] := TRUE; END_IF;
+		xManualStopConveyor := TRUE;
+		xManualStopDumper := TRUE;
+		nBunkerStartStep := 0; // Сброс подшага запуска бункеров
+	END_IF;
+
 	AUTO_STEP := WORK;
 	xAutoStopping := TRUE;
 END_IF
@@ -627,8 +648,10 @@ CASE AUTO_STEP OF
 		AUTO_STEP := START_DUMPER;
 
 	START_DUMPER :
-		IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN // Если отвалообразователь не запущен
-				xStartDumper := TRUE; // Команда запуска отвалообразователя
+		// Запуск отвалообразователя
+		// (обработка остановки перенесена в секцию "Обычная остановка" выше CASE)
+		IF eDumperStage <> E_StageWithPreStartAlarm.WORK THEN
+			xStartDumper := TRUE; // Команда запуска отвалообразователя
 		ELSE
 			xStartDumper := FALSE; // Гарантированный сброс команды при достижении WORK
 			ton_AutoTimer.IN := TRUE;
@@ -639,7 +662,9 @@ CASE AUTO_STEP OF
 		END_IF;
 
 	START_CONV:
-		IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN // Если конвейер не запущен
+		// Запуск конвейера
+		// (обработка остановки перенесена в секцию "Обычная остановка" выше CASE)
+		IF eConveyorStage <> E_StageWithPreStartAlarm.WORK THEN
 			xStartConveyor := TRUE; // Команда запуска конвейера
 		ELSE
 			xStartConveyor := FALSE; // Гарантированный сброс команды при достижении WORK
@@ -651,6 +676,9 @@ CASE AUTO_STEP OF
 		END_IF;
 
 	START_VIBFEEDER:
+		// Запуск вибропитателей
+		// (обработка остановки перенесена в секцию "Обычная остановка" выше CASE)
+
 		// Последовательный запуск бункеров с задержкой: 3 → задержка → 2 → задержка → 1
 		// ВАЖНО: Частота задаётся ПЕРЕД запуском каждого бункера
 		CASE nBunkerStartStep OF
@@ -795,8 +823,27 @@ CASE AUTO_STEP OF
 
 		// === ОБЫЧНАЯ ОСТАНОВКА ===
 		IF xAutoStopping THEN
+			// === БЫСТРЫЙ ВЫХОД: если всё оборудование уже остановлено ===
+			// Актуально когда СТОП нажат во время ППЗ - оборудование уже в IDLE
+			IF eDumperStage = E_StageWithPreStartAlarm.IDLE
+				AND eConveyorStage = E_StageWithPreStartAlarm.IDLE
+				AND eBunkerStage[1] <> E_StageWithPreStartAlarm.WORK
+				AND eBunkerStage[2] <> E_StageWithPreStartAlarm.WORK
+				AND eBunkerStage[3] <> E_StageWithPreStartAlarm.WORK
+			THEN
+				// Всё уже остановлено - завершить процесс остановки немедленно
+				ton_AutoTimer.IN := FALSE;
+				xAutoStopping := FALSE;
+				xStateAutoWorking := FALSE;
+				xManualStopBunker[1] := FALSE;
+				xManualStopBunker[2] := FALSE;
+				xManualStopBunker[3] := FALSE;
+				xManualStopConveyor := FALSE;
+				xManualStopDumper := FALSE;
+				nStopSubstage := 0;
+				AUTO_STEP := IDLE;
 			// Выбор режима остановки бункеров
-			IF BUNKER_INSTANT_STOP THEN
+			ELSIF BUNKER_INSTANT_STOP THEN
 				// === МГНОВЕННАЯ ОСТАНОВКА ВСЕХ БУНКЕРОВ (параллельно) ===
 				CASE nStopSubstage OF
 					0: // Шаг 0: Одновременная остановка всех 3-х бункеров
@@ -1127,6 +1174,14 @@ END_IF;
 
 // Аварийная остановка срабатывает в любом состоянии AUTO_STEP
 IF xAutoEmergencyStopping THEN
+	// Сброс всех команд запуска (чтобы после Reset не запустилось само)
+	xStartBunker[1] := FALSE;
+	xStartBunker[2] := FALSE;
+	xStartBunker[3] := FALSE;
+	xStartConveyor := FALSE;
+	xStartDumper := FALSE;
+	nBunkerStartStep := 0;
+
 	// Установка флагов аварийной остановки для всех секций
 	xAutoEmergencyStopBunker[1] := TRUE;
 	xAutoEmergencyStopBunker[2] := TRUE;

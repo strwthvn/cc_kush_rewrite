@@ -299,14 +299,14 @@ IF xEnable THEN
 	// ========================================
 
 	// Симуляция частоты ЧРП моторов конвейера отвалообразователя
-	// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
-	Dumper.MotorConveyor[1].VFD.nActualFrequencyADC := Dumper.MotorConveyor[1].VFD.nSetOutSignalToModule;
-	Dumper.MotorConveyor[2].VFD.nActualFrequencyADC := Dumper.MotorConveyor[2].VFD.nSetOutSignalToModule;
+	// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+	// поэтому записываем целевую частоту в rSimulatedFrequency
+	Dumper.MotorConveyor[1].VFD.rSimulatedFrequency := Dumper.MotorConveyor[1].VFD.qrOutFrequency;
+	Dumper.MotorConveyor[2].VFD.rSimulatedFrequency := Dumper.MotorConveyor[2].VFD.qrOutFrequency;
 
 	// Симуляция частоты ЧРП моторов поворота отвалообразователя
-	// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
-	Dumper.MotorRotation[1].VFD.nActualFrequencyADC := Dumper.MotorRotation[1].VFD.nSetOutSignalToModule;
-	Dumper.MotorRotation[2].VFD.nActualFrequencyADC := Dumper.MotorRotation[2].VFD.nSetOutSignalToModule;
+	Dumper.MotorRotation[1].VFD.rSimulatedFrequency := Dumper.MotorRotation[1].VFD.qrOutFrequency;
+	Dumper.MotorRotation[2].VFD.rSimulatedFrequency := Dumper.MotorRotation[2].VFD.qrOutFrequency;
 
 	// ========================================
 	// СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ ОТВАЛООБРАЗОВАТЕЛЯ
@@ -355,9 +355,10 @@ IF xEnable THEN
 	// ========================================
 
 	// Симуляция частоты ЧРП моторов конвейера
-	// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
-	Conveyor.MotorConveyor[1].VFD.nActualFrequencyADC := Conveyor.MotorConveyor[1].VFD.nSetOutSignalToModule;
-	Conveyor.MotorConveyor[2].VFD.nActualFrequencyADC := Conveyor.MotorConveyor[2].VFD.nSetOutSignalToModule;
+	// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+	// поэтому записываем целевую частоту в rSimulatedFrequency
+	Conveyor.MotorConveyor[1].VFD.rSimulatedFrequency := Conveyor.MotorConveyor[1].VFD.qrOutFrequency;
+	Conveyor.MotorConveyor[2].VFD.rSimulatedFrequency := Conveyor.MotorConveyor[2].VFD.qrOutFrequency;
 
 	// ========================================
 	// СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ СБОРНОГО КОНВЕЙЕРА
@@ -389,8 +390,9 @@ IF xEnable THEN
 		// --- Вибропитатели (MotorVibFeeder[1..2]) ---
 		FOR m := 1 TO 2 BY 1 DO
 			// Симуляция частоты ЧРП вибропитателя
-			// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
-			Bunker[b].MotorVibFeeder[m].VFD.nActualFrequencyADC := Bunker[b].MotorVibFeeder[m].VFD.nSetOutSignalToModule;
+			// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+			// поэтому записываем целевую частоту в rSimulatedFrequency
+			Bunker[b].MotorVibFeeder[m].VFD.rSimulatedFrequency := Bunker[b].MotorVibFeeder[m].VFD.qrOutFrequency;
 
 			// Обратная связь контактора вибропитателя
 			tonKM_VibFeeder[b, m](IN := Bunker[b].MotorVibFeeder[m].qxKM_Power, PT := tFeedbackDelay);
@@ -404,8 +406,9 @@ IF xEnable THEN
 		// --- Вибраторы (MotorVibrator[1..4]) ---
 		FOR m := 1 TO 4 BY 1 DO
 			// Симуляция частоты ЧРП вибратора
-			// В режиме симуляции: DAC код от модуля AO → ADC код модуля AI
-			Bunker[b].MotorVibrator[m].VFD.nActualFrequencyADC := Bunker[b].MotorVibrator[m].VFD.nSetOutSignalToModule;
+			// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+			// поэтому записываем целевую частоту в rSimulatedFrequency
+			Bunker[b].MotorVibrator[m].VFD.rSimulatedFrequency := Bunker[b].MotorVibrator[m].VFD.qrOutFrequency;
 
 			// Обратная связь контактора вибратора
 			tonKM_Vibrator[b, m](IN := Bunker[b].MotorVibrator[m].qxKM_Power, PT := tFeedbackDelay);
