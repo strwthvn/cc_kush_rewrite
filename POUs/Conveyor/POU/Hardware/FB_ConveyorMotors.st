@@ -12,6 +12,7 @@ VAR_OUTPUT
 	rCurrentFrequency : REAL;   // Текущая частота моторов (среднее значение)
 	xStartingTimeout : BOOL;    // Флаг тайм-аута запуска (STARTING слишком долго)
 	xStoppingTimeout : BOOL;    // Флаг тайм-аута остановки (STOPPING слишком долго)
+	xVFD_FeedbackLostTimeout : BOOL; // Флаг: потеря обратной связи VFD во время работы (не восстановилась за TIME_TIMEOUT_VFD_FEEDBACK_LOST)
 END_VAR
 VAR
 	STAGE : E_StageActuator := E_StageActuator.IDLE;
@@ -38,6 +39,9 @@ VAR
 
 	// Таймер контроля времени остановки (STOPPING → IDLE)
 	tonTimerStopping : TON;
+
+	// Таймер контроля потери обратной связи VFD во время работы
+	tonTimerVFD_FeedbackLost : TON;
 
 	// Флаг запуска таймера (защита от зацикливания)
 	xBrakeTimerStarted : BOOL := FALSE;
@@ -125,6 +129,28 @@ IF tonTimerStopping.Q THEN
 	STAGE := E_StageActuator.FAULT;
 	nStoppingSubstage := 0;
 	tonTimerStopping(IN := FALSE);
+END_IF
+
+// Контроль потери обратной связи VFD во время работы
+// Если VFD был в работе (WORK) и обратная связь пропала - включаем таймер
+// Если обратная связь не вернулась в течение TIME_TIMEOUT_VFD_FEEDBACK_LOST → аварийная остановка
+tonTimerVFD_FeedbackLost(
+	IN := (STAGE = E_StageActuator.WORK) AND
+	      (NOT Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+	       OR NOT Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal),
+	PT := TIME_TIMEOUT_VFD_FEEDBACK_LOST
+);
+
+IF tonTimerVFD_FeedbackLost.Q THEN
+	xVFD_FeedbackLostTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Conveyor.MotorConveyor[1].VFD.qxStart := FALSE;
+	Conveyor.MotorConveyor[2].VFD.qxStart := FALSE;
+	// Активация тормоза
+	Conveyor.qxBreakerConveyor := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	tonTimerVFD_FeedbackLost(IN := FALSE);
 END_IF
 
 // ========================================
@@ -242,6 +268,7 @@ CASE STAGE OF
 			STAGE := E_StageActuator.IDLE;
 			xStartingTimeout := FALSE; // Сброс флага тайм-аута запуска
 			xStoppingTimeout := FALSE; // Сброс флага тайм-аута остановки
+			xVFD_FeedbackLostTimeout := FALSE; // Сброс флага потери обратной связи VFD
 		END_IF
 END_CASE;
 
@@ -250,9 +277,9 @@ END_CASE;
 // ========================================
 
 // Установка частоты напрямую в аналоговый выход VFD
-// В режиме WORK частота = rTargetFrequency
+// В режимах STARTING и WORK частота = rTargetFrequency (VFD должен знать целевую частоту до запуска)
 // В остальных режимах (IDLE, STOPPING, FAULT) частота = 0
-IF STAGE = E_StageActuator.WORK THEN
+IF STAGE = E_StageActuator.STARTING OR STAGE = E_StageActuator.WORK THEN
 	Conveyor.MotorConveyor[1].VFD.qrOutFrequency := rTargetFrequency;
 	Conveyor.MotorConveyor[2].VFD.qrOutFrequency := rTargetFrequency;
 ELSE

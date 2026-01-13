@@ -130,8 +130,10 @@ FOR i := 1 TO 2 BY 1 DO
 	);
 
 	// Аналоговый выход ЧРП (задание частоты)
+	// xEnable: включаем аналоговый выход когда есть команда на запуск ИЛИ VFD уже работает
+	// Это позволяет задать частоту ДО того, как VFD запустится
 	Conveyor.MotorConveyor[i].VFD.fbAnalogOutput(
-		xEnable := Conveyor.MotorConveyor[i].VFD.Device.qxActive,
+		xEnable := Conveyor.MotorConveyor[i].VFD.qxStart OR Conveyor.MotorConveyor[i].VFD.Device.qxActive,
 		rEngValue := Conveyor.MotorConveyor[i].VFD.qrOutFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,

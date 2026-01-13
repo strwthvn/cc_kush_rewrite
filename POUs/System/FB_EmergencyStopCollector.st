@@ -34,6 +34,10 @@ VAR_INPUT
 	ixDependencyError : BOOL;             // Ошибка блокировочных зависимостей
 	ixMotorCurrentHH : BOOL;              // Любой мотор с HH уровнем тока
 
+	// == ОШИБКИ VFD (аварийный сигнал от частотного преобразователя) ==
+	ixDumperVFD_Failure : BOOL;           // Авария VFD отвалообразователя
+	ixConveyorVFD_Failure : BOOL;         // Авария VFD конвейера
+
 	// == КОМАНДА СБРОСА ==
 	ixReset : BOOL;                       // Общий сброс
 END_VAR
@@ -56,6 +60,7 @@ VAR_OUTPUT
 	qxReason_QR : BOOL;                   // Причина: датчик скорости
 	qxReason_Dependencies : BOOL;         // Причина: блокировочные зависимости
 	qxReason_MotorCurrent : BOOL;         // Причина: аварийный ток мотора
+	qxReason_VFD_Failure : BOOL;          // Причина: авария VFD (частотного преобразователя)
 
 	// == СИГНАЛЫ АВАРИЙНОЙ ОСТАНОВКИ ПО СЕКЦИЯМ ==
 	qxSectionStop_Dumper : BOOL;          // Остановка отвалообразователя
@@ -160,6 +165,9 @@ qxReason_Dependencies := ENABLE_GLOBAL_ESTOP_DEPENDENCIES AND ixDependencyError;
 // Аварийный ток мотора
 qxReason_MotorCurrent := ENABLE_GLOBAL_ESTOP_MOTOR_CURRENT_HH AND ixMotorCurrentHH;
 
+// Авария VFD (частотного преобразователя)
+qxReason_VFD_Failure := ENABLE_GLOBAL_ESTOP_VFD_FAILURE AND (ixDumperVFD_Failure OR ixConveyorVFD_Failure);
+
 // ========================================
 // ФОРМИРОВАНИЕ ГЛОБАЛЬНОГО СИГНАЛА АВАРИЙНОЙ ОСТАНОВКИ
 // ========================================
@@ -184,7 +192,8 @@ qxGlobalEmergencyStop :=
 	OR qxReason_YE
 	OR qxReason_QR
 	OR qxReason_Dependencies
-	OR qxReason_MotorCurrent;
+	OR qxReason_MotorCurrent
+	OR qxReason_VFD_Failure;
 
 // ========================================
 // ФОРМИРОВАНИЕ СИГНАЛОВ ОСТАНОВКИ ПО СЕКЦИЯМ
@@ -233,7 +242,8 @@ qxResetBlocked := qxReason_EStopButton
 	OR qxReason_YE
 	OR qxReason_QR
 	OR qxReason_Dependencies
-	OR qxReason_MotorCurrent;
+	OR qxReason_MotorCurrent
+	OR qxReason_VFD_Failure;
 
 // ========================================
 // КОД ПРИЧИНЫ ДЛЯ SCADA
@@ -268,6 +278,8 @@ ELSIF qxReason_ProportionError THEN
 	qnReasonCode := 22;  // Ошибка пропорций
 ELSIF qxReason_MotorCurrent THEN
 	qnReasonCode := 30;  // Аварийный ток мотора (HH)
+ELSIF qxReason_VFD_Failure THEN
+	qnReasonCode := 31;  // Авария VFD (частотного преобразователя)
 ELSE
 	qnReasonCode := 0;   // Нет ошибки
 END_IF

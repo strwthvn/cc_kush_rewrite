@@ -340,7 +340,7 @@ xErrorQR_Any := xErrorQR1 OR xErrorQR2;
 // Логика: 1 = Норма, 0 = Тревога (продольный разрыв ленты)
 
 // Таймер задержки срабатывания (сигнал должен удерживаться itDelayYS перед фиксацией)
-_fbDelayYS(IN := NOT Conveyor.fbYS1.qxSignal, PT := itDelayYS);
+_fbDelayYS(IN := Conveyor.fbYS1.qxSignal, PT := itDelayYS);
 
 // Определяем текущее состояние датчика (после задержки)
 _xCurrentErrorYS := _fbDelayYS.Q;

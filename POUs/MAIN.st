@@ -309,6 +309,10 @@ fbEmergencyStopCollector(
 	ixDependencyError := xAutoEmergencyStoppingDependecies,
 	ixMotorCurrentHH := FALSE, // Агрегировать из VFD при необходимости
 
+	// Ошибки VFD (аварийный сигнал от частотного преобразователя)
+	ixDumperVFD_Failure := fbDumper.fbMotorErrors.xErrorMotors,
+	ixConveyorVFD_Failure := fbConveyor.fbMotorErrors.xErrorMotors,
+
 	// Команда сброса
 	ixReset := stCommands.cmdResetAll.qxRisingEdge
 );

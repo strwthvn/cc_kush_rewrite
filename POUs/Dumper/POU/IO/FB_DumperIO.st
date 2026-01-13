@@ -164,8 +164,10 @@ FOR i := 1 TO 2 BY 1 DO
 	);
 
 	// Аналоговый выход ЧРП (задание частоты)
+	// xEnable: включаем аналоговый выход когда есть команда на запуск ИЛИ VFD уже работает
+	// Это позволяет задать частоту ДО того, как VFD запустится
 	Dumper.MotorConveyor[i].VFD.fbAnalogOutput(
-		xEnable := Dumper.MotorConveyor[i].VFD.Device.qxActive,
+		xEnable := Dumper.MotorConveyor[i].VFD.qxStart OR Dumper.MotorConveyor[i].VFD.Device.qxActive,
 		rEngValue := Dumper.MotorConveyor[i].VFD.qrOutFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,
@@ -265,8 +267,10 @@ FOR i := 1 TO 2 BY 1 DO
 	);
 
 	// Аналоговый выход ЧРП (задание частоты)
+	// xEnable: включаем аналоговый выход когда есть команда на запуск ИЛИ VFD уже работает
+	// Это позволяет задать частоту ДО того, как VFD запустится
 	Dumper.MotorRotation[i].VFD.fbAnalogOutput(
-		xEnable := Dumper.MotorRotation[i].VFD.Device.qxActive,
+		xEnable := Dumper.MotorRotation[i].VFD.qxStart OR Dumper.MotorRotation[i].VFD.Device.qxActive,
 		rEngValue := Dumper.MotorRotation[i].VFD.qrOutFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,

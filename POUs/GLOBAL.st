@@ -49,6 +49,7 @@ VAR_GLOBAL RETAIN
 	ENABLE_GLOBAL_ESTOP_SCADA_LOSS : BOOL := FALSE;          // Потеря связи со SCADA
 	ENABLE_GLOBAL_ESTOP_PROPORTION : BOOL := FALSE;          // Ошибка суммы пропорций
 	ENABLE_GLOBAL_ESTOP_MOTOR_CURRENT_HH : BOOL := FALSE;    // Аварийный уровень тока (HH)
+	ENABLE_GLOBAL_ESTOP_VFD_FAILURE : BOOL := TRUE;          // Авария VFD (частотного преобразователя)
 
 	// Блокировочные зависимости (глобально)
 	ENABLE_GLOBAL_ESTOP_DEPENDENCIES : BOOL := TRUE;         // Блокировочные зависимости между секциями
@@ -120,7 +121,10 @@ VAR_GLOBAL RETAIN
 	TIME_TIMEOUT_STOP_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут остановки моторов поворота отвалообразователя (STOPPING → IDLE)
 	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов сборного конвейера (STOPPING → IDLE)
 	TIME_TIMEOUT_STOP_BUNKER : TIME := T#20S; // Тайм-аут остановки вибропитателей бункера (WORK → IDLE)
-	
+
+	// Таймер ожидания восстановления потерянной обратной связи VFD во время работы
+	TIME_TIMEOUT_VFD_FEEDBACK_LOST : TIME := T#3S; // Если обратная связь VFD пропала во время WORK и не вернулась в течение этого времени → аварийная остановка
+
 	// Таймер ожидания пропавшего сигнала обратной связи работы механизма
 	TIME_WAITING_FEEDBACK : TIME := T#0S;
 

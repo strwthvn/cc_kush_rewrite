@@ -143,15 +143,18 @@ Conveyor.xStateWarning := fbSensors.xWarningSafetySensors
 // ОПРЕДЕЛЕНИЕ ГОТОВНОСТИ СЕКЦИИ
 // ========================================
 // Готовность = отсутствие ошибок по сенсорам + отсутствие ошибок моторов +
-//              готовность VFD (дискретный сигнал) + отсутствие ошибок VFD
+//              готовность VFD (дискретный сигнал) + отсутствие ошибок VFD +
+//              автоматические выключатели включены (QF)
 
 // Общая готовность секции:
 // - Нет ошибок по датчикам безопасности
 // - Нет ошибок моторов конвейера (VFD failure)
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
+// - Автоматические выключатели моторов конвейера включены (QF)
 xSectionReady := NOT fbSensors.xErrorSafetySensors
               AND NOT fbMotorErrors.xErrorMotorConv_Any
-              AND fbMotorErrors.xVFD_ReadyConv_All;
+              AND fbMotorErrors.xVFD_ReadyConv_All
+              AND fbMotorErrors.xQF_OkConv_All;
 
 // ========================================
 // ОБРАБОТКА ОСТАНОВКИ И СБРОСА
@@ -205,6 +208,12 @@ END_IF;
 
 // Тайм-аут остановки моторов конвейера
 IF fbConveyorMotors.xStoppingTimeout THEN
+	Conveyor.xStateFailure := TRUE;
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Потеря обратной связи VFD во время работы (не восстановилась за TIME_TIMEOUT_VFD_FEEDBACK_LOST)
+IF fbConveyorMotors.xVFD_FeedbackLostTimeout THEN
 	Conveyor.xStateFailure := TRUE;
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;

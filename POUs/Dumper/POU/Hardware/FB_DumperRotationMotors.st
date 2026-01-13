@@ -341,9 +341,9 @@ END_CASE;
 // ========================================
 
 // Установка частоты напрямую в аналоговый выход VFD
-// В режиме WORK частота = rTargetFrequency
+// В режимах STARTING и WORK частота = rTargetFrequency (VFD должен знать целевую частоту до запуска)
 // В остальных режимах (IDLE, STOPPING, FAULT) частота = 0
-IF STAGE = E_StageActuator.WORK THEN
+IF STAGE = E_StageActuator.STARTING OR STAGE = E_StageActuator.WORK THEN
 	Dumper.MotorRotation[1].VFD.qrOutFrequency := rTargetFrequency;
 	Dumper.MotorRotation[2].VFD.qrOutFrequency := rTargetFrequency;
 ELSE

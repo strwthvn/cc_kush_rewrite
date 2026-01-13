@@ -27,6 +27,19 @@ VAR_OUTPUT
 	xVFD_ReadyRot_All : BOOL; // Все VFD поворота готовы
 
 	xVFD_Ready_All : BOOL; // Все VFD готовы к пуску
+
+	// Состояние автоматических выключателей (QF)
+	// TRUE = включен, FALSE = выключен
+	// Не является ошибкой, но влияет на готовность к запуску
+	xQF_OkConv1 : BOOL; // QF мотора конвейера 1 включен
+	xQF_OkConv2 : BOOL; // QF мотора конвейера 2 включен
+	xQF_OkConv_All : BOOL; // Все QF конвейера включены
+
+	xQF_OkRot1 : BOOL; // QF мотора поворота 1 включен
+	xQF_OkRot2 : BOOL; // QF мотора поворота 2 включен
+	xQF_OkRot_All : BOOL; // Все QF поворота включены
+
+	xQF_Ok_All : BOOL; // Все QF включены
 END_VAR
 VAR
 	// Внутренние переменные для текущих состояний ошибок (без фиксации)
@@ -134,5 +147,25 @@ xVFD_ReadyRot_All := xVFD_ReadyRot1 AND xVFD_ReadyRot2;
 
 // Общая готовность всех VFD
 xVFD_Ready_All := xVFD_ReadyConv_All AND xVFD_ReadyRot_All;
+
+// ========================================
+// ПРОВЕРКА СОСТОЯНИЯ АВТОМАТИЧЕСКИХ ВЫКЛЮЧАТЕЛЕЙ (QF)
+// ========================================
+// fbStateQF - NO контакт: 1 = QF включен, 0 = QF выключен
+// Состояние проверяется в реальном времени (без фиксации)
+// Выключенный QF - не ошибка, но запуск мотора невозможен
+
+// Состояние QF конвейера
+xQF_OkConv1 := Dumper.MotorConveyor[1].fbStateQF.qxSignal;
+xQF_OkConv2 := Dumper.MotorConveyor[2].fbStateQF.qxSignal;
+xQF_OkConv_All := xQF_OkConv1 AND xQF_OkConv2;
+
+// Состояние QF поворота
+xQF_OkRot1 := Dumper.MotorRotation[1].fbStateQF.qxSignal;
+xQF_OkRot2 := Dumper.MotorRotation[2].fbStateQF.qxSignal;
+xQF_OkRot_All := xQF_OkRot1 AND xQF_OkRot2;
+
+// Общее состояние всех QF
+xQF_Ok_All := xQF_OkConv_All AND xQF_OkRot_All;
 
 END_FUNCTION_BLOCK
