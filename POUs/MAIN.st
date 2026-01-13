@@ -496,24 +496,45 @@ IF (eBunkerStage[3] = E_StageWithPreStartAlarm.IDLE OR eBunkerStage[3] = E_Stage
 // == АВТОМАТИЧЕСКИЙ РЕЖИМ ==
 ton_AutoTimer(PT:=T#10S);
 
-// Проверка готовности системы к автоматическому пуску
+// ========================================
+// ПРОВЕРКА ГОТОВНОСТИ СИСТЕМЫ К АВТОМАТИЧЕСКОМУ ПУСКУ
+// ========================================
+// Готовность системы = ВСЕ условия должны быть выполнены:
+// 1. Не идёт процесс остановки (xAutoStopping, xAutoEmergencyStopping)
+// 2. Все секции в автоматическом режиме (Auto)
+// 3. Нет зафиксированных ошибок (xStateFailure)
+// 4. Секции не в стадии ERROR
+// 5. Секции готовы к запуску (xSectionReady):
+//    - VFD готовы к пуску (дискретный сигнал fbStateRdyToStart)
+//    - Нет ошибок моторов (VFD failure)
+//    - Нет ошибок по датчикам безопасности
+// 6. Сумма пропорций = 100%
 xStateErrorCheckReady :=
+	// 1. Не идёт остановка
 	NOT xAutoStopping AND NOT xAutoEmergencyStopping
+	// 2. Все секции в автоматическом режиме
 	AND stBunker[1].eStateRemote = E_StateRemote.Auto
 	AND stBunker[2].eStateRemote = E_StateRemote.Auto
 	AND stBunker[3].eStateRemote = E_StateRemote.Auto
 	AND stDumper.eStateRemote = E_StateRemote.Auto
 	AND stConveyor.eStateRemote = E_StateRemote.Auto
+	// 3. Нет зафиксированных ошибок
 	AND NOT stBunker[1].xStateFailure
 	AND NOT stBunker[2].xStateFailure
 	AND NOT stBunker[3].xStateFailure
 	AND NOT stDumper.xStateFailure
 	AND NOT stConveyor.xStateFailure
+	// 4. Секции не в стадии ERROR
 	AND eBunkerStage[1] <> E_StageWithPreStartAlarm.ERROR
 	AND eBunkerStage[2] <> E_StageWithPreStartAlarm.ERROR
 	AND eBunkerStage[3] <> E_StageWithPreStartAlarm.ERROR
 	AND eDumperStage <> E_StageWithPreStartAlarm.ERROR
 	AND eConveyorStage <> E_StageWithPreStartAlarm.ERROR
+	// 5. Секции готовы к запуску (VFD готовы, нет ошибок моторов/сенсоров)
+	AND fbDumper.xSectionReady
+	AND fbConveyor.xSectionReady
+	// TODO: Добавить fbBunker[i].xSectionReady когда будет реализовано
+	// 6. Сумма пропорций = 100%
 	AND BUNKER_WORK_PRECENT_1 + BUNKER_WORK_PRECENT_2 + BUNKER_WORK_PRECENT_3 = 100;
 
 // ========================================
@@ -1079,15 +1100,19 @@ ELSIF AUTO_STEP = IDLE AND (stDumper.xStateWarning OR stConveyor.xStateWarning O
 	// Предупреждение без активной работы
 	eSystemStageToSCADA := E_ScadaStatesDevice.WARNING;
 
-ELSIF AUTO_STEP = IDLE AND 
-	(stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure 
-	OR eDumperStageToSCADA = E_ScadaStatesDevice.ERROR OR eConveyorStageToSCADA = E_ScadaStatesDevice.ERROR OR eBunkerStage[1] = E_ScadaStatesDevice.ERROR OR eBunkerStage[2] = E_ScadaStatesDevice.ERROR OR eBunkerStage[3] = E_ScadaStatesDevice.ERROR) 
+ELSIF AUTO_STEP = IDLE AND
+	(stDumper.xStateFailure OR stConveyor.xStateFailure OR stBunker[1].xStateFailure OR stBunker[2].xStateFailure OR stBunker[3].xStateFailure
+	OR eDumperStageToSCADA = E_ScadaStatesDevice.ERROR OR eConveyorStageToSCADA = E_ScadaStatesDevice.ERROR OR eBunkerStage[1] = E_ScadaStatesDevice.ERROR OR eBunkerStage[2] = E_ScadaStatesDevice.ERROR OR eBunkerStage[3] = E_ScadaStatesDevice.ERROR)
 	THEN
-	// Система неготова к запуску (есть ошибки или секции в состоянии ERROR)
+	// Система неготова к запуску (есть зафиксированные ошибки или секции в состоянии ERROR)
+	eSystemStageToSCADA := E_ScadaStatesDevice.NOT_READY;
+
+ELSIF AUTO_STEP = IDLE AND NOT xStateErrorCheckReady THEN
+	// Система неготова к запуску (VFD не готовы, неверные пропорции, или другие условия не выполнены)
 	eSystemStageToSCADA := E_ScadaStatesDevice.NOT_READY;
 
 ELSE
-	// Система готова к запуску (IDLE, нет ошибок и предупреждений)
+	// Система готова к запуску (IDLE, все условия готовности выполнены)
 	eSystemStageToSCADA := E_ScadaStatesDevice.READY;
 
 END_IF;
