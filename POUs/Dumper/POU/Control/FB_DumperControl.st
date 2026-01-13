@@ -112,7 +112,14 @@ fbRotationMotors(
 
 fbSensors(
 	Dumper := Dumper,
-	xReset := xReset
+	xReset := xReset,
+	itDelayZQ_Alarm := TIME_DELAY_SENSOR_DUMPER_ZQ_ALARM,
+	itDelayZQ_Warning := TIME_DELAY_SENSOR_DUMPER_ZQ_WARNING,
+	itDelayHQ := TIME_DELAY_SENSOR_DUMPER_HQ,
+	itDelaySQ := TIME_DELAY_SENSOR_DUMPER_SQ,
+	itDelayGS := TIME_DELAY_SENSOR_DUMPER_GS,
+	itDelayYS := TIME_DELAY_SENSOR_DUMPER_YS,
+	itDelayQR := TIME_DELAY_SENSOR_DUMPER_QR
 );
 
 // ========================================

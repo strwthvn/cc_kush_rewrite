@@ -232,4 +232,24 @@ VAR_GLOBAL RETAIN
 	// Константы
 	AMOUNT_BUNKER_MOTOR_VIBFEEDER : INT := 2;
 	AMOUNT_BUNKER_MOTOR_VIBRATOR : INT := 4;
+
+	// == УСТАВКИ ЗАДЕРЖКИ СРАБАТЫВАНИЯ ДАТЧИКОВ БЕЗОПАСНОСТИ ==
+	// Таймеры задержки для датчиков отвалообразователя (Dumper)
+	TIME_DELAY_SENSOR_DUMPER_ZQ_ALARM : TIME := T#0S;   // Задержка срабатывания датчика схода ленты (Alarm)
+	TIME_DELAY_SENSOR_DUMPER_ZQ_WARNING : TIME := T#0S; // Задержка срабатывания датчика схода ленты (Warning)
+	TIME_DELAY_SENSOR_DUMPER_HQ : TIME := T#0S;         // Задержка срабатывания кабель-тросового выключателя
+	TIME_DELAY_SENSOR_DUMPER_SQ : TIME := T#0S;         // Задержка срабатывания датчика ограждения барабана
+	TIME_DELAY_SENSOR_DUMPER_GS : TIME := T#0S;         // Задержка срабатывания датчика заштыбовки
+	TIME_DELAY_SENSOR_DUMPER_YS : TIME := T#0S;         // Задержка срабатывания датчика продольного разрыва
+	TIME_DELAY_SENSOR_DUMPER_QR : TIME := T#0S;         // Задержка срабатывания датчика скорости
+
+	// Таймеры задержки для датчиков сборного конвейера (Conveyor)
+	TIME_DELAY_SENSOR_CONVEYOR_ZQ_ALARM : TIME := T#0S;   // Задержка срабатывания датчика схода ленты (Alarm)
+	TIME_DELAY_SENSOR_CONVEYOR_ZQ_WARNING : TIME := T#0S; // Задержка срабатывания датчика схода ленты (Warning)
+	TIME_DELAY_SENSOR_CONVEYOR_HQ : TIME := T#0S;         // Задержка срабатывания кабель-тросового выключателя
+	TIME_DELAY_SENSOR_CONVEYOR_SQ : TIME := T#0S;         // Задержка срабатывания датчика ограждения барабана
+	TIME_DELAY_SENSOR_CONVEYOR_GS : TIME := T#0S;         // Задержка срабатывания датчика заштыбовки
+	TIME_DELAY_SENSOR_CONVEYOR_YS : TIME := T#0S;         // Задержка срабатывания датчика продольного разрыва
+	TIME_DELAY_SENSOR_CONVEYOR_YE : TIME := T#0S;         // Задержка срабатывания металлодетектора
+	TIME_DELAY_SENSOR_CONVEYOR_QR : TIME := T#0S;         // Задержка срабатывания датчика скорости
 END_VAR

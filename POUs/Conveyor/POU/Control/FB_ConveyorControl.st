@@ -83,7 +83,15 @@ fbConveyorMotors(
 
 fbSensors(
 	Conveyor := Conveyor,
-	xReset := xReset
+	xReset := xReset,
+	itDelayZQ_Alarm := TIME_DELAY_SENSOR_CONVEYOR_ZQ_ALARM,
+	itDelayZQ_Warning := TIME_DELAY_SENSOR_CONVEYOR_ZQ_WARNING,
+	itDelayHQ := TIME_DELAY_SENSOR_CONVEYOR_HQ,
+	itDelaySQ := TIME_DELAY_SENSOR_CONVEYOR_SQ,
+	itDelayGS := TIME_DELAY_SENSOR_CONVEYOR_GS,
+	itDelayYS := TIME_DELAY_SENSOR_CONVEYOR_YS,
+	itDelayYE := TIME_DELAY_SENSOR_CONVEYOR_YE,
+	itDelayQR := TIME_DELAY_SENSOR_CONVEYOR_QR
 );
 
 // ========================================
