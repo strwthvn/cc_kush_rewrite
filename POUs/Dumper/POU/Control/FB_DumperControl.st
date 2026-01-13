@@ -491,6 +491,14 @@ ELSE
 	IF xStopRotation AND fbRotationMotors.eStage = E_StageActuator.IDLE THEN
 		xStopRotation := FALSE;
 	END_IF;
+
+	// Сброс команд поворота при достижении концевиков
+	IF fbRotationMotors.xEndSwitchLeftReached THEN
+		xTurnLeft := FALSE;
+	END_IF;
+	IF fbRotationMotors.xEndSwitchRightReached THEN
+		xTurnRight := FALSE;
+	END_IF;
 END_IF;
 
 // ========================================

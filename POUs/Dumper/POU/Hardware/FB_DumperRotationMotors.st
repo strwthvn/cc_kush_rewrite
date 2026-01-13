@@ -15,6 +15,8 @@ VAR_OUTPUT
 	xRotatingRight : BOOL;      // Активен поворот вправо
 	xStartingTimeout : BOOL;    // Флаг тайм-аута запуска (STARTING слишком долго)
 	xStoppingTimeout : BOOL;    // Флаг тайм-аута остановки (STOPPING слишком долго)
+	xEndSwitchLeftReached : BOOL;   // Достигнут левый концевик
+	xEndSwitchRightReached : BOOL;  // Достигнут правый концевик
 END_VAR
 VAR
 	STAGE : E_StageActuator := E_StageActuator.IDLE;
@@ -365,5 +367,10 @@ rCurrentFrequency := (Dumper.MotorRotation[1].VFD.rActualFrequency
 // Флаги активного поворота
 xRotatingLeft := xLeftActive;
 xRotatingRight := xRightActive;
+
+// Состояние концевых выключателей (TRUE = концевик достигнут)
+// qxSignal = TRUE означает концевик в норме (не нажат), поэтому инвертируем
+xEndSwitchLeftReached := NOT Dumper.fbEndSwitchLeft.qxSignal;
+xEndSwitchRightReached := NOT Dumper.fbEndSwitchRight.qxSignal;
 
 END_FUNCTION_BLOCK

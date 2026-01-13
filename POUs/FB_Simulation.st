@@ -390,9 +390,10 @@ IF xEnable THEN
 		// --- Вибропитатели (MotorVibFeeder[1..2]) ---
 		FOR m := 1 TO 2 BY 1 DO
 			// Симуляция частоты ЧРП вибропитателя
-			// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
-			// поэтому записываем целевую частоту в rSimulatedFrequency
-			Bunker[b].MotorVibFeeder[m].VFD.rSimulatedFrequency := Bunker[b].MotorVibFeeder[m].VFD.qrOutFrequency;
+			// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую.
+			// Для вибропитателей используем Frequency.qrCurrentFrequency, т.к. именно это значение
+			// передаётся в fbAnalogOutput.rEngValue (плавное изменение частоты через FB_FrequencyControl)
+			Bunker[b].MotorVibFeeder[m].VFD.rSimulatedFrequency := Bunker[b].MotorVibFeeder[m].VFD.Frequency.qrCurrentFrequency;
 
 			// Обратная связь контактора вибропитателя
 			tonKM_VibFeeder[b, m](IN := Bunker[b].MotorVibFeeder[m].qxKM_Power, PT := tFeedbackDelay);
