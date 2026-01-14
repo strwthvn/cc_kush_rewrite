@@ -13,6 +13,11 @@ END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия запуска вибропитателей
 	eStageToSCADA : E_ScadaStatesDevice; // Передача состояния скаде
+
+	// Готовность секции к запуску
+	xSectionReady : BOOL; // Секция готова к запуску (все условия выполнены)
+	xSectionReadyVibFeeder : BOOL; // Готовность вибропитателей (оба готовы)
+	xSectionReadyVibrator : BOOL; // Готовность вибраторов (только выбранные)
 END_VAR
 VAR
 	// === I/O обработка ===
@@ -161,6 +166,56 @@ Bunker.xStateWarning := Bunker.MotorVibFeeder[1].VFD.fbRangeDiagnostic.qxWarning
                      OR Bunker.MotorVibFeeder[2].fbRangeDiagnostic[2].qxWarningActive;
 
 // ========================================
+// ОПРЕДЕЛЕНИЕ ГОТОВНОСТИ СЕКЦИИ
+// ========================================
+// Готовность = отсутствие ошибок по датчикам бункера (люк) + отсутствие ошибок моторов +
+//              готовность VFD (дискретный сигнал) + автоматические выключатели включены (QF) +
+//              схема контакторов собрана + отсутствие FAULT в блоках управления моторами
+
+// Готовность вибропитателей:
+// - Нет ошибок моторов вибропитателей (VFD failure)
+// - VFD моторов вибропитателей готовы к пуску (fbStateRdyToStart)
+// - Автоматические выключатели моторов вибропитателей включены (QF)
+// - Схема контакторов вибропитателей собрана (xCircuitBuilt)
+// - Отсутствие FAULT в блоке управления моторами вибропитателей
+xSectionReadyVibFeeder := NOT fbMotorErrors.xErrorMotorVibFeeder_Any
+                       AND fbMotorErrors.xVFD_ReadyVibFeeder_All
+                       AND fbMotorErrors.xQF_OkVibFeeder_All
+                       AND xCircuitBuilt
+                       AND fbVibFeederMotors.eStage <> E_StageActuator.FAULT;
+
+// Готовность вибраторов (ТОЛЬКО ВЫБРАННЫХ):
+// При принятии решения учитываются только те вибраторы, которые были включены в работу
+// через команды выбора Bunker.cmdAddVib1..4.
+// - Нет ошибок выбранных вибраторов (VFD failure)
+// - VFD выбранных вибраторов готовы к пуску (fbStateRdyToStart)
+// - Автоматические выключатели выбранных вибраторов включены (QF)
+// - Схема контакторов вибраторов собрана (xCircuitBuiltVibrator)
+// - Отсутствие FAULT в блоке управления вибраторами
+//
+// ЛОГИКА ПРОВЕРКИ:
+// Для каждого вибратора: если выбран (cmdAddVibX = TRUE) → проверяем готовность
+//                       если не выбран → игнорируем (не влияет на готовность)
+xSectionReadyVibrator :=
+    // Схема контакторов вибраторов собрана
+    xCircuitBuiltVibrator
+    // Отсутствие FAULT в блоке управления вибраторами
+    AND fbVibratorMotors.eStage <> E_StageActuator.FAULT
+    // Проверка каждого вибратора (если выбран - проверяем готовность)
+    AND (NOT Bunker.cmdAddVib1 OR (NOT fbMotorErrors.xErrorVibrator1 AND fbMotorErrors.xVFD_ReadyVibrator1 AND fbMotorErrors.xQF_OkVibrator1))
+    AND (NOT Bunker.cmdAddVib2 OR (NOT fbMotorErrors.xErrorVibrator2 AND fbMotorErrors.xVFD_ReadyVibrator2 AND fbMotorErrors.xQF_OkVibrator2))
+    AND (NOT Bunker.cmdAddVib3 OR (NOT fbMotorErrors.xErrorVibrator3 AND fbMotorErrors.xVFD_ReadyVibrator3 AND fbMotorErrors.xQF_OkVibrator3))
+    AND (NOT Bunker.cmdAddVib4 OR (NOT fbMotorErrors.xErrorVibrator4 AND fbMotorErrors.xVFD_ReadyVibrator4 AND fbMotorErrors.xQF_OkVibrator4));
+
+// Общая готовность секции:
+// - Нет ошибок по датчикам бункера (fbSensors.xErrorHatch)
+// - Вибропитатели готовы (оба мотора)
+// - Вибраторы готовы (только выбранные)
+xSectionReady := NOT fbSensors.xErrorHatch
+              AND xSectionReadyVibFeeder
+              AND xSectionReadyVibrator;
+
+// ========================================
 // ВЫБОР ИСТОЧНИКА КОМАНД (ПМУ ИЛИ SCADA)
 // ========================================
 
@@ -168,7 +223,8 @@ Bunker.xStateWarning := Bunker.MotorVibFeeder[1].VFD.fbRangeDiagnostic.qxWarning
 // В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
 IF xLocalMode THEN
 	// Местный режим - команды с ПМУ
-	xStartCommand := Bunker.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	// ПУСК разрешён только при готовности секции (xSectionReady)
+	xStartCommand := Bunker.fbBtnStart.qxRisingEdge AND xSectionReady;
 	xStopCommand := Bunker.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
 ELSE
 	// Дистанционный режим - команды из SCADA
@@ -460,11 +516,15 @@ ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND Bunker.xStateWarning THEN
 	eStageToSCADA := E_ScadaStatesDevice.WARNING;
 
 ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND Bunker.xStateFailure THEN
-	// Секция неготова к запуску (есть ошибки)
+	// Секция неготова к запуску (есть зафиксированные ошибки)
+	eStageToSCADA := E_ScadaStatesDevice.NOT_READY;
+
+ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND NOT xSectionReady THEN
+	// Секция неготова к запуску (VFD не готовы или есть ошибки моторов/датчиков)
 	eStageToSCADA := E_ScadaStatesDevice.NOT_READY;
 
 ELSE
-	// Секция готова к запуску (IDLE, нет ошибок и предупреждений)
+	// Секция готова к запуску (IDLE, нет ошибок, VFD готовы)
 	eStageToSCADA := E_ScadaStatesDevice.READY;
 
 END_IF;

@@ -12,10 +12,12 @@ VAR_INPUT
 	xEnableAutoMode : BOOL;             // Разрешение автоматического режима (только в WORK вибропитателей)
 END_VAR
 VAR_OUTPUT
+	eStage : E_StageActuator;           // IDLE/STARTING/WORK/STOPPING/FAULT
 	xVibratorAutoActive : BOOL;         // Флаг активной работы (Auto)
 	xVibratorManualRunActive : BOOL;    // Флаг активной работы (Manual)
 END_VAR
 VAR
+	STAGE : E_StageActuator := E_StageActuator.IDLE;  // Текущая стадия
 	tonVibratorActive : TON;            // Таймер активной работы (Auto)
 	tonVibratorPause : TON;             // Таймер паузы (Auto)
 	i : INT;
@@ -44,6 +46,7 @@ END_VAR
 // - xEnableAutoMode: разрешение автоматического режима (TRUE только в WORK вибропитателей)
 //
 // ВЫХОДЫ:
+// - eStage: текущая стадия (IDLE/STARTING/WORK/STOPPING/FAULT)
 // - xVibratorAutoActive: флаг активной работы в авто режиме
 // - xVibratorManualRunActive: флаг активной работы в ручном режиме
 //
@@ -65,6 +68,9 @@ IF xEmergencyStop THEN
 	tonVibratorPause(IN := FALSE);
 	xVibratorManualRunActive := FALSE;
 	xVibratorAutoActive := FALSE;
+
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
 END_IF
 
 // ========================================
@@ -102,6 +108,9 @@ IF NOT xEmergencyStop THEN
 						Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
 						Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
 						Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+
+						// Переход в WORK
+						STAGE := E_StageActuator.WORK;
 					ELSIF NOT tonVibratorPause.IN THEN
 						// Первый запуск - сразу в ACTIVE
 						tonVibratorActive(IN := TRUE);
@@ -112,6 +121,12 @@ IF NOT xEmergencyStop THEN
 						Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
 						Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
 						Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+
+						// Переход в WORK
+						STAGE := E_StageActuator.WORK;
+					ELSE
+						// Пауза активна - IDLE
+						STAGE := E_StageActuator.IDLE;
 					END_IF;
 				ELSE
 					// Состояние ACTIVE - ждем окончания активной работы
@@ -126,6 +141,12 @@ IF NOT xEmergencyStop THEN
 						Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
 						Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
 						Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+
+						// Переход в IDLE (пауза)
+						STAGE := E_StageActuator.IDLE;
+					ELSE
+						// Активная работа - WORK
+						STAGE := E_StageActuator.WORK;
 					END_IF;
 				END_IF;
 			ELSE
@@ -139,6 +160,9 @@ IF NOT xEmergencyStop THEN
 				Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
 				Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
 				Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+
+				// Переход в IDLE
+				STAGE := E_StageActuator.IDLE;
 			END_IF;
 
 		// ========================================
@@ -166,6 +190,16 @@ IF NOT xEmergencyStop THEN
 				Bunker.MotorVibrator[2].VFD.qxStart := xSelectedVibrators[2];
 				Bunker.MotorVibrator[3].VFD.qxStart := xSelectedVibrators[3];
 				Bunker.MotorVibrator[4].VFD.qxStart := xSelectedVibrators[4];
+
+				// Проверка: хотя бы один вибратор выбран → WORK
+				IF xSelectedVibrators[1] OR xSelectedVibrators[2] OR xSelectedVibrators[3] OR xSelectedVibrators[4] THEN
+					STAGE := E_StageActuator.WORK;
+				ELSE
+					STAGE := E_StageActuator.IDLE;
+				END_IF;
+			ELSE
+				// Флаг запуска неактивен - IDLE
+				STAGE := E_StageActuator.IDLE;
 			END_IF
 
 			// Установка частоты для вибраторов в ручном режиме
@@ -183,7 +217,24 @@ IF NOT xEmergencyStop THEN
 			Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
 			Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
 			Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+
+			// Режим ремонт - IDLE
+			STAGE := E_StageActuator.IDLE;
 	END_CASE
 END_IF; // Конец IF NOT xEmergencyStop
+
+// ========================================
+// ВЫХОД ИЗ FAULT ПО КОМАНДЕ СБРОСА
+// ========================================
+
+IF STAGE = E_StageActuator.FAULT AND xReset THEN
+	STAGE := E_StageActuator.IDLE;
+END_IF
+
+// ========================================
+// ВЫХОДЫ
+// ========================================
+
+eStage := STAGE;
 
 END_FUNCTION_BLOCK
