@@ -186,22 +186,26 @@ Dumper.xStateWarning := fbSensors.xWarningSafetySensors
 // - Нет ошибок моторов конвейера (VFD failure)
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов конвейера включены (QF)
+// - Схема контакторов конвейера собрана (xCircuitBuilt)
 xSectionReadyConveyor := NOT fbMotorErrors.xErrorMotorConv_Any
                       AND fbMotorErrors.xVFD_ReadyConv_All
-                      AND fbMotorErrors.xQF_OkConv_All;
+                      AND fbMotorErrors.xQF_OkConv_All
+                      AND xCircuitBuilt;
 
 // Готовность поворота:
 // - Нет ошибок моторов поворота (VFD failure)
 // - VFD моторов поворота готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов поворота включены (QF)
+// - Схема контакторов поворота собрана (xCircuitBuiltRotation)
 xSectionReadyRotation := NOT fbMotorErrors.xErrorMotorRot_Any
                       AND fbMotorErrors.xVFD_ReadyRot_All
-                      AND fbMotorErrors.xQF_OkRot_All;
+                      AND fbMotorErrors.xQF_OkRot_All
+                      AND xCircuitBuiltRotation;
 
 // Общая готовность секции:
 // - Нет ошибок по датчикам безопасности
-// - Конвейер готов
-// - Поворот готов
+// - Конвейер готов (включая схему)
+// - Поворот готов (включая схему)
 xSectionReady := NOT fbSensors.xErrorSafetySensors
               AND xSectionReadyConveyor
               AND xSectionReadyRotation;
@@ -226,7 +230,8 @@ END_IF
 // В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
 IF xLocalMode THEN
 	// Местный режим - команды с ПМУ
-	xStartCommand := Dumper.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	// ПУСК конвейера разрешён только при готовности конвейера (xSectionReadyConveyor)
+	xStartCommand := Dumper.fbBtnStart.qxRisingEdge AND xSectionReadyConveyor;
 	xStopCommand := Dumper.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
 ELSE
 	// Дистанционный режим - команды из SCADA
@@ -455,10 +460,11 @@ Dumper.MotorRotation[2].qxKM_Power := xCircuitBuiltRotation;
 IF xLocalMode THEN
 	// ========== МЕСТНЫЙ РЕЖИМ (ПМУ) ==========
 	// В местном режиме: поворот работает ПОКА ЗАЖАТА КНОПКА
+	// Поворот разрешён только при готовности поворота (xSectionReadyRotation)
 
 	// Команды поворота с кнопок ПМУ (уровень, не edge)
-	xTurnLeft := Dumper.fbBtnTurnLeft.qxSignal;
-	xTurnRight := Dumper.fbBtnTurnRight.qxSignal;
+	xTurnLeft := Dumper.fbBtnTurnLeft.qxSignal AND xSectionReadyRotation;
+	xTurnRight := Dumper.fbBtnTurnRight.qxSignal AND xSectionReadyRotation;
 
 	// Остановка при отпускании кнопки (обрабатывается внутри FB_DumperRotationMotors)
 	xStopRotation := FALSE;

@@ -95,6 +95,34 @@ VAR
 	// Таймеры обратной связи вибраторов [бункер 1..3][мотор 1..4]
 	tonKM_Vibrator : ARRAY[1..3, 1..4] OF TON;
 	tonVFD_Vibrator : ARRAY[1..3, 1..4] OF TON;
+
+	// ========================================
+	// ПЕРЕМЕННЫЕ ДЛЯ ОТЛАДКИ - СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ VFD
+	// TRUE = обратная связь есть (нормальная работа)
+	// FALSE = обратная связь отсутствует (ошибка - нет обратной связи)
+	// ========================================
+
+	// Отвалообразователь - моторы конвейера
+	_xSimVFDFeedback_DumperConv1 : BOOL := TRUE;
+	_xSimVFDFeedback_DumperConv2 : BOOL := TRUE;
+
+	// Отвалообразователь - моторы поворота
+	_xSimVFDFeedback_DumperRot1 : BOOL := TRUE;
+	_xSimVFDFeedback_DumperRot2 : BOOL := TRUE;
+
+	// Сборный конвейер - моторы конвейера
+	_xSimVFDFeedback_ConveyorConv1 : BOOL := TRUE;
+	_xSimVFDFeedback_ConveyorConv2 : BOOL := TRUE;
+
+	// Бункеры - вибропитатели [бункер 1..3][мотор 1..2]
+	_xSimVFDFeedback_VibFeeder : ARRAY[1..3, 1..2] OF BOOL := [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE];
+
+	// Бункеры - вибраторы [бункер 1..3][мотор 1..4]
+	_xSimVFDFeedback_Vibrator : ARRAY[1..3, 1..4] OF BOOL := [
+		TRUE, TRUE, TRUE, TRUE,
+		TRUE, TRUE, TRUE, TRUE,
+		TRUE, TRUE, TRUE, TRUE
+	];
 END_VAR
 
 // Детекция фронтов
@@ -328,18 +356,18 @@ IF xEnable THEN
 
 	// Обратная связь работы ЧРП моторов конвейера отвалообразователя
 	tonVFD_Conv1(IN := Dumper.MotorConveyor[1].VFD.qxStart, PT := tFeedbackDelay);
-	Dumper.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv1.Q;
+	Dumper.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv1.Q AND _xSimVFDFeedback_DumperConv1;
 
 	tonVFD_Conv2(IN := Dumper.MotorConveyor[2].VFD.qxStart, PT := tFeedbackDelay);
-	Dumper.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv2.Q;
+	Dumper.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv2.Q AND _xSimVFDFeedback_DumperConv2;
 
 	// Обратная связь работы ЧРП моторов поворота отвалообразователя
 	// Учитываем как прямое, так и реверсивное вращение
 	tonVFD_Rot1(IN := (Dumper.MotorRotation[1].VFD.qxStart OR Dumper.MotorRotation[1].qxVFDReverseStart), PT := tFeedbackDelay);
-	Dumper.MotorRotation[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot1.Q;
+	Dumper.MotorRotation[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot1.Q AND _xSimVFDFeedback_DumperRot1;
 
 	tonVFD_Rot2(IN := (Dumper.MotorRotation[2].VFD.qxStart OR Dumper.MotorRotation[2].qxVFDReverseStart), PT := tFeedbackDelay);
-	Dumper.MotorRotation[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot2.Q;
+	Dumper.MotorRotation[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot2.Q AND _xSimVFDFeedback_DumperRot2;
 
 	// Обратная связь тормозов отвалообразователя
 	// Тормоз отпущен (TRUE) когда на выходе активен сигнал
@@ -373,10 +401,10 @@ IF xEnable THEN
 
 	// Обратная связь работы ЧРП моторов конвейера
 	tonVFD_PrefConv1(IN := Conveyor.MotorConveyor[1].VFD.qxStart, PT := tFeedbackDelay);
-	Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv1.Q;
+	Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv1.Q AND _xSimVFDFeedback_ConveyorConv1;
 
 	tonVFD_PrefConv2(IN := Conveyor.MotorConveyor[2].VFD.qxStart, PT := tFeedbackDelay);
-	Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv2.Q;
+	Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv2.Q AND _xSimVFDFeedback_ConveyorConv2;
 
 	// Обратная связь тормоза сборного конвейера
 	tonBreaker_PrefConv(IN := Conveyor.qxBreakerConveyor, PT := tFeedbackDelay);
@@ -401,7 +429,7 @@ IF xEnable THEN
 
 			// Обратная связь работы ЧРП вибропитателя
 			tonVFD_VibFeeder[b, m](IN := Bunker[b].MotorVibFeeder[m].VFD.qxStart, PT := tFeedbackDelay);
-			Bunker[b].MotorVibFeeder[m].VFD.fbStateIsWorking.ixSignal := tonVFD_VibFeeder[b, m].Q;
+			Bunker[b].MotorVibFeeder[m].VFD.fbStateIsWorking.ixSignal := tonVFD_VibFeeder[b, m].Q AND _xSimVFDFeedback_VibFeeder[b, m];
 		END_FOR;
 
 		// --- Вибраторы (MotorVibrator[1..4]) ---
@@ -417,7 +445,7 @@ IF xEnable THEN
 
 			// Обратная связь работы ЧРП вибратора
 			tonVFD_Vibrator[b, m](IN := Bunker[b].MotorVibrator[m].VFD.qxStart, PT := tFeedbackDelay);
-			Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.ixSignal := tonVFD_Vibrator[b, m].Q;
+			Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.ixSignal := tonVFD_Vibrator[b, m].Q AND _xSimVFDFeedback_Vibrator[b, m];
 		END_FOR;
 	END_FOR;
 

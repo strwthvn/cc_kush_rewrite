@@ -151,10 +151,12 @@ Conveyor.xStateWarning := fbSensors.xWarningSafetySensors
 // - Нет ошибок моторов конвейера (VFD failure)
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов конвейера включены (QF)
+// - Схема контакторов собрана (xCircuitBuilt)
 xSectionReady := NOT fbSensors.xErrorSafetySensors
               AND NOT fbMotorErrors.xErrorMotorConv_Any
               AND fbMotorErrors.xVFD_ReadyConv_All
-              AND fbMotorErrors.xQF_OkConv_All;
+              AND fbMotorErrors.xQF_OkConv_All
+              AND xCircuitBuilt;
 
 // ========================================
 // ОБРАБОТКА ОСТАНОВКИ И СБРОСА
@@ -173,7 +175,8 @@ END_IF
 // В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
 IF xLocalMode THEN
 	// Местный режим - команды с ПМУ
-	xStartCommand := Conveyor.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	// ПУСК конвейера разрешён только при готовности секции (xSectionReady)
+	xStartCommand := Conveyor.fbBtnStart.qxRisingEdge AND xSectionReady;
 	xStopCommand := Conveyor.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
 ELSE
 	// Дистанционный режим - команды из SCADA
