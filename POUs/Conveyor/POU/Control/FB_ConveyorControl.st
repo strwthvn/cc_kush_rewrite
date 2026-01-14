@@ -152,11 +152,13 @@ Conveyor.xStateWarning := fbSensors.xWarningSafetySensors
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов конвейера включены (QF)
 // - Схема контакторов собрана (xCircuitBuilt)
+// - Отсутствие FAULT в блоке управления моторами конвейера
 xSectionReady := NOT fbSensors.xErrorSafetySensors
               AND NOT fbMotorErrors.xErrorMotorConv_Any
               AND fbMotorErrors.xVFD_ReadyConv_All
               AND fbMotorErrors.xQF_OkConv_All
-              AND xCircuitBuilt;
+              AND xCircuitBuilt
+              AND fbConveyorMotors.eStage <> E_StageActuator.FAULT;
 
 // ========================================
 // ОБРАБОТКА ОСТАНОВКИ И СБРОСА

@@ -187,25 +187,29 @@ Dumper.xStateWarning := fbSensors.xWarningSafetySensors
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов конвейера включены (QF)
 // - Схема контакторов конвейера собрана (xCircuitBuilt)
+// - Отсутствие FAULT в блоке управления моторами конвейера
 xSectionReadyConveyor := NOT fbMotorErrors.xErrorMotorConv_Any
                       AND fbMotorErrors.xVFD_ReadyConv_All
                       AND fbMotorErrors.xQF_OkConv_All
-                      AND xCircuitBuilt;
+                      AND xCircuitBuilt
+                      AND fbConveyorMotors.eStage <> E_StageActuator.FAULT;
 
 // Готовность поворота:
 // - Нет ошибок моторов поворота (VFD failure)
 // - VFD моторов поворота готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов поворота включены (QF)
 // - Схема контакторов поворота собрана (xCircuitBuiltRotation)
+// - Отсутствие FAULT в блоке управления моторами поворота
 xSectionReadyRotation := NOT fbMotorErrors.xErrorMotorRot_Any
                       AND fbMotorErrors.xVFD_ReadyRot_All
                       AND fbMotorErrors.xQF_OkRot_All
-                      AND xCircuitBuiltRotation;
+                      AND xCircuitBuiltRotation
+                      AND fbRotationMotors.eStage <> E_StageActuator.FAULT;
 
 // Общая готовность секции:
 // - Нет ошибок по датчикам безопасности
-// - Конвейер готов (включая схему)
-// - Поворот готов (включая схему)
+// - Конвейер готов (включая схему и отсутствие FAULT)
+// - Поворот готов (включая схему и отсутствие FAULT)
 xSectionReady := NOT fbSensors.xErrorSafetySensors
               AND xSectionReadyConveyor
               AND xSectionReadyRotation;
