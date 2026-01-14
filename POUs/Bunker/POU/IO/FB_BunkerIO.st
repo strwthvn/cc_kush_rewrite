@@ -261,9 +261,10 @@ FOR i := 1 TO AMOUNT_BUNKER_MOTOR_VIBFEEDER BY 1 DO
 	);
 
 	// Аналоговый выход ЧРП (задание частоты)
+	// Частота берётся напрямую из qrOutFrequency (без плавного разгона через FB_FrequencyControl)
 	Bunker.MotorVibFeeder[i].VFD.fbAnalogOutput(
 		xEnable := Bunker.MotorVibFeeder[i].VFD.fbStateIsWorking.qxSignal,
-		rEngValue := Bunker.MotorVibFeeder[i].VFD.Frequency.qrCurrentFrequency,
+		rEngValue := Bunker.MotorVibFeeder[i].VFD.qrOutFrequency,
 		rEngValue_Max := VFD_FREQ_MAX_RANGE,
 		rEngValue_Min := VFD_FREQ_MIN,
 		rCurrent_Max := VFD_CURRENT_MAX,
