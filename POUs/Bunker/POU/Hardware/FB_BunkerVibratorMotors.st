@@ -21,6 +21,12 @@ VAR
 	tonVibratorActive : TON;            // Таймер активной работы (Auto)
 	tonVibratorPause : TON;             // Таймер паузы (Auto)
 	i : INT;
+
+	// Переменные для последовательного запуска вибраторов
+	tonSequentialStart : TON;           // Таймер шага последовательного запуска
+	nSequentialIndex : INT := 0;        // Текущий индекс в последовательности запуска (0 = не запущен, 1-4 = номер вибратора)
+	axVibratorStarted : ARRAY[1..4] OF BOOL; // Флаги запущенных вибраторов в текущем цикле ACTIVE
+	xSequentialStartComplete : BOOL;    // Все выбранные вибраторы запущены
 END_VAR
 
 // ========================================
@@ -66,8 +72,14 @@ IF xEmergencyStop THEN
 	// Сброс таймеров и флагов
 	tonVibratorActive(IN := FALSE);
 	tonVibratorPause(IN := FALSE);
+	tonSequentialStart(IN := FALSE);
 	xVibratorManualRunActive := FALSE;
 	xVibratorAutoActive := FALSE;
+	nSequentialIndex := 0;
+	xSequentialStartComplete := FALSE;
+	FOR i := 1 TO 4 BY 1 DO
+		axVibratorStarted[i] := FALSE;
+	END_FOR;
 
 	// Переход в FAULT
 	STAGE := E_StageActuator.FAULT;
@@ -93,6 +105,7 @@ IF NOT xEmergencyStop THEN
 				// Таймеры автоматического цикла
 				tonVibratorActive(PT := stVibratorSettings.TIME_ACTIVE);
 				tonVibratorPause(PT := stVibratorSettings.TIME_PAUSE_VIBRATOR);
+				tonSequentialStart(PT := TIME_VIBRATOR_SEQUENTIAL_START_STEP);
 
 				// Логика автоматического цикла (ACTIVE ↔ PAUSE)
 				IF NOT xVibratorAutoActive THEN
@@ -100,47 +113,92 @@ IF NOT xEmergencyStop THEN
 					IF tonVibratorPause.Q THEN
 						// Пауза завершена - переход в ACTIVE
 						tonVibratorPause(IN := FALSE);
-						tonVibratorActive(IN := TRUE);
 						xVibratorAutoActive := TRUE;
 
-						// Запуск всех вибраторов
-						Bunker.MotorVibrator[1].VFD.qxStart := TRUE;
-						Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
-						Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
-						Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+						// Сброс состояния последовательного запуска
+						nSequentialIndex := 0;
+						xSequentialStartComplete := FALSE;
+						FOR i := 1 TO 4 BY 1 DO
+							axVibratorStarted[i] := FALSE;
+						END_FOR;
+						tonSequentialStart(IN := FALSE);
+						tonVibratorActive(IN := FALSE); // Таймер ACTIVE запустится после завершения последовательного запуска
 
-						// Переход в WORK
+						// Переход в WORK (вибраторы будут запускаться последовательно)
 						STAGE := E_StageActuator.WORK;
 					ELSIF NOT tonVibratorPause.IN THEN
 						// Первый запуск - сразу в ACTIVE
-						tonVibratorActive(IN := TRUE);
 						xVibratorAutoActive := TRUE;
 
-						// Запуск всех вибраторов
-						Bunker.MotorVibrator[1].VFD.qxStart := TRUE;
-						Bunker.MotorVibrator[2].VFD.qxStart := TRUE;
-						Bunker.MotorVibrator[3].VFD.qxStart := TRUE;
-						Bunker.MotorVibrator[4].VFD.qxStart := TRUE;
+						// Сброс состояния последовательного запуска
+						nSequentialIndex := 0;
+						xSequentialStartComplete := FALSE;
+						FOR i := 1 TO 4 BY 1 DO
+							axVibratorStarted[i] := FALSE;
+						END_FOR;
+						tonSequentialStart(IN := FALSE);
+						tonVibratorActive(IN := FALSE); // Таймер ACTIVE запустится после завершения последовательного запуска
 
-						// Переход в WORK
+						// Переход в WORK (вибраторы будут запускаться последовательно)
 						STAGE := E_StageActuator.WORK;
 					ELSE
 						// Пауза активна - IDLE
 						STAGE := E_StageActuator.IDLE;
 					END_IF;
 				ELSE
-					// Состояние ACTIVE - ждем окончания активной работы
-					IF tonVibratorActive.Q THEN
+					// Состояние ACTIVE - последовательный запуск вибраторов
+
+					// Логика последовательного запуска (если ещё не все запущены)
+					IF NOT xSequentialStartComplete THEN
+						// Проверка таймера для запуска следующего вибратора
+						IF NOT tonSequentialStart.IN OR tonSequentialStart.Q THEN
+							// Сброс таймера и поиск следующего выбранного вибратора
+							tonSequentialStart(IN := FALSE);
+
+							// Ищем следующий выбранный вибратор, который ещё не запущен
+							FOR i := 1 TO 4 BY 1 DO
+								IF xSelectedVibrators[i] AND NOT axVibratorStarted[i] THEN
+									// Найден следующий вибратор для запуска
+									Bunker.MotorVibrator[i].VFD.qxStart := TRUE;
+									axVibratorStarted[i] := TRUE;
+									nSequentialIndex := i;
+									tonSequentialStart(IN := TRUE); // Запуск таймера для следующего
+									EXIT; // Выход из цикла - запускаем только один за раз
+								END_IF;
+							END_FOR;
+
+							// Проверка: все ли выбранные вибраторы запущены
+							xSequentialStartComplete := TRUE;
+							FOR i := 1 TO 4 BY 1 DO
+								IF xSelectedVibrators[i] AND NOT axVibratorStarted[i] THEN
+									xSequentialStartComplete := FALSE;
+									EXIT;
+								END_IF;
+							END_FOR;
+
+							// Если все запущены - остановить таймер последовательного запуска и запустить таймер ACTIVE
+							IF xSequentialStartComplete THEN
+								tonSequentialStart(IN := FALSE);
+								tonVibratorActive(IN := TRUE); // Таймер ACTIVE начинается после запуска всех выбранных вибраторов
+							END_IF;
+						END_IF;
+					END_IF;
+
+					// Проверка окончания активной работы (только если все вибраторы уже запущены)
+					IF xSequentialStartComplete AND tonVibratorActive.Q THEN
 						// Активная работа завершена - переход в PAUSE
 						tonVibratorActive(IN := FALSE);
 						tonVibratorPause(IN := TRUE);
+						tonSequentialStart(IN := FALSE);
 						xVibratorAutoActive := FALSE;
+						xSequentialStartComplete := FALSE;
+						nSequentialIndex := 0;
 
 						// Остановка всех вибраторов
-						Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
-						Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
-						Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
-						Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+						FOR i := 1 TO 4 BY 1 DO
+							Bunker.MotorVibrator[i].VFD.qxStart := FALSE;
+							axVibratorStarted[i] := FALSE;
+						END_FOR;
 
 						// Переход в IDLE (пауза)
 						STAGE := E_StageActuator.IDLE;
@@ -153,13 +211,16 @@ IF NOT xEmergencyStop THEN
 				// Вне WORK вибропитателей - остановка автоматического цикла
 				tonVibratorActive(IN := FALSE);
 				tonVibratorPause(IN := FALSE);
+				tonSequentialStart(IN := FALSE);
 				xVibratorAutoActive := FALSE;
+				xSequentialStartComplete := FALSE;
+				nSequentialIndex := 0;
 
 				// Остановка всех вибраторов
-				Bunker.MotorVibrator[1].VFD.qxStart := FALSE;
-				Bunker.MotorVibrator[2].VFD.qxStart := FALSE;
-				Bunker.MotorVibrator[3].VFD.qxStart := FALSE;
-				Bunker.MotorVibrator[4].VFD.qxStart := FALSE;
+				FOR i := 1 TO 4 BY 1 DO
+					Bunker.MotorVibrator[i].VFD.qxStart := FALSE;
+					axVibratorStarted[i] := FALSE;
+				END_FOR;
 
 				// Переход в IDLE
 				STAGE := E_StageActuator.IDLE;

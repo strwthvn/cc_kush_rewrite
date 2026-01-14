@@ -95,6 +95,9 @@ VAR_GLOBAL RETAIN
 		COUNT_CYCLE := 3
 		);
 
+	// Время шага последовательного запуска вибраторов (задержка между запуском каждого следующего вибратора в фазе ACTIVE)
+	TIME_VIBRATOR_SEQUENTIAL_START_STEP : TIME := T#2S;
+
 	// Настройка пневмообрушения
 	PNEUMO_SETTINGS : ST_BunkerVibratorSettings := (
 		TIME_ACTIVE := T#10S,
