@@ -117,6 +117,7 @@ VAR_GLOBAL RETAIN
 	TIME_TIMEOUT_START_DUMPER_CONVEYOR : TIME := T#30S; // Тайм-аут запуска моторов конвейера отвалообразователя (STARTING → WORK)
 	TIME_TIMEOUT_START_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут запуска моторов поворота отвалообразователя (STARTING → WORK)
 	TIME_TIMEOUT_START_CONVEYOR : TIME := T#30S; // Тайм-аут запуска моторов сборного конвейера (STARTING → WORK)
+	TIME_TIMEOUT_START_BUNKER : TIME := T#20S; // Тайм-аут запуска вибропитателей бункера (STARTING → WORK)
 	TIME_TIMEOUT_STOP_DUMPER_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов конвейера отвалообразователя (STOPPING → IDLE)
 	TIME_TIMEOUT_STOP_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут остановки моторов поворота отвалообразователя (STOPPING → IDLE)
 	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов сборного конвейера (STOPPING → IDLE)
