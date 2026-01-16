@@ -2,6 +2,15 @@ FUNCTION_BLOCK FB_DumperSensors
 VAR_INPUT
 	Dumper : REFERENCE TO ST_Dumper;
 	xReset : BOOL; // Команда сброса зафиксированных ошибок
+
+	// Уставки задержки срабатывания для каждого типа датчика
+	itDelayZQ_Alarm : TIME;   // Задержка срабатывания датчика схода ленты (Alarm)
+	itDelayZQ_Warning : TIME; // Задержка срабатывания датчика схода ленты (Warning)
+	itDelayHQ : TIME;         // Задержка срабатывания кабель-тросового выключателя
+	itDelaySQ : TIME;         // Задержка срабатывания датчика ограждения барабана
+	itDelayGS : TIME;         // Задержка срабатывания датчика заштыбовки
+	itDelayYS : TIME;         // Задержка срабатывания датчика продольного разрыва
+	itDelayQR : TIME;         // Задержка срабатывания датчика скорости
 END_VAR
 VAR_OUTPUT
 	// Ошибки по датчикам схода ленты (ZQ Alarm)
@@ -93,6 +102,39 @@ VAR
 	_fbLatchErrorQR1 : RS;
 	_fbLatchErrorQR2 : RS;
 	_fbLatchErrorYS : RS;
+
+	// TON таймеры задержки срабатывания для каждого датчика
+	// Датчики схода ленты (ZQ Alarm)
+	_fbDelayZQ1Alarm : TON;
+	_fbDelayZQ2Alarm : TON;
+	_fbDelayZQ3Alarm : TON;
+	_fbDelayZQ4Alarm : TON;
+
+	// Датчики схода ленты (ZQ Warning)
+	_fbDelayZQ1Warning : TON;
+	_fbDelayZQ2Warning : TON;
+	_fbDelayZQ3Warning : TON;
+	_fbDelayZQ4Warning : TON;
+
+	// Кабель-тросовые выключатели (HQ)
+	_fbDelayHQ1 : TON;
+	_fbDelayHQ2 : TON;
+	_fbDelayHQ3 : TON;
+	_fbDelayHQ4 : TON;
+
+	// Ограждения барабана (SQ)
+	_fbDelaySQ1 : TON;
+	_fbDelaySQ2 : TON;
+
+	// Заштыбовка (GS)
+	_fbDelayGS : TON;
+
+	// Датчики скорости (QR)
+	_fbDelayQR1 : TON;
+	_fbDelayQR2 : TON;
+
+	// Продольный разрыв (YS)
+	_fbDelayYS : TON;
 END_VAR
 
 // ========================================
@@ -130,11 +172,17 @@ END_VAR
 // ========================================
 // Логика: 1 = Норма, 0 = Тревога (сход ленты)
 
-// Определяем текущее состояние датчиков
-_xCurrentErrorZQ1 := NOT Dumper.fbZQAlarm[1].qxSignal;
-_xCurrentErrorZQ2 := NOT Dumper.fbZQAlarm[2].qxSignal;
-_xCurrentErrorZQ3 := NOT Dumper.fbZQAlarm[3].qxSignal;
-_xCurrentErrorZQ4 := NOT Dumper.fbZQAlarm[4].qxSignal;
+// Таймеры задержки срабатывания (сигнал должен удерживаться itDelayZQ_Alarm перед фиксацией)
+_fbDelayZQ1Alarm(IN := NOT Dumper.fbZQAlarm[1].qxSignal, PT := itDelayZQ_Alarm);
+_fbDelayZQ2Alarm(IN := NOT Dumper.fbZQAlarm[2].qxSignal, PT := itDelayZQ_Alarm);
+_fbDelayZQ3Alarm(IN := NOT Dumper.fbZQAlarm[3].qxSignal, PT := itDelayZQ_Alarm);
+_fbDelayZQ4Alarm(IN := NOT Dumper.fbZQAlarm[4].qxSignal, PT := itDelayZQ_Alarm);
+
+// Определяем текущее состояние датчиков (после задержки)
+_xCurrentErrorZQ1 := _fbDelayZQ1Alarm.Q;
+_xCurrentErrorZQ2 := _fbDelayZQ2Alarm.Q;
+_xCurrentErrorZQ3 := _fbDelayZQ3Alarm.Q;
+_xCurrentErrorZQ4 := _fbDelayZQ4Alarm.Q;
 
 // Фиксируем ошибки через RS-триггеры (SET при ошибке, RESET по команде xReset)
 _fbLatchErrorZQ1(SET := _xCurrentErrorZQ1, RESET1 := xReset);
@@ -155,11 +203,17 @@ xErrorZQ_Any := xErrorZQ1 OR xErrorZQ2 OR xErrorZQ3 OR xErrorZQ4;
 // ========================================
 // Логика: 1 = Норма, 0 = Предупреждение (лента близка к сходу)
 
-// Определяем текущее состояние датчиков
-_xCurrentWarningZQ1 := NOT Dumper.fbZQWarning[1].qxSignal;
-_xCurrentWarningZQ2 := NOT Dumper.fbZQWarning[2].qxSignal;
-_xCurrentWarningZQ3 := NOT Dumper.fbZQWarning[3].qxSignal;
-_xCurrentWarningZQ4 := NOT Dumper.fbZQWarning[4].qxSignal;
+// Таймеры задержки срабатывания (сигнал должен удерживаться itDelayZQ_Warning перед фиксацией)
+_fbDelayZQ1Warning(IN := NOT Dumper.fbZQWarning[1].qxSignal, PT := itDelayZQ_Warning);
+_fbDelayZQ2Warning(IN := NOT Dumper.fbZQWarning[2].qxSignal, PT := itDelayZQ_Warning);
+_fbDelayZQ3Warning(IN := NOT Dumper.fbZQWarning[3].qxSignal, PT := itDelayZQ_Warning);
+_fbDelayZQ4Warning(IN := NOT Dumper.fbZQWarning[4].qxSignal, PT := itDelayZQ_Warning);
+
+// Определяем текущее состояние датчиков (после задержки)
+_xCurrentWarningZQ1 := _fbDelayZQ1Warning.Q;
+_xCurrentWarningZQ2 := _fbDelayZQ2Warning.Q;
+_xCurrentWarningZQ3 := _fbDelayZQ3Warning.Q;
+_xCurrentWarningZQ4 := _fbDelayZQ4Warning.Q;
 
 // Фиксируем предупреждения через RS-триггеры
 _fbLatchWarningZQ1(SET := _xCurrentWarningZQ1, RESET1 := xReset);
@@ -180,11 +234,17 @@ xWarningZQ_Any := xWarningZQ1 OR xWarningZQ2 OR xWarningZQ3 OR xWarningZQ4;
 // ========================================
 // Логика: 1 = Норма, 0 = Аварийная остановка (трос натянут)
 
-// Определяем текущее состояние датчиков
-_xCurrentErrorHQ1 := NOT Dumper.fbHQ_IsOk[1].qxSignal;
-_xCurrentErrorHQ2 := NOT Dumper.fbHQ_IsOk[2].qxSignal;
-_xCurrentErrorHQ3 := NOT Dumper.fbHQ_IsOk[3].qxSignal;
-_xCurrentErrorHQ4 := NOT Dumper.fbHQ_IsOk[4].qxSignal;
+// Таймеры задержки срабатывания (сигнал должен удерживаться itDelayHQ перед фиксацией)
+_fbDelayHQ1(IN := NOT Dumper.fbHQ_IsOk[1].qxSignal, PT := itDelayHQ);
+_fbDelayHQ2(IN := NOT Dumper.fbHQ_IsOk[2].qxSignal, PT := itDelayHQ);
+_fbDelayHQ3(IN := NOT Dumper.fbHQ_IsOk[3].qxSignal, PT := itDelayHQ);
+_fbDelayHQ4(IN := NOT Dumper.fbHQ_IsOk[4].qxSignal, PT := itDelayHQ);
+
+// Определяем текущее состояние датчиков (после задержки)
+_xCurrentErrorHQ1 := _fbDelayHQ1.Q;
+_xCurrentErrorHQ2 := _fbDelayHQ2.Q;
+_xCurrentErrorHQ3 := _fbDelayHQ3.Q;
+_xCurrentErrorHQ4 := _fbDelayHQ4.Q;
 
 // Фиксируем ошибки через RS-триггеры
 _fbLatchErrorHQ1(SET := _xCurrentErrorHQ1, RESET1 := xReset);
@@ -205,9 +265,13 @@ xErrorHQ_Any := xErrorHQ1 OR xErrorHQ2 OR xErrorHQ3 OR xErrorHQ4;
 // ========================================
 // Логика: 1 = Норма (ограждение закрыто), 0 = Тревога (ограждение открыто)
 
-// Определяем текущее состояние датчиков
-_xCurrentErrorSQ1 := NOT Dumper.fbSQ_IsOk[1].qxSignal;
-_xCurrentErrorSQ2 := NOT Dumper.fbSQ_IsOk[2].qxSignal;
+// Таймеры задержки срабатывания (сигнал должен удерживаться itDelaySQ перед фиксацией)
+_fbDelaySQ1(IN := NOT Dumper.fbSQ_IsOk[1].qxSignal, PT := itDelaySQ);
+_fbDelaySQ2(IN := NOT Dumper.fbSQ_IsOk[2].qxSignal, PT := itDelaySQ);
+
+// Определяем текущее состояние датчиков (после задержки)
+_xCurrentErrorSQ1 := _fbDelaySQ1.Q;
+_xCurrentErrorSQ2 := _fbDelaySQ2.Q;
 
 // Фиксируем ошибки через RS-триггеры
 _fbLatchErrorSQ1(SET := _xCurrentErrorSQ1, RESET1 := xReset);
@@ -224,8 +288,11 @@ xErrorSQ_Any := xErrorSQ1 OR xErrorSQ2;
 // ========================================
 // Логика: 1 = Норма, 0 = Тревога (заштыбовка материала)
 
-// Определяем текущее состояние датчика
-_xCurrentErrorGS := NOT Dumper.fbGS1.qxSignal;
+// Таймер задержки срабатывания (сигнал должен удерживаться itDelayGS перед фиксацией)
+_fbDelayGS(IN := NOT Dumper.fbGS1.qxSignal, PT := itDelayGS);
+
+// Определяем текущее состояние датчика (после задержки)
+_xCurrentErrorGS := _fbDelayGS.Q;
 
 // Фиксируем ошибку через RS-триггер
 _fbLatchErrorGS(SET := _xCurrentErrorGS, RESET1 := xReset);
@@ -239,9 +306,13 @@ xErrorGS := _fbLatchErrorGS.Q1;
 // Логика: Проверка наличия импульсов (детектирование остановки при работающем моторе)
 // Ошибка определяется на верхнем уровне по сравнению с состоянием мотора
 
-// Определяем текущее состояние датчиков (резерв для будущей реализации)
-_xCurrentErrorQR1 := FALSE; // Резерв для будущей реализации
-_xCurrentErrorQR2 := FALSE; // Резерв для будущей реализации
+// Таймеры задержки срабатывания (резерв для будущей реализации)
+_fbDelayQR1(IN := FALSE, PT := itDelayQR); // Резерв для будущей реализации
+_fbDelayQR2(IN := FALSE, PT := itDelayQR); // Резерв для будущей реализации
+
+// Определяем текущее состояние датчиков (после задержки)
+_xCurrentErrorQR1 := _fbDelayQR1.Q;
+_xCurrentErrorQR2 := _fbDelayQR2.Q;
 
 // Фиксируем ошибки через RS-триггеры
 _fbLatchErrorQR1(SET := _xCurrentErrorQR1, RESET1 := xReset);
@@ -258,8 +329,11 @@ xErrorQR_Any := xErrorQR1 OR xErrorQR2;
 // ========================================
 // Логика: 1 = Норма, 0 = Тревога (продольный разрыв ленты)
 
-// Определяем текущее состояние датчика
-_xCurrentErrorYS := NOT Dumper.fbYS1.qxSignal;
+// Таймер задержки срабатывания (сигнал должен удерживаться itDelayYS перед фиксацией)
+_fbDelayYS(IN := NOT Dumper.fbYS1.qxSignal, PT := itDelayYS);
+
+// Определяем текущее состояние датчика (после задержки)
+_xCurrentErrorYS := _fbDelayYS.Q;
 
 // Фиксируем ошибку через RS-триггер
 _fbLatchErrorYS(SET := _xCurrentErrorYS, RESET1 := xReset);

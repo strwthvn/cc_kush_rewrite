@@ -6,11 +6,15 @@ VAR_INPUT
 	xStop : BOOL; // Команда остановки (дистанционный режим)
 	xEmergencyStop : BOOL; // Аварийная остановка
 	xReset : BOOL; // Сброс в начальное состояние
-	xDisableAutoEmergencyStop : BOOL; // Отключение автоматических аварийных остановок по датчикам безопасности
 END_VAR
 VAR_OUTPUT
 	eStage : E_StageWithPreStartAlarm; // Текущая стадия
 	eStageToSCADA : E_ScadaStatesDevice; // Передача состояния скаде
+
+	// Готовность секции к запуску
+	xSectionReady : BOOL; // Секция готова к запуску (все условия выполнены)
+	xSectionReadyConveyor : BOOL; // Готовность конвейера (VFD готовы, нет ошибок моторов)
+	xSectionReadyRotation : BOOL; // Готовность поворота (VFD готовы, нет ошибок моторов)
 END_VAR
 VAR
 	// I/O обработка
@@ -40,11 +44,22 @@ VAR
 	xCircuitBuilt : BOOL := FALSE;
 	xCircuitBuiltRotation : BOOL := FALSE;
 
-	// Таймеры контроля выполнения команд
-	fbTimerStarting : TON; // Тайм-аут запуска (STARTING → WORK)
-	fbTimerStopping : TON; // Тайм-аут остановки (WORK → IDLE)
+	// Защёлки потери готовности (сбрасываются только по команде Reset)
+	// TRUE = готовность потеряна, требуется сброс
+	xReadyLostLatch_Conveyor : BOOL := FALSE;
+	xReadyLostLatch_Rotation : BOOL := FALSE;
+	xReadyLostLatch_Sensors : BOOL := FALSE;
+
+	// Текущее состояние готовности (без защёлки) - для проверки при сбросе
+	xCurrentReadyConveyor : BOOL;
+	xCurrentReadyRotation : BOOL;
+	xCurrentReadySensors : BOOL;
 
 	simInit : BOOL;
+	
+	ftrig_motorConveyor_KM_Power : F_TRIG;
+	ftrig_motorRotation_KM_Power : F_TRIG;
+	
 END_VAR
 
 // ========================================
@@ -93,6 +108,7 @@ fbConveyorMotors(
 	xStart := xStartConveyor,
 	xStop := xStopConveyor,
 	xEmergencyStop := xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal,
+	xReset := xReset,
 	rTargetFrequency := MOTOR_FREQUENCY_DUMPER_CONVEYOR
 );
 
@@ -106,6 +122,7 @@ fbRotationMotors(
 	xTurnRight := xTurnRight,
 	xStop := xStopRotation,
 	xEmergencyStop := xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal,
+	xReset := xReset,
 	rTargetFrequency := MOTOR_FREQUENCY_DUMPER_ROTATION
 );
 
@@ -115,14 +132,24 @@ fbRotationMotors(
 
 fbSensors(
 	Dumper := Dumper,
-	xReset := xReset
+	xReset := xReset,
+	itDelayZQ_Alarm := TIME_DELAY_SENSOR_DUMPER_ZQ_ALARM,
+	itDelayZQ_Warning := TIME_DELAY_SENSOR_DUMPER_ZQ_WARNING,
+	itDelayHQ := TIME_DELAY_SENSOR_DUMPER_HQ,
+	itDelaySQ := TIME_DELAY_SENSOR_DUMPER_SQ,
+	itDelayGS := TIME_DELAY_SENSOR_DUMPER_GS,
+	itDelayYS := TIME_DELAY_SENSOR_DUMPER_YS,
+	itDelayQR := TIME_DELAY_SENSOR_DUMPER_QR
 );
 
 // ========================================
 // ПРОВЕРКА ОШИБОК МОТОРОВ
 // ========================================
 
-fbMotorErrors(Dumper := Dumper);
+fbMotorErrors(
+	Dumper := Dumper,
+	xReset := xReset
+);
 
 // ========================================
 // ПРЕДПУСКОВАЯ СИГНАЛИЗАЦИЯ
@@ -130,7 +157,7 @@ fbMotorErrors(Dumper := Dumper);
 
 Dumper.fbPreStartAlarm(
 	ixStart := STAGE = PRESTART_ALARM,
-	ixStop := xStopCommand OR xReset,
+	ixStop := xStopCommand OR xReset OR xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal, // Остановка ППЗ при СТОП, СБРОС или АВАРИЙНОЙ ОСТАНОВКЕ
 	itFirstSignal := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL,
 	itPauseAfterFirst := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_FIRST_SIGNAL_PAUSE,
 	itSecondSignal := DUMPER_CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL,
@@ -164,12 +191,96 @@ Dumper.xStateWarning := fbSensors.xWarningSafetySensors
                      OR Dumper.MotorRotation[2].VFD.fbRangeDiagnostic.qxWarningActive;
 
 // ========================================
+// ОПРЕДЕЛЕНИЕ ГОТОВНОСТИ СЕКЦИИ
+// ========================================
+// Готовность = отсутствие ошибок по сенсорам + отсутствие ошибок моторов +
+//              готовность VFD (дискретный сигнал) + отсутствие ошибок VFD +
+//              автоматические выключатели включены (QF)
+//
+// ВАЖНО: Готовность работает с защёлкой - если готовность была потеряна,
+// она НЕ восстанавливается автоматически даже при исправлении проблемы.
+// Для восстановления готовности требуется команда Reset (xReset).
+// При сбросе проверяется, что проблема действительно устранена.
+
+// Текущее состояние готовности конвейера (без защёлки):
+// - Нет ошибок моторов конвейера (VFD failure)
+// - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
+// - Автоматические выключатели моторов конвейера включены (QF)
+// - Схема контакторов конвейера собрана (xCircuitBuilt)
+// - Отсутствие FAULT в блоке управления моторами конвейера
+xCurrentReadyConveyor := NOT fbMotorErrors.xErrorMotorConv_Any
+                      AND fbMotorErrors.xVFD_ReadyConv_All
+                      AND fbMotorErrors.xQF_OkConv_All
+                      AND xCircuitBuilt
+                      AND fbConveyorMotors.eStage <> E_StageActuator.FAULT;
+
+// Текущее состояние готовности поворота (без защёлки):
+// - Нет ошибок моторов поворота (VFD failure)
+// - VFD моторов поворота готовы к пуску (fbStateRdyToStart)
+// - Автоматические выключатели моторов поворота включены (QF)
+// - Схема контакторов поворота собрана (xCircuitBuiltRotation)
+// - Отсутствие FAULT в блоке управления моторами поворота
+xCurrentReadyRotation := NOT fbMotorErrors.xErrorMotorRot_Any
+                      AND fbMotorErrors.xVFD_ReadyRot_All
+                      AND fbMotorErrors.xQF_OkRot_All
+                      AND xCircuitBuiltRotation
+                      AND fbRotationMotors.eStage <> E_StageActuator.FAULT;
+
+// Текущее состояние готовности по датчикам (без защёлки)
+xCurrentReadySensors := NOT fbSensors.xErrorSafetySensors;
+
+// Управление защёлками потери готовности:
+// Защёлка устанавливается при потере текущей готовности
+// Защёлка сбрасывается ТОЛЬКО по команде Reset + текущая готовность OK
+IF NOT xCurrentReadyConveyor THEN
+	xReadyLostLatch_Conveyor := TRUE;
+END_IF;
+
+IF NOT xCurrentReadyRotation THEN
+	xReadyLostLatch_Rotation := TRUE;
+END_IF;
+
+IF NOT xCurrentReadySensors THEN
+	xReadyLostLatch_Sensors := TRUE;
+END_IF;
+
+// Готовность секции с учётом защёлки:
+// Готовность есть только если:
+// 1. Текущее состояние готовности OK
+// 2. Защёлка потери готовности НЕ установлена
+xSectionReadyConveyor := xCurrentReadyConveyor AND NOT xReadyLostLatch_Conveyor;
+xSectionReadyRotation := xCurrentReadyRotation AND NOT xReadyLostLatch_Rotation;
+
+// Общая готовность секции:
+// - Нет ошибок по датчикам безопасности + защёлка не установлена
+// - Конвейер готов (включая схему и отсутствие FAULT) + защёлка не установлена
+// - Поворот готов (включая схему и отсутствие FAULT) + защёлка не установлена
+xSectionReady := xCurrentReadySensors AND NOT xReadyLostLatch_Sensors
+              AND xSectionReadyConveyor
+              AND xSectionReadyRotation;
+
+// ========================================
 // ОБРАБОТКА ОСТАНОВКИ И СБРОСА
 // ========================================
 
 // Сброс в начальное состояние
 IF xReset THEN
 	Dumper.xStateFailure := FALSE;
+
+	// Сброс защёлок потери готовности (только если текущее состояние OK)
+	// Это гарантирует, что готовность восстановится только при реальном
+	// исправлении проблемы, а не просто по команде Reset
+	IF xCurrentReadyConveyor THEN
+		xReadyLostLatch_Conveyor := FALSE;
+	END_IF;
+
+	IF xCurrentReadyRotation THEN
+		xReadyLostLatch_Rotation := FALSE;
+	END_IF;
+
+	IF xCurrentReadySensors THEN
+		xReadyLostLatch_Sensors := FALSE;
+	END_IF;
 END_IF
 
 // Штатная остановка - запускается при получении команды xStop
@@ -183,7 +294,8 @@ END_IF
 // В дистанционном режиме (xLocalMode = FALSE) - команды берутся из SCADA (входы ФБ)
 IF xLocalMode THEN
 	// Местный режим - команды с ПМУ
-	xStartCommand := Dumper.fbBtnStart.qxRisingEdge; // ПУСК по фронту кнопки
+	// ПУСК конвейера разрешён только при готовности конвейера (xSectionReadyConveyor)
+	xStartCommand := Dumper.fbBtnStart.qxRisingEdge AND xSectionReadyConveyor;
 	xStopCommand := Dumper.fbBtnStop.qxRisingEdge;   // СТОП по фронту кнопки
 ELSE
 	// Дистанционный режим - команды из SCADA
@@ -197,31 +309,46 @@ END_IF;
 
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ
 // Аварийная остановка имеет наивысший приоритет и срабатывает в любой стадии
-// 1. Внешний сигнал аварийной остановки (от SCADA или системы)
-// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата)
+// 1. Внешний сигнал аварийной остановки (от FB_EmergencyStopCollector)
+//    - включает все настраиваемые источники (датчики, зависимости, и т.д.)
+// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата) - ГАРАНТИРОВАННАЯ
+//
+// ПРИМЕЧАНИЕ: Проверка датчиков безопасности (fbSensors.xErrorSafetySensors) теперь
+// централизована в FB_EmergencyStopCollector и передаётся через вход xEmergencyStop.
+// Настройка источников аварийной остановки выполняется через опции ENABLE_GLOBAL_ESTOP_*
+// в GLOBAL.st (например, ENABLE_GLOBAL_ESTOP_ZQ, ENABLE_GLOBAL_ESTOP_HQ и т.д.).
 IF xEmergencyStop OR NOT Dumper.fbBtnEmergencyStop.qxSignal THEN
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
-// КРИТИЧЕСКИЕ ОШИБКИ ДАТЧИКОВ БЕЗОПАСНОСТИ
-// При срабатывании датчиков безопасности немедленная аварийная остановка,
-// если секция НЕ в IDLE (т.е. находится в процессе работы или запуска)
-// Блокируется через вход xDisableAutoEmergencyStop
-IF fbSensors.xErrorSafetySensors
-   AND STAGE <> E_StageWithPreStartAlarm.IDLE
-   AND NOT xDisableAutoEmergencyStop
-THEN
+// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД (флаги из аппаратных блоков)
+// Тайм-аут запуска моторов конвейера
+IF fbConveyorMotors.xStartingTimeout THEN
+	Dumper.xStateFailure := TRUE;
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
-// ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
-// Тайм-аут запуска: не удалось запустить секцию за установленное время
-IF fbTimerStarting.Q THEN
+// Тайм-аут остановки моторов конвейера
+IF fbConveyorMotors.xStoppingTimeout THEN
+	Dumper.xStateFailure := TRUE;
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
-// Тайм-аут остановки: не удалось остановить секцию за установленное время
-IF fbTimerStopping.Q THEN
+// Тайм-аут запуска моторов поворота
+IF fbRotationMotors.xStartingTimeout THEN
+	Dumper.xStateFailure := TRUE;
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Тайм-аут остановки моторов поворота
+IF fbRotationMotors.xStoppingTimeout THEN
+	Dumper.xStateFailure := TRUE;
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
+
+// Потеря обратной связи VFD во время работы (не восстановилась за TIME_TIMEOUT_VFD_FEEDBACK_LOST)
+IF fbConveyorMotors.xVFD_FeedbackLostTimeout THEN
+	Dumper.xStateFailure := TRUE;
 	STAGE := E_StageWithPreStartAlarm.ERROR;
 END_IF;
 
@@ -230,10 +357,6 @@ CASE STAGE OF
 		// Сброс команд управления конвейером
 		xStartConveyor := FALSE;
 		xStopConveyor := FALSE;
-
-		// Сброс таймеров
-		fbTimerStarting(IN := FALSE);
-		fbTimerStopping(IN := FALSE);
 
 		// Команда запуска верхнего уровня
 		IF xStartCommand THEN
@@ -260,40 +383,27 @@ CASE STAGE OF
 			STAGE := E_StageWithPreStartAlarm.WORK; // Переход в WORK для обработки остановки
 		END_IF;
 
-		// Таймер ожидания полного запуска секции
-		fbTimerStarting(
-			IN := TRUE,
-			PT := TIME_AFTER_START_DUMPER
-		);
-
 		// Проверка состояния аппаратного блока конвейера
+		// Тайм-аут запуска контролируется в fbConveyorMotors
 		IF fbConveyorMotors.eStage = E_StageActuator.WORK THEN
 			// Конвейер запущен, переходим в WORK
 			STAGE := E_StageWithPreStartAlarm.WORK;
-			fbTimerStarting(IN := FALSE); // Сброс таймера
 		END_IF;
 
 	E_StageWithPreStartAlarm.WORK:
 		// Нормальная работа
-		fbTimerStopping(IN := FALSE);
 
 		// Команда остановки
 		IF xStopCommand THEN
 			// Начать штатную остановку
 			xStartConveyor := FALSE;
 			xStopConveyor := TRUE;
-
-			// Запуск таймера остановки
-			fbTimerStopping(
-				IN := TRUE,
-				PT := TIME_TIMEOUT_STOP_DUMPER
-			);
 		END_IF;
 
 		// Проверка завершения остановки
+		// Тайм-аут остановки контролируется в fbConveyorMotors
 		IF xStopConveyor AND fbConveyorMotors.eStage = E_StageActuator.IDLE THEN
 			// Конвейер остановлен, переходим в IDLE
-			fbTimerStopping(IN := FALSE);
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF;
 
@@ -315,10 +425,6 @@ CASE STAGE OF
 			xCircuitBuilt := FALSE;
 			xCircuitBuiltRotation := FALSE;
 		END_IF;
-
-		// Сброс таймеров
-		fbTimerStarting(IN := FALSE);
-		fbTimerStopping(IN := FALSE);
 		// Контакторы управляются отдельно через импульсные команды
 		// cmdBuildCircuitOn/Off (см. секцию УПРАВЛЕНИЕ КОНТАКТОРАМИ)
 
@@ -337,18 +443,24 @@ END_CASE;
 eStage := STAGE;
 
 // ========================================
-// УПРАВЛЕНИЕ КОНТАКТОРАМИ
+// УПРАВЛЕНИЕ КОНТАКТОРАМИ (СБОРКА СХЕМЫ)
 // ========================================
-
+//
+// УСЛОВИЯ СБОРКИ СХЕМЫ (в автоматическом режиме):
+// - Нет ошибок по датчикам безопасности (fbSensors.xErrorSafetySensors = FALSE)
+// - Секция НЕ в стадии ERROR
+// ПРИМЕЧАНИЕ: Готовность VFD и ошибки моторов НЕ влияют на сборку схемы,
+// они влияют на готовность секции к ЗАПУСКУ (xSectionReady).
+//
 // РУЧНОЙ РЕЖИМ (Manual):
 // - Схема управляется ТОЛЬКО импульсными командами cmdBuildCircuitOn/Off
 // - Автоматическая сборка/разборка схемы ОТКЛЮЧЕНА
 //
-// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto/Remote):
-// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок секции:
-//   * Нет ошибок по датчикам безопасности (fbSensors.xErrorSafetySensors = FALSE)
-//   * Секция НЕ в стадии ERROR
-// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок или переходе в ERROR
+// АВТОМАТИЧЕСКИЙ РЕЖИМ (Auto):
+// - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок по сенсорам и НЕ в ERROR
+// - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок по сенсорам или переходе в ERROR
+
+ftrig_motorConveyor_KM_Power(CLK:= (Dumper.MotorConveyor[1].fbStateKM.qxSignal AND Dumper.MotorConveyor[2].fbStateKM.qxSignal));
 
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы конвейера
@@ -368,14 +480,19 @@ ELSIF Dumper.eStateRemote = E_StateRemote.Auto THEN
 	// 2. Секция НЕ в стадии ERROR
 	IF NOT fbSensors.xErrorSafetySensors AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
 		xCircuitBuilt := TRUE;
-	ELSE
-		xCircuitBuilt := FALSE;
 	END_IF;
+END_IF;
+
+// Разобрать схему по сигналу заднего фронта контактора
+IF ftrig_motorConveyor_KM_Power.Q THEN
+	xCircuitBuilt := FALSE;
 END_IF;
 
 // Моторы конвейера - управление контакторами через состояние схемы
 Dumper.MotorConveyor[1].qxKM_Power := xCircuitBuilt;
 Dumper.MotorConveyor[2].qxKM_Power := xCircuitBuilt;
+
+ftrig_motorRotation_KM_Power(CLK:= (Dumper.MotorRotation[1].fbStateKM.qxSignal AND Dumper.MotorRotation[2].fbStateKM.qxSignal));
 
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы поворота
@@ -395,9 +512,11 @@ ELSIF Dumper.eStateRemote = E_StateRemote.Auto THEN
 	// 2. Секция НЕ в стадии ERROR
 	IF NOT fbSensors.xErrorSafetySensors AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
 		xCircuitBuiltRotation := TRUE;
-	ELSE
-		xCircuitBuiltRotation := FALSE;
 	END_IF;
+END_IF;
+
+IF ftrig_motorRotation_KM_Power.Q THEN
+	xCircuitBuiltRotation := FALSE;
 END_IF;
 
 // Моторы поворота - управление контакторами через состояние схемы
@@ -414,10 +533,11 @@ Dumper.MotorRotation[2].qxKM_Power := xCircuitBuiltRotation;
 IF xLocalMode THEN
 	// ========== МЕСТНЫЙ РЕЖИМ (ПМУ) ==========
 	// В местном режиме: поворот работает ПОКА ЗАЖАТА КНОПКА
+	// Поворот разрешён только при готовности поворота (xSectionReadyRotation)
 
 	// Команды поворота с кнопок ПМУ (уровень, не edge)
-	xTurnLeft := Dumper.fbBtnTurnLeft.qxSignal;
-	xTurnRight := Dumper.fbBtnTurnRight.qxSignal;
+	xTurnLeft := Dumper.fbBtnTurnLeft.qxSignal AND xSectionReadyRotation;
+	xTurnRight := Dumper.fbBtnTurnRight.qxSignal AND xSectionReadyRotation;
 
 	// Остановка при отпускании кнопки (обрабатывается внутри FB_DumperRotationMotors)
 	xStopRotation := FALSE;
@@ -449,6 +569,14 @@ ELSE
 	// Сброс команды остановки после выполнения
 	IF xStopRotation AND fbRotationMotors.eStage = E_StageActuator.IDLE THEN
 		xStopRotation := FALSE;
+	END_IF;
+
+	// Сброс команд поворота при достижении концевиков
+	IF fbRotationMotors.xEndSwitchLeftReached THEN
+		xTurnLeft := FALSE;
+	END_IF;
+	IF fbRotationMotors.xEndSwitchRightReached THEN
+		xTurnRight := FALSE;
 	END_IF;
 END_IF;
 
@@ -493,11 +621,15 @@ ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND Dumper.xStateWarning THEN
 	eStageToSCADA := E_ScadaStatesDevice.WARNING;
 
 ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND Dumper.xStateFailure THEN
-	// Секция неготова к запуску (есть ошибки)
+	// Секция неготова к запуску (есть зафиксированные ошибки)
+	eStageToSCADA := E_ScadaStatesDevice.NOT_READY;
+
+ELSIF STAGE = E_StageWithPreStartAlarm.IDLE AND NOT xSectionReady THEN
+	// Секция неготова к запуску (VFD не готовы или есть ошибки моторов/сенсоров)
 	eStageToSCADA := E_ScadaStatesDevice.NOT_READY;
 
 ELSE
-	// Секция готова к запуску (IDLE, нет ошибок и предупреждений)
+	// Секция готова к запуску (IDLE, нет ошибок, VFD готовы)
 	eStageToSCADA := E_ScadaStatesDevice.READY;
 
 END_IF;

@@ -95,6 +95,34 @@ VAR
 	// Таймеры обратной связи вибраторов [бункер 1..3][мотор 1..4]
 	tonKM_Vibrator : ARRAY[1..3, 1..4] OF TON;
 	tonVFD_Vibrator : ARRAY[1..3, 1..4] OF TON;
+
+	// ========================================
+	// ПЕРЕМЕННЫЕ ДЛЯ ОТЛАДКИ - СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ VFD
+	// TRUE = обратная связь есть (нормальная работа)
+	// FALSE = обратная связь отсутствует (ошибка - нет обратной связи)
+	// ========================================
+
+	// Отвалообразователь - моторы конвейера
+	_xSimVFDFeedback_DumperConv1 : BOOL := TRUE;
+	_xSimVFDFeedback_DumperConv2 : BOOL := TRUE;
+
+	// Отвалообразователь - моторы поворота
+	_xSimVFDFeedback_DumperRot1 : BOOL := TRUE;
+	_xSimVFDFeedback_DumperRot2 : BOOL := TRUE;
+
+	// Сборный конвейер - моторы конвейера
+	_xSimVFDFeedback_ConveyorConv1 : BOOL := TRUE;
+	_xSimVFDFeedback_ConveyorConv2 : BOOL := TRUE;
+
+	// Бункеры - вибропитатели [бункер 1..3][мотор 1..2]
+	_xSimVFDFeedback_VibFeeder : ARRAY[1..3, 1..2] OF BOOL := [TRUE, TRUE, TRUE, TRUE, TRUE, TRUE];
+
+	// Бункеры - вибраторы [бункер 1..3][мотор 1..4]
+	_xSimVFDFeedback_Vibrator : ARRAY[1..3, 1..4] OF BOOL := [
+		TRUE, TRUE, TRUE, TRUE,
+		TRUE, TRUE, TRUE, TRUE,
+		TRUE, TRUE, TRUE, TRUE
+	];
 END_VAR
 
 // Детекция фронтов
@@ -109,7 +137,10 @@ IF _xInitRequired THEN
 	// ========================================
 	// ИНИЦИАЛИЗАЦИЯ ОБЩИЕ СИГНАЛЫ
 	// ========================================
-	
+
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Common.fbEmergencyStopBtn.ixSignal := TRUE;
+
 	// Сигнал ПМУ - режим управления 1 - дистанция, 0 - местный
 	Common.fbRemoteModeBtn.ixSignal := TRUE; 
 
@@ -243,50 +274,155 @@ IF _xInitRequired THEN
 	// Установка всех сигналов в состояние "нет ошибок"
 	// ========================================
 
-	FOR b := 1 TO 3 BY 1 DO
-		// Вибропитатели (MotorVibFeeder[1..2])
-		FOR m := 1 TO 2 BY 1 DO
-			// ЧРП готовность
-			Bunker[b].MotorVibFeeder[m].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	// ========================================
+	// БУНКЕР 1
+	// ========================================
 
-			// Автоматический выключатель (QF)
-			Bunker[b].MotorVibFeeder[m].fbStateQF.ixSignal := TRUE;
+	// Вибропитатели (MotorVibFeeder[1..2])
+	// Вибропитатель 1
+	Bunker[1].MotorVibFeeder[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[1].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[1].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[1].fbStatorOverheat.ixSignal := TRUE;
 
-			// ЧРП ошибка - инвертированный сигнал (NC)
-			Bunker[b].MotorVibFeeder[m].VFD.fbStateFailure.ixSignal := TRUE;
+	// Вибропитатель 2
+	Bunker[1].MotorVibFeeder[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[2].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[2].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[2].fbStatorOverheat.ixSignal := TRUE;
 
-			// Перегрев статора - инвертированный сигнал (NC)
-			Bunker[b].MotorVibFeeder[m].fbStatorOverheat.ixSignal := TRUE;
-		END_FOR;
+	// Вибраторы (MotorVibrator[1..4])
+	Bunker[1].MotorVibrator[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[1].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[1].VFD.fbStateFailure.ixSignal := TRUE;
 
-		// Вибраторы (MotorVibrator[1..4])
-		FOR m := 1 TO 4 BY 1 DO
-			// ЧРП готовность
-			Bunker[b].MotorVibrator[m].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[2].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[2].VFD.fbStateFailure.ixSignal := TRUE;
 
-			// Автоматический выключатель (QF)
-			Bunker[b].MotorVibrator[m].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[3].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[3].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[3].VFD.fbStateFailure.ixSignal := TRUE;
 
-			// ЧРП ошибка - инвертированный сигнал (NC)
-			Bunker[b].MotorVibrator[m].VFD.fbStateFailure.ixSignal := TRUE;
-		END_FOR;
+	Bunker[1].MotorVibrator[4].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[4].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[4].VFD.fbStateFailure.ixSignal := TRUE;
 
-		// Люк бункера - закрыт (норма = 1)
-		Bunker[b].fbStateHatch.ixSignal := TRUE;
+	// Люк бункера - закрыт (норма = 1)
+	Bunker[1].fbStateHatch.ixSignal := TRUE;
 
-		// Кнопка аварийной остановки - инвертированный сигнал (NC)
-		Bunker[b].fbBtnEmergencyStop.ixSignal := TRUE;
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Bunker[1].fbBtnEmergencyStop.ixSignal := TRUE;
 
-		// Начальный вес бункера (симуляция заполненного бункера)
-		Bunker[b].rWeight := 100.0;
+	// Начальный вес бункера (симуляция заполненного бункера)
+	Bunker[1].rWeight := 100.0;
 
-		// Сброс веса под бункером
-		Bunker[b].rWeightUnderBunker := 0.0;
-		_rLocalWeightUnderBunker[b] := 0.0;
+	// Сброс веса под бункером
+	Bunker[1].rWeightUnderBunker := 0.0;
+	_rLocalWeightUnderBunker[1] := 0.0;
 
-		// Сброс дрейфа
-		_rDriftOffset[b] := 0.0;
-	END_FOR;
+	// Сброс дрейфа
+	_rDriftOffset[1] := 0.0;
+
+	// ========================================
+	// БУНКЕР 2
+	// ========================================
+
+	// Вибропитатели (MotorVibFeeder[1..2])
+	// Вибропитатель 1
+	Bunker[2].MotorVibFeeder[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[1].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[1].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[1].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибропитатель 2
+	Bunker[2].MotorVibFeeder[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[2].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[2].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[2].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибраторы (MotorVibrator[1..4])
+	Bunker[2].MotorVibrator[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[1].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[1].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[2].MotorVibrator[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[2].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[2].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[2].MotorVibrator[3].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[3].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[3].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[2].MotorVibrator[4].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[4].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[4].VFD.fbStateFailure.ixSignal := TRUE;
+
+	// Люк бункера - закрыт (норма = 1)
+	Bunker[2].fbStateHatch.ixSignal := TRUE;
+
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Bunker[2].fbBtnEmergencyStop.ixSignal := TRUE;
+
+	// Начальный вес бункера (симуляция заполненного бункера)
+	Bunker[2].rWeight := 100.0;
+
+	// Сброс веса под бункером
+	Bunker[2].rWeightUnderBunker := 0.0;
+	_rLocalWeightUnderBunker[2] := 0.0;
+
+	// Сброс дрейфа
+	_rDriftOffset[2] := 0.0;
+
+	// ========================================
+	// БУНКЕР 3
+	// ========================================
+
+	// Вибропитатели (MotorVibFeeder[1..2])
+	// Вибропитатель 1
+	Bunker[3].MotorVibFeeder[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[1].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[1].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[1].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибропитатель 2
+	Bunker[3].MotorVibFeeder[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[2].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[2].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[2].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибраторы (MotorVibrator[1..4])
+	Bunker[3].MotorVibrator[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[1].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[1].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[3].MotorVibrator[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[2].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[2].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[3].MotorVibrator[3].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[3].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[3].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[3].MotorVibrator[4].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[4].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[4].VFD.fbStateFailure.ixSignal := TRUE;
+
+	// Люк бункера - закрыт (норма = 1)
+	Bunker[3].fbStateHatch.ixSignal := TRUE;
+
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Bunker[3].fbBtnEmergencyStop.ixSignal := TRUE;
+
+	// Начальный вес бункера (симуляция заполненного бункера)
+	Bunker[3].rWeight := 100.0;
+
+	// Сброс веса под бункером
+	Bunker[3].rWeightUnderBunker := 0.0;
+	_rLocalWeightUnderBunker[3] := 0.0;
+
+	// Сброс дрейфа
+	_rDriftOffset[3] := 0.0;
 END_IF;
 
 // ========================================
@@ -299,34 +435,14 @@ IF xEnable THEN
 	// ========================================
 
 	// Симуляция частоты ЧРП моторов конвейера отвалообразователя
-	Dumper.MotorConveyor[1].VFD.fbSimFreq(
-		xProceed := Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorConveyor[1].VFD.rActualFrequency
-	);
-
-	Dumper.MotorConveyor[2].VFD.fbSimFreq(
-		xProceed := Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorConveyor[2].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorConveyor[2].VFD.rActualFrequency
-	);
+	// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+	// поэтому записываем целевую частоту в rSimulatedFrequency
+	Dumper.MotorConveyor[1].VFD.rSimulatedFrequency := Dumper.MotorConveyor[1].VFD.qrOutFrequency;
+	Dumper.MotorConveyor[2].VFD.rSimulatedFrequency := Dumper.MotorConveyor[2].VFD.qrOutFrequency;
 
 	// Симуляция частоты ЧРП моторов поворота отвалообразователя
-	Dumper.MotorRotation[1].VFD.fbSimFreq(
-		xProceed := Dumper.MotorRotation[1].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorRotation[1].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorRotation[1].VFD.rActualFrequency
-	);
-
-	Dumper.MotorRotation[2].VFD.fbSimFreq(
-		xProceed := Dumper.MotorRotation[2].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Dumper.MotorRotation[2].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Dumper.MotorRotation[2].VFD.rActualFrequency
-	);
+	Dumper.MotorRotation[1].VFD.rSimulatedFrequency := Dumper.MotorRotation[1].VFD.qrOutFrequency;
+	Dumper.MotorRotation[2].VFD.rSimulatedFrequency := Dumper.MotorRotation[2].VFD.qrOutFrequency;
 
 	// ========================================
 	// СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ ОТВАЛООБРАЗОВАТЕЛЯ
@@ -348,18 +464,18 @@ IF xEnable THEN
 
 	// Обратная связь работы ЧРП моторов конвейера отвалообразователя
 	tonVFD_Conv1(IN := Dumper.MotorConveyor[1].VFD.qxStart, PT := tFeedbackDelay);
-	Dumper.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv1.Q;
+	Dumper.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv1.Q AND _xSimVFDFeedback_DumperConv1;
 
 	tonVFD_Conv2(IN := Dumper.MotorConveyor[2].VFD.qxStart, PT := tFeedbackDelay);
-	Dumper.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv2.Q;
+	Dumper.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Conv2.Q AND _xSimVFDFeedback_DumperConv2;
 
 	// Обратная связь работы ЧРП моторов поворота отвалообразователя
 	// Учитываем как прямое, так и реверсивное вращение
 	tonVFD_Rot1(IN := (Dumper.MotorRotation[1].VFD.qxStart OR Dumper.MotorRotation[1].qxVFDReverseStart), PT := tFeedbackDelay);
-	Dumper.MotorRotation[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot1.Q;
+	Dumper.MotorRotation[1].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot1.Q AND _xSimVFDFeedback_DumperRot1;
 
 	tonVFD_Rot2(IN := (Dumper.MotorRotation[2].VFD.qxStart OR Dumper.MotorRotation[2].qxVFDReverseStart), PT := tFeedbackDelay);
-	Dumper.MotorRotation[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot2.Q;
+	Dumper.MotorRotation[2].VFD.fbStateIsWorking.ixSignal := tonVFD_Rot2.Q AND _xSimVFDFeedback_DumperRot2;
 
 	// Обратная связь тормозов отвалообразователя
 	// Тормоз отпущен (TRUE) когда на выходе активен сигнал
@@ -375,19 +491,10 @@ IF xEnable THEN
 	// ========================================
 
 	// Симуляция частоты ЧРП моторов конвейера
-	Conveyor.MotorConveyor[1].VFD.fbSimFreq(
-		xProceed := Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Conveyor.MotorConveyor[1].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Conveyor.MotorConveyor[1].VFD.rActualFrequency
-	);
-
-	Conveyor.MotorConveyor[2].VFD.fbSimFreq(
-		xProceed := Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal,
-		irTarget := Conveyor.MotorConveyor[2].VFD.Frequency.qrCurrentFrequency,
-		irStep := 0.2,
-		irInputModule => Conveyor.MotorConveyor[2].VFD.rActualFrequency
-	);
+	// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+	// поэтому записываем целевую частоту в rSimulatedFrequency
+	Conveyor.MotorConveyor[1].VFD.rSimulatedFrequency := Conveyor.MotorConveyor[1].VFD.qrOutFrequency;
+	Conveyor.MotorConveyor[2].VFD.rSimulatedFrequency := Conveyor.MotorConveyor[2].VFD.qrOutFrequency;
 
 	// ========================================
 	// СИМУЛЯЦИЯ ОБРАТНОЙ СВЯЗИ СБОРНОГО КОНВЕЙЕРА
@@ -402,10 +509,10 @@ IF xEnable THEN
 
 	// Обратная связь работы ЧРП моторов конвейера
 	tonVFD_PrefConv1(IN := Conveyor.MotorConveyor[1].VFD.qxStart, PT := tFeedbackDelay);
-	Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv1.Q;
+	Conveyor.MotorConveyor[1].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv1.Q AND _xSimVFDFeedback_ConveyorConv1;
 
 	tonVFD_PrefConv2(IN := Conveyor.MotorConveyor[2].VFD.qxStart, PT := tFeedbackDelay);
-	Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv2.Q;
+	Conveyor.MotorConveyor[2].VFD.fbStateIsWorking.ixSignal := tonVFD_PrefConv2.Q AND _xSimVFDFeedback_ConveyorConv2;
 
 	// Обратная связь тормоза сборного конвейера
 	tonBreaker_PrefConv(IN := Conveyor.qxBreakerConveyor, PT := tFeedbackDelay);
@@ -419,12 +526,9 @@ IF xEnable THEN
 		// --- Вибропитатели (MotorVibFeeder[1..2]) ---
 		FOR m := 1 TO 2 BY 1 DO
 			// Симуляция частоты ЧРП вибропитателя
-			Bunker[b].MotorVibFeeder[m].VFD.fbSimFreq(
-				xProceed := Bunker[b].MotorVibFeeder[m].VFD.fbStateIsWorking.qxSignal,
-				irTarget := Bunker[b].MotorVibFeeder[m].VFD.Frequency.qrCurrentFrequency,
-				irStep := 0.2,
-				irInputModule => Bunker[b].MotorVibFeeder[m].VFD.rActualFrequency
-			);
+			// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+			// поэтому записываем целевую частоту в rSimulatedFrequency
+			Bunker[b].MotorVibFeeder[m].VFD.rSimulatedFrequency := Bunker[b].MotorVibFeeder[m].VFD.qrOutFrequency;
 
 			// Обратная связь контактора вибропитателя
 			tonKM_VibFeeder[b, m](IN := Bunker[b].MotorVibFeeder[m].qxKM_Power, PT := tFeedbackDelay);
@@ -432,18 +536,15 @@ IF xEnable THEN
 
 			// Обратная связь работы ЧРП вибропитателя
 			tonVFD_VibFeeder[b, m](IN := Bunker[b].MotorVibFeeder[m].VFD.qxStart, PT := tFeedbackDelay);
-			Bunker[b].MotorVibFeeder[m].VFD.fbStateIsWorking.ixSignal := tonVFD_VibFeeder[b, m].Q;
+			Bunker[b].MotorVibFeeder[m].VFD.fbStateIsWorking.ixSignal := tonVFD_VibFeeder[b, m].Q AND _xSimVFDFeedback_VibFeeder[b, m];
 		END_FOR;
 
 		// --- Вибраторы (MotorVibrator[1..4]) ---
 		FOR m := 1 TO 4 BY 1 DO
 			// Симуляция частоты ЧРП вибратора
-			Bunker[b].MotorVibrator[m].VFD.fbSimFreq(
-				xProceed := Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.qxSignal,
-				irTarget := Bunker[b].MotorVibrator[m].VFD.Frequency.qrCurrentFrequency,
-				irStep := 0.2,
-				irInputModule => Bunker[b].MotorVibrator[m].VFD.rActualFrequency
-			);
+			// В режиме симуляции FB_AnalogInput использует refSimValue (rSimulatedFrequency) напрямую,
+			// поэтому записываем целевую частоту в rSimulatedFrequency
+			Bunker[b].MotorVibrator[m].VFD.rSimulatedFrequency := Bunker[b].MotorVibrator[m].VFD.qrOutFrequency;
 
 			// Обратная связь контактора вибратора
 			tonKM_Vibrator[b, m](IN := Bunker[b].MotorVibrator[m].qxKM_Power, PT := tFeedbackDelay);
@@ -451,7 +552,7 @@ IF xEnable THEN
 
 			// Обратная связь работы ЧРП вибратора
 			tonVFD_Vibrator[b, m](IN := Bunker[b].MotorVibrator[m].VFD.qxStart, PT := tFeedbackDelay);
-			Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.ixSignal := tonVFD_Vibrator[b, m].Q;
+			Bunker[b].MotorVibrator[m].VFD.fbStateIsWorking.ixSignal := tonVFD_Vibrator[b, m].Q AND _xSimVFDFeedback_Vibrator[b, m];
 		END_FOR;
 	END_FOR;
 
@@ -462,10 +563,10 @@ IF xEnable THEN
 	// Симуляция с случайными возмущениями для тестирования ПИД-регулятора
 	FOR b := 1 TO 3 BY 1 DO
 		// Средняя выходная частота двух вибропитателей бункера
-		// Используем fbAnalogOutput.rEngValue - инженерное значение частоты от аналогового выхода
+		// Используем rActualFrequency - актуальная частота от модуля AI (после полного цикла AO → AI)
 		_rAvgFrequencyVibFeeder[b] :=
-			(Bunker[b].MotorVibFeeder[1].VFD.fbAnalogOutput.rEngValue
-		   + Bunker[b].MotorVibFeeder[2].VFD.fbAnalogOutput.rEngValue) / 2.0;
+			(Bunker[b].MotorVibFeeder[1].VFD.rActualFrequency
+		   + Bunker[b].MotorVibFeeder[2].VFD.rActualFrequency) / 2.0;
 
 		// --- Генерация случайного шума (Linear Congruential Generator) ---
 		// LCG формула: seed = (a * seed + c) mod m

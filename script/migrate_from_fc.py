@@ -34,7 +34,7 @@ from typing import List, Tuple, Optional, Dict
 SCRIPT_DIR = Path(__file__).parent
 DB_PATH = SCRIPT_DIR / 'db' / 'modbus_registers.db'
 SCHEMA_PATH = SCRIPT_DIR / 'db' / 'schema.sql'
-FC_MODBUS_PATH = SCRIPT_DIR.parent / 'POUs' / 'FC_ModbusToSCADA.st'
+FC_MODBUS_PATH = SCRIPT_DIR.parent / 'POUs' / 'FB_ModbusToSCADA.st'
 
 # Словарь описаний переменных (из update_descriptions.py)
 DESCRIPTIONS = {

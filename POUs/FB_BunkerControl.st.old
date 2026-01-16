@@ -4,7 +4,7 @@ VAR_INPUT
 	xLocalMode : BOOL; // TRUE = местный режим (ПМУ), FALSE = дистанционный режим (SCADA)
 	xStart : BOOL; // Команда запуска вибропитателей (дистанционный режим)
 	xStop : BOOL; // Команда остановки (дистанционный режим)
-	xEmergencyStopVibFeeder : BOOL; // Аварийная остановка вибропитателей (переводит бункер в ERROR)
+	xEmergencyStop : BOOL; // Аварийная остановка (переводит бункер в ERROR)
 	xEmergencyStopVibrator : BOOL; // Аварийная остановка вибраторов (только отключает вибраторы)
 	xReset : BOOL; // Сброс ошибок
 	irManualFrequency : REAL; // Частота вибропитателей для ручного режима управления
@@ -495,11 +495,11 @@ END_IF;
 
 // ПРИОРИТЕТНАЯ ПРОВЕРКА АВАРИЙНОЙ ОСТАНОВКИ ВИБРОПИТАТЕЛЕЙ
 // Аварийная остановка питателей имеет наивысший приоритет и срабатывает в любой стадии
-// 1. Внешний сигнал аварийной остановки (от SCADA или системы)
-// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата)
-//	IF xEmergencyStopVibFeeder OR NOT Bunker.fbBtnEmergencyStop.qxSignal THEN
-//	STAGE := E_StageWithPreStartAlarm.ERROR;
-//END_IF;
+// 1. Внешний сигнал аварийной остановки (от FB_EmergencyStopCollector)
+// 2. Кнопка аварийной остановки на ПМУ (NC контакт: FALSE = кнопка нажата) - ГАРАНТИРОВАННАЯ
+IF xEmergencyStop OR NOT Bunker.fbBtnEmergencyStop.qxSignal THEN
+	STAGE := E_StageWithPreStartAlarm.ERROR;
+END_IF;
 
 // ПРОВЕРКА ТАЙМ-АУТОВ ВЫПОЛНЕНИЯ КОМАНД
 // Тайм-аут запуска: не удалось запустить вибропитатели за установленное время
@@ -625,10 +625,10 @@ CASE STAGE OF
 		// Сброс ошибки и переход в IDLE при отсутствии ошибок
 		// Для выхода из ERROR требуется:
 		// 1. Команда сброса (xReset)
-		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStopVibFeeder)
+		// 2. Снятие сигнала аварийной остановки (NOT xEmergencyStop)
 		// 3. Кнопка аварийной остановки отпущена (NC контакт: TRUE = кнопка отпущена)
 		// 4. Отсутствие ошибок оборудования (NOT Bunker.xStateFailure)
-		IF xReset AND NOT xEmergencyStopVibFeeder AND Bunker.fbBtnEmergencyStop.qxSignal AND NOT Bunker.xStateFailure THEN
+		IF xReset AND NOT xEmergencyStop AND Bunker.fbBtnEmergencyStop.qxSignal AND NOT Bunker.xStateFailure THEN
 			STAGE := E_StageWithPreStartAlarm.IDLE;
 		END_IF
 

@@ -16,7 +16,7 @@ VAR_GLOBAL
 	EFFICIENCY_LIMIT_RATE : REAL := 1; // Коэффицент ограничения производительности (0-1)
 	
 	// Переменные симуляции
-	SIMULATION : BOOL := FALSE;
+	SIMULATION : BOOL := TRUE;
 	SIMULATION_BUNKER_WEIGHT : BOOL := FALSE; // Включение симуляции расхода и пополнения веса бункеров
 	
 	// == MODBUS РЕГИСТРЫ ДЛЯ SCADA ==
@@ -29,18 +29,39 @@ VAR_GLOBAL
 
 END_VAR
 VAR_GLOBAL RETAIN
-	// == КРИТИЧЕСКИЕ НАСТРОЙКИ ==
-	DISABLE_AUTO_STOPPING : BOOL := FALSE; // Отключение автоматических блокировок по цепям безопасности механизмов
-	DISABLE_AUTO_STOPPING_DEPENDENCIES : BOOL := FALSE; 			// Отключение автоматических блокировок по блокировочным зависимостям
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER1 : BOOL := FALSE; 	// Отключение автоматических блокировок бункера 1
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER2 : BOOL := FALSE; 	// Отключение автоматических блокировок бункера 2
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_BUNKER3 : BOOL := FALSE; 	// Отключение автоматических блокировок бункера 3
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_CONVEYOR : BOOL := FALSE; 	// Отключение автоматических блокировок сборного конвейера
-	DISABLE_AUTO_STOPPING_DEPENDENCIES_DUMPER : BOOL := FALSE; 		// Отключение автоматических блокировок отвалообразователя
-	
-	DISABLE_AUTO_STOPPING_SCADA_COMMUNICATION : BOOL := TRUE; // Отключение автоматических блокировок по потере связи со SCADA
-	DISABLE_AUTO_STOPPING_CURRENT : BOOL := FALSE; // Отключение автоматических блокировок по значению тока
+	// == НАСТРОЙКИ ОСТАНОВКИ ==
 	BUNKER_INSTANT_STOP : BOOL := FALSE; // Флаг мгновенной остановки бункеров (TRUE = одновременная остановка всех 3-х бункеров, FALSE = последовательная остановка)
+
+	// == ОПЦИИ ВКЛЮЧЕНИЯ ИСТОЧНИКОВ В ГЛОБАЛЬНУЮ АВАРИЙНУЮ ОСТАНОВКУ ==
+	// TRUE = источник включен в цепь глобальной аварийной остановки комплекса
+	// FALSE = источник НЕ вызывает глобальную остановку
+
+	// Датчики безопасности
+	ENABLE_GLOBAL_ESTOP_ZQ : BOOL := TRUE;       // Датчики схода ленты (ZQ Alarm)
+	ENABLE_GLOBAL_ESTOP_HQ : BOOL := TRUE;       // Кабель-тросовые выключатели
+	ENABLE_GLOBAL_ESTOP_SQ : BOOL := FALSE;      // Концевики ограждений барабана
+	ENABLE_GLOBAL_ESTOP_GS : BOOL := TRUE;      // Заштыбовка
+	ENABLE_GLOBAL_ESTOP_YS : BOOL := TRUE;       // Продольный разрыв ленты
+	ENABLE_GLOBAL_ESTOP_YE : BOOL := TRUE;       // Металлодетектор
+	ENABLE_GLOBAL_ESTOP_QR : BOOL := FALSE;      // Датчики скорости
+
+	// Системные сигналы
+	ENABLE_GLOBAL_ESTOP_SCADA_LOSS : BOOL := FALSE;          // Потеря связи со SCADA
+	ENABLE_GLOBAL_ESTOP_PROPORTION : BOOL := FALSE;          // Ошибка суммы пропорций
+	ENABLE_GLOBAL_ESTOP_MOTOR_CURRENT_HH : BOOL := FALSE;    // Аварийный уровень тока (HH)
+	ENABLE_GLOBAL_ESTOP_VFD_FAILURE : BOOL := TRUE;          // Авария VFD (частотного преобразователя)
+
+	// Блокировочные зависимости (глобально)
+	ENABLE_GLOBAL_ESTOP_DEPENDENCIES : BOOL := TRUE;         // Блокировочные зависимости между секциями
+
+	// Блокировочные зависимости (индивидуально по секциям)
+	// TRUE = секция останавливается при нарушении зависимостей
+	// FALSE = секция НЕ останавливается при нарушении зависимостей
+	ENABLE_ESTOP_DEPENDENCIES_DUMPER : BOOL := TRUE;         // Зависимости для отвалообразователя
+	ENABLE_ESTOP_DEPENDENCIES_CONVEYOR : BOOL := TRUE;       // Зависимости для сборного конвейера
+	ENABLE_ESTOP_DEPENDENCIES_BUNKER1 : BOOL := TRUE;        // Зависимости для бункера 1
+	ENABLE_ESTOP_DEPENDENCIES_BUNKER2 : BOOL := TRUE;        // Зависимости для бункера 2
+	ENABLE_ESTOP_DEPENDENCIES_BUNKER3 : BOOL := TRUE;        // Зависимости для бункера 3
 
 	// == УСТАВКИ ==
 	VFD_FREQUENCY_MAX : REAL := 50;
@@ -73,6 +94,9 @@ VAR_GLOBAL RETAIN
 		TIME_PAUSE_FB := T#30S,
 		COUNT_CYCLE := 3
 		);
+		
+	// Время шага последовательного запуска вибраторов (задержка между запуском каждого следующего вибратора в фазе ACTIVE)
+	TIME_VIBRATOR_SEQUENTIAL_START_STEP : TIME := T#4S;
 
 	// Настройка пневмообрушения
 	PNEUMO_SETTINGS : ST_BunkerVibratorSettings := (
@@ -93,11 +117,18 @@ VAR_GLOBAL RETAIN
 	TIME_AFTER_START_BUNKER_3 : TIME := T#120S; // Время ожидания после запуска бункера 3
 
 	// Таймеры контроля выполнения команд (тайм-ауты)
-	TIME_TIMEOUT_STOP_DUMPER : TIME := T#30S; // Тайм-аут остановки отвалообразователя (WORK → IDLE)
-	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки конвейера (WORK → IDLE)
-	TIME_TIMEOUT_ROTATION_DUMPER : TIME := T#20S; // Тайм-аут выполнения команд поворота дампера
+	TIME_TIMEOUT_START_DUMPER_CONVEYOR : TIME := T#30S; // Тайм-аут запуска моторов конвейера отвалообразователя (STARTING → WORK)
+	TIME_TIMEOUT_START_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут запуска моторов поворота отвалообразователя (STARTING → WORK)
+	TIME_TIMEOUT_START_CONVEYOR : TIME := T#30S; // Тайм-аут запуска моторов сборного конвейера (STARTING → WORK)
+	TIME_TIMEOUT_START_BUNKER : TIME := T#20S; // Тайм-аут запуска вибропитателей бункера (STARTING → WORK)
+	TIME_TIMEOUT_STOP_DUMPER_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов конвейера отвалообразователя (STOPPING → IDLE)
+	TIME_TIMEOUT_STOP_DUMPER_ROTATION : TIME := T#20S; // Тайм-аут остановки моторов поворота отвалообразователя (STOPPING → IDLE)
+	TIME_TIMEOUT_STOP_CONVEYOR : TIME := T#30S; // Тайм-аут остановки моторов сборного конвейера (STOPPING → IDLE)
 	TIME_TIMEOUT_STOP_BUNKER : TIME := T#20S; // Тайм-аут остановки вибропитателей бункера (WORK → IDLE)
-	
+
+	// Таймер ожидания восстановления потерянной обратной связи VFD во время работы
+	TIME_TIMEOUT_VFD_FEEDBACK_LOST : TIME := T#3S; // Если обратная связь VFD пропала во время WORK и не вернулась в течение этого времени → аварийная остановка
+
 	// Таймер ожидания пропавшего сигнала обратной связи работы механизма
 	TIME_WAITING_FEEDBACK : TIME := T#0S;
 
@@ -209,4 +240,24 @@ VAR_GLOBAL RETAIN
 	// Константы
 	AMOUNT_BUNKER_MOTOR_VIBFEEDER : INT := 2;
 	AMOUNT_BUNKER_MOTOR_VIBRATOR : INT := 4;
+
+	// == УСТАВКИ ЗАДЕРЖКИ СРАБАТЫВАНИЯ ДАТЧИКОВ БЕЗОПАСНОСТИ ==
+	// Таймеры задержки для датчиков отвалообразователя (Dumper)
+	TIME_DELAY_SENSOR_DUMPER_ZQ_ALARM : TIME := T#3S;   // Задержка срабатывания датчика схода ленты (Alarm)
+	TIME_DELAY_SENSOR_DUMPER_ZQ_WARNING : TIME := T#0S; // Задержка срабатывания датчика схода ленты (Warning)
+	TIME_DELAY_SENSOR_DUMPER_HQ : TIME := T#0S;         // Задержка срабатывания кабель-тросового выключателя
+	TIME_DELAY_SENSOR_DUMPER_SQ : TIME := T#0S;         // Задержка срабатывания датчика ограждения барабана
+	TIME_DELAY_SENSOR_DUMPER_GS : TIME := T#3S;         // Задержка срабатывания датчика заштыбовки
+	TIME_DELAY_SENSOR_DUMPER_YS : TIME := T#3S;         // Задержка срабатывания датчика продольного разрыва
+	TIME_DELAY_SENSOR_DUMPER_QR : TIME := T#0S;         // Задержка срабатывания датчика скорости
+
+	// Таймеры задержки для датчиков сборного конвейера (Conveyor)
+	TIME_DELAY_SENSOR_CONVEYOR_ZQ_ALARM : TIME := T#3S;   // Задержка срабатывания датчика схода ленты (Alarm)
+	TIME_DELAY_SENSOR_CONVEYOR_ZQ_WARNING : TIME := T#0S; // Задержка срабатывания датчика схода ленты (Warning)
+	TIME_DELAY_SENSOR_CONVEYOR_HQ : TIME := T#0S;         // Задержка срабатывания кабель-тросового выключателя
+	TIME_DELAY_SENSOR_CONVEYOR_SQ : TIME := T#0S;         // Задержка срабатывания датчика ограждения барабана
+	TIME_DELAY_SENSOR_CONVEYOR_GS : TIME := T#3S;         // Задержка срабатывания датчика заштыбовки
+	TIME_DELAY_SENSOR_CONVEYOR_YS : TIME := T#3S;         // Задержка срабатывания датчика продольного разрыва
+	TIME_DELAY_SENSOR_CONVEYOR_YE : TIME := T#0S;         // Задержка срабатывания металлодетектора
+	TIME_DELAY_SENSOR_CONVEYOR_QR : TIME := T#0S;         // Задержка срабатывания датчика скорости
 END_VAR

@@ -399,7 +399,7 @@ script/
 3. Проверьте права на выполнение: `chmod +x modbus_cli.sh`
 4. Проверьте логи ошибок в терминале
 
-Для восстановления БД из FC_ModbusToSCADA.st:
+Для восстановления БД из FB_ModbusToSCADA.st:
 ```bash
 cd script
 python3 migrate_from_fc.py

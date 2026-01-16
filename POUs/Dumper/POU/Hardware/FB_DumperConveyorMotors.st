@@ -3,12 +3,16 @@ VAR_INPUT
 	Dumper : REFERENCE TO ST_Dumper;
 	xStart : BOOL;              // Команда запуска
 	xStop : BOOL;               // Команда остановки
-	xEmergencyStop : BOOL;      // Аварийная остановка
+	xEmergencyStop : BOOL;      // Аварийная остановка (импульсная)
+	xReset : BOOL;              // Сброс аварии (импульсная)
 	rTargetFrequency : REAL;    // Целевая частота моторов
 END_VAR
 VAR_OUTPUT
 	eStage : E_StageActuator;   // Текущая стадия
 	rCurrentFrequency : REAL;   // Текущая частота моторов (среднее значение)
+	xStartingTimeout : BOOL;    // Флаг тайм-аута запуска (STARTING слишком долго)
+	xStoppingTimeout : BOOL;    // Флаг тайм-аута остановки (STOPPING слишком долго)
+	xVFD_FeedbackLostTimeout : BOOL; // Флаг: потеря обратной связи VFD во время работы (не восстановилась за TIME_TIMEOUT_VFD_FEEDBACK_LOST)
 END_VAR
 VAR
 	STAGE : E_StageActuator := E_StageActuator.IDLE;
@@ -30,6 +34,15 @@ VAR
 	// Таймер задержки включения тормоза
 	tonTimerEnableBrake : TON;
 
+	// Таймер контроля времени запуска (STARTING → WORK)
+	tonTimerStarting : TON;
+
+	// Таймер контроля времени остановки (STOPPING → IDLE)
+	tonTimerStopping : TON;
+
+	// Таймер контроля потери обратной связи VFD во время работы
+	tonTimerVFD_FeedbackLost : TON;
+
 	// Флаг запуска таймера (защита от зацикливания)
 	xBrakeTimerStarted : BOOL := FALSE;
 END_VAR
@@ -48,11 +61,12 @@ END_VAR
 // ВХОДЫ:
 // - xStart: команда запуска моторов
 // - xStop: команда остановки моторов
-// - xEmergencyStop: аварийная остановка
+// - xEmergencyStop: аварийная остановка (импульсная)
+// - xReset: сброс аварии (импульсная)
 // - rTargetFrequency: целевая частота (Гц)
 //
 // ВЫХОДЫ:
-// - eStage: текущая стадия (IDLE/STARTING/WORK)
+// - eStage: текущая стадия (IDLE/STARTING/WORK/STOPPING/FAULT)
 // - rCurrentFrequency: текущая частота моторов
 //
 // ========================================
@@ -69,12 +83,74 @@ IF xEmergencyStop THEN
 	// Активация тормоза
 	Dumper.qxBreakerConveyor := FALSE;
 
-	// Переход в IDLE
-	STAGE := E_StageActuator.IDLE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
 	nStartingSubstage := 0;
 	nStoppingSubstage := 0;
 	tonTimerEnableBrake(IN := FALSE);
+	tonTimerStarting(IN := FALSE);
+	tonTimerStopping(IN := FALSE);
 	xBrakeTimerStarted := FALSE;
+END_IF
+
+// Тайм-аут запуска: если слишком долго в STARTING → аварийная остановка
+tonTimerStarting(
+	IN := (STAGE = E_StageActuator.STARTING),
+	PT := TIME_TIMEOUT_START_DUMPER_CONVEYOR
+);
+
+IF tonTimerStarting.Q THEN
+	xStartingTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+	Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+	// Активация тормоза
+	Dumper.qxBreakerConveyor := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	nStartingSubstage := 0;
+	tonTimerStarting(IN := FALSE);
+END_IF
+
+// Тайм-аут остановки: если слишком долго в STOPPING → аварийная остановка
+tonTimerStopping(
+	IN := (STAGE = E_StageActuator.STOPPING),
+	PT := TIME_TIMEOUT_STOP_DUMPER_CONVEYOR
+);
+
+IF tonTimerStopping.Q THEN
+	xStoppingTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+	Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+	// Активация тормоза
+	Dumper.qxBreakerConveyor := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	nStoppingSubstage := 0;
+	tonTimerStopping(IN := FALSE);
+END_IF
+
+// Контроль потери обратной связи VFD во время работы
+// Если VFD был в работе (WORK) и обратная связь пропала - включаем таймер
+// Если обратная связь не вернулась в течение TIME_TIMEOUT_VFD_FEEDBACK_LOST → аварийная остановка
+tonTimerVFD_FeedbackLost(
+	IN := (STAGE = E_StageActuator.WORK) AND
+	      (NOT Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
+	       OR NOT Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal),
+	PT := TIME_TIMEOUT_VFD_FEEDBACK_LOST
+);
+
+IF tonTimerVFD_FeedbackLost.Q THEN
+	xVFD_FeedbackLostTimeout := TRUE;
+	// Аварийная остановка: немедленное выключение VFD
+	Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
+	Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
+	// Активация тормоза
+	Dumper.qxBreakerConveyor := FALSE;
+	// Переход в FAULT
+	STAGE := E_StageActuator.FAULT;
+	tonTimerVFD_FeedbackLost(IN := FALSE);
 END_IF
 
 // ========================================
@@ -102,7 +178,7 @@ CASE STAGE OF
 		// Проверка команды остановки во время запуска
 		IF xStop THEN
 			// Прервать запуск и перейти к остановке
-			STAGE := E_StageActuator.WORK;
+			STAGE := E_StageActuator.STOPPING;
 			nStartingSubstage := 0;
 			nStoppingSubstage := 1; // Начать процедуру остановки
 		END_IF
@@ -139,30 +215,32 @@ CASE STAGE OF
 		END_CASE;
 
 	E_StageActuator.WORK:
-		// Нормальная работа или штатная остановка через подстадии
-		CASE nStoppingSubstage OF
-			0: // Нормальная работа
-				// Команда остановки
-				IF xStop THEN
-					nStoppingSubstage := 1;
-				END_IF
+		// Нормальная работа
+		// Команда остановки - переход в STOPPING
+		IF xStop THEN
+			STAGE := E_StageActuator.STOPPING;
+			nStoppingSubstage := 0;
+		END_IF
 
-			1: // STOP_VFD - Остановка VFD
+	E_StageActuator.STOPPING:
+		// Штатная остановка через подстадии
+		CASE nStoppingSubstage OF
+			0: // STOP_VFD - Остановка VFD
 				// Отключить команду пуска на VFD
 				Dumper.MotorConveyor[1].VFD.qxStart := FALSE;
 				Dumper.MotorConveyor[2].VFD.qxStart := FALSE;
 
-				nStoppingSubstage := 2;
+				nStoppingSubstage := 1;
 
-			2: // WAIT_VFD_STOP - Ожидание остановки VFD
+			1: // WAIT_VFD_STOP - Ожидание остановки VFD
 				// Проверить обратную связь VFD о выключении
 				IF NOT Dumper.MotorConveyor[1].VFD.fbStateIsWorking.qxSignal
 					AND NOT Dumper.MotorConveyor[2].VFD.fbStateIsWorking.qxSignal
 				THEN
-					nStoppingSubstage := 3;
+					nStoppingSubstage := 2;
 				END_IF
 
-			3: // ACTIVATE_BRAKE - Активация тормоза с задержкой
+			2: // ACTIVATE_BRAKE - Активация тормоза с задержкой
 				// Включение таймера на задержку тормоза (один раз)
 				IF NOT xBrakeTimerStarted THEN
 					xBrakeTimerStarted := TRUE;
@@ -175,13 +253,23 @@ CASE STAGE OF
 					Dumper.qxBreakerConveyor := FALSE;
 					tonTimerEnableBrake(IN := FALSE);
 					xBrakeTimerStarted := FALSE;
-					nStoppingSubstage := 4;
+					nStoppingSubstage := 3;
 				END_IF
 
-			4: // WAIT_BRAKE_FEEDBACK - Переход в IDLE
+			3: // Переход в IDLE
 				STAGE := E_StageActuator.IDLE;
 				nStoppingSubstage := 0;
 		END_CASE;
+
+	E_StageActuator.FAULT:
+		// Состояние аварии - ожидание сброса
+		// Выход из FAULT по команде xReset
+		IF xReset THEN
+			STAGE := E_StageActuator.IDLE;
+			xStartingTimeout := FALSE; // Сброс флага тайм-аута запуска
+			xStoppingTimeout := FALSE; // Сброс флага тайм-аута остановки
+			xVFD_FeedbackLostTimeout := FALSE; // Сброс флага потери обратной связи VFD
+		END_IF
 END_CASE;
 
 // ========================================
@@ -189,9 +277,9 @@ END_CASE;
 // ========================================
 
 // Установка частоты напрямую в аналоговый выход VFD
-// В режиме IDLE и при остановке частота = 0
-// В режиме WORK частота = rTargetFrequency
-IF STAGE = E_StageActuator.WORK THEN
+// В режимах STARTING и WORK частота = rTargetFrequency (VFD должен знать целевую частоту до запуска)
+// В остальных режимах (IDLE, STOPPING, FAULT) частота = 0
+IF STAGE = E_StageActuator.STARTING OR STAGE = E_StageActuator.WORK THEN
 	Dumper.MotorConveyor[1].VFD.qrOutFrequency := rTargetFrequency;
 	Dumper.MotorConveyor[2].VFD.qrOutFrequency := rTargetFrequency;
 ELSE
