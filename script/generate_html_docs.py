@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Генерация HTML документации Modbus регистров для GitHub Pages
+GitHub Dark Theme с адаптивной мобильной версией
 """
 
 import sqlite3
@@ -80,7 +81,7 @@ def generate_html_documentation():
 
     conn.close()
 
-    # Генерируем HTML
+    # Генерируем HTML с GitHub Dark Theme
     html_content = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -93,6 +94,7 @@ def generate_html_documentation():
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
     <style>
+        /* GitHub Dark Theme */
         * {{
             margin: 0;
             padding: 0;
@@ -101,23 +103,26 @@ def generate_html_documentation():
 
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0d1117;
             min-height: 100vh;
             padding: 20px;
+            color: #c9d1d9;
         }}
 
         .container {{
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: #161b22;
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid #30363d;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             overflow: hidden;
         }}
 
         header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            color: #c9d1d9;
             padding: 30px;
             text-align: center;
         }}
@@ -126,11 +131,12 @@ def generate_html_documentation():
             font-size: 2.5em;
             margin-bottom: 10px;
             font-weight: 700;
+            color: #58a6ff;
         }}
 
         header p {{
             font-size: 1.1em;
-            opacity: 0.9;
+            color: #8b949e;
         }}
 
         .stats {{
@@ -138,19 +144,20 @@ def generate_html_documentation():
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             padding: 30px;
-            background: #f8f9fa;
+            background: #0d1117;
         }}
 
         .stat-card {{
-            background: white;
+            background: #161b22;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
+            border: 1px solid #30363d;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border-left: 4px solid #1f6feb;
         }}
 
         .stat-card h3 {{
-            color: #667eea;
+            color: #58a6ff;
             font-size: 0.9em;
             text-transform: uppercase;
             margin-bottom: 10px;
@@ -160,17 +167,18 @@ def generate_html_documentation():
         .stat-card .number {{
             font-size: 2em;
             font-weight: bold;
-            color: #333;
+            color: #c9d1d9;
         }}
 
         .stat-card .label {{
-            color: #666;
+            color: #8b949e;
             font-size: 0.9em;
             margin-top: 5px;
         }}
 
         .content {{
             padding: 30px;
+            background: #0d1117;
         }}
 
         .filters {{
@@ -188,45 +196,126 @@ def generate_html_documentation():
 
         .filter-group label {{
             font-weight: 600;
-            color: #555;
+            color: #8b949e;
             font-size: 0.9em;
         }}
 
         .filter-group select {{
             padding: 8px 12px;
-            border: 2px solid #ddd;
+            border: 1px solid #30363d;
             border-radius: 6px;
             font-size: 1em;
             cursor: pointer;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, background-color 0.3s;
+            background: #161b22;
+            color: #c9d1d9;
         }}
 
         .filter-group select:focus {{
             outline: none;
-            border-color: #667eea;
+            border-color: #58a6ff;
+            background: #0d1117;
         }}
 
+        .filter-group select:hover {{
+            background: #0d1117;
+        }}
+
+        /* DataTables Overrides for Dark Theme */
         table.dataTable {{
             border-collapse: collapse;
             width: 100%;
             font-size: 0.9em;
+            background: #161b22;
+            color: #c9d1d9;
         }}
 
         table.dataTable thead th {{
-            background: #667eea;
-            color: white;
+            background: #21262d;
+            color: #c9d1d9;
             font-weight: 600;
             padding: 12px 8px;
             text-align: left;
+            border-bottom: 1px solid #30363d;
         }}
 
         table.dataTable tbody td {{
             padding: 10px 8px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #21262d;
+            background: #0d1117;
+            color: #c9d1d9;
+        }}
+
+        table.dataTable tbody tr {{
+            background: #0d1117;
         }}
 
         table.dataTable tbody tr:hover {{
-            background: #f5f5ff;
+            background: #161b22 !important;
+        }}
+
+        table.dataTable.stripe tbody tr.odd,
+        table.dataTable.display tbody tr.odd {{
+            background: #0d1117;
+        }}
+
+        table.dataTable.stripe tbody tr.even,
+        table.dataTable.display tbody tr.even {{
+            background: #161b22;
+        }}
+
+        /* DataTables Search Box */
+        .dataTables_wrapper .dataTables_filter input {{
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }}
+
+        .dataTables_wrapper .dataTables_filter input:focus {{
+            outline: none;
+            border-color: #58a6ff;
+        }}
+
+        /* DataTables Info and Pagination */
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {{
+            color: #8b949e;
+        }}
+
+        .dataTables_wrapper .dataTables_length select {{
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }}
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {{
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9 !important;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 0 2px;
+        }}
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {{
+            background: #21262d !important;
+            border-color: #58a6ff !important;
+            color: #58a6ff !important;
+        }}
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {{
+            background: #1f6feb !important;
+            border-color: #1f6feb !important;
+            color: #ffffff !important;
+        }}
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {{
+            color: #484f58 !important;
         }}
 
         .badge {{
@@ -238,47 +327,57 @@ def generate_html_documentation():
         }}
 
         .badge-holding {{
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #1f6feb33;
+            color: #58a6ff;
+            border: 1px solid #1f6feb;
         }}
 
         .badge-input {{
-            background: #e8f5e9;
-            color: #388e3c;
+            background: #2ea04333;
+            color: #3fb950;
+            border: 1px solid #2ea043;
         }}
 
         .badge-bool {{
-            background: #fff3e0;
-            color: #f57c00;
+            background: #d2930033;
+            color: #f0883e;
+            border: 1px solid #d29300;
         }}
 
         .badge-real {{
-            background: #f3e5f5;
-            color: #7b1fa2;
+            background: #a371f733;
+            color: #bc8cff;
+            border: 1px solid #a371f7;
         }}
 
         .badge-int {{
-            background: #e0f2f1;
-            color: #00796b;
+            background: #388bfd33;
+            color: #58a6ff;
+            border: 1px solid #388bfd;
         }}
 
         .badge-reserved {{
-            background: #ffebee;
-            color: #c62828;
+            background: #da364633;
+            color: #f85149;
+            border: 1px solid #da3646;
         }}
 
         footer {{
             text-align: center;
             padding: 20px;
-            background: #f8f9fa;
-            color: #666;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            color: #8b949e;
             font-size: 0.9em;
         }}
 
         .var-name {{
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
-            color: #d73a49;
+            color: #79c0ff;
+            background: #161b22;
+            padding: 2px 6px;
+            border-radius: 3px;
         }}
 
         .dt-buttons {{
@@ -286,9 +385,9 @@ def generate_html_documentation():
         }}
 
         .dt-button {{
-            background: #667eea !important;
+            background: #238636 !important;
             color: white !important;
-            border: none !important;
+            border: 1px solid #2ea043 !important;
             padding: 8px 16px !important;
             border-radius: 6px !important;
             margin-right: 10px !important;
@@ -297,7 +396,327 @@ def generate_html_documentation():
         }}
 
         .dt-button:hover {{
-            background: #5568d3 !important;
+            background: #2ea043 !important;
+        }}
+
+        /* Mobile-specific styles */
+        .table-wrapper {{
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }}
+
+        /* Responsive Design - Mobile First */
+        @media screen and (max-width: 768px) {{
+            body {{
+                padding: 10px;
+            }}
+
+            .container {{
+                border-radius: 8px;
+            }}
+
+            header {{
+                padding: 20px 15px;
+            }}
+
+            header h1 {{
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }}
+
+            header p {{
+                font-size: 0.95em;
+            }}
+
+            /* Stats cards - stack vertically on mobile */
+            .stats {{
+                grid-template-columns: 1fr;
+                padding: 15px;
+                gap: 12px;
+            }}
+
+            .stat-card {{
+                padding: 15px;
+            }}
+
+            .stat-card .number {{
+                font-size: 1.8em;
+            }}
+
+            /* Content area */
+            .content {{
+                padding: 15px;
+            }}
+
+            /* Filters - stack vertically */
+            .filters {{
+                flex-direction: column;
+                gap: 12px;
+            }}
+
+            .filter-group {{
+                width: 100%;
+            }}
+
+            .filter-group select {{
+                width: 100%;
+                padding: 12px 16px;
+                font-size: 16px; /* Prevent zoom on iOS */
+                min-height: 44px; /* Touch-friendly size */
+            }}
+
+            /* DataTables controls */
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter {{
+                float: none !important;
+                text-align: left;
+                margin-bottom: 12px;
+            }}
+
+            .dataTables_wrapper .dataTables_filter input {{
+                width: 100% !important;
+                max-width: none !important;
+                margin-left: 0 !important;
+                margin-top: 8px;
+                padding: 12px 16px;
+                font-size: 16px; /* Prevent zoom on iOS */
+                min-height: 44px; /* Touch-friendly */
+            }}
+
+            .dataTables_wrapper .dataTables_length select {{
+                padding: 8px 12px;
+                font-size: 16px;
+                min-height: 40px;
+            }}
+
+            /* Table - horizontal scroll */
+            .table-wrapper {{
+                margin: 0 -15px;
+                padding: 0 15px;
+            }}
+
+            table.dataTable {{
+                font-size: 0.85em;
+                min-width: 600px; /* Force horizontal scroll */
+            }}
+
+            table.dataTable thead th {{
+                padding: 10px 6px;
+                font-size: 0.85em;
+                white-space: nowrap;
+            }}
+
+            table.dataTable tbody td {{
+                padding: 10px 6px;
+                white-space: nowrap;
+            }}
+
+            /* Make important columns visible */
+            table.dataTable tbody td:nth-child(3),
+            table.dataTable tbody td:nth-child(5) {{
+                font-weight: 600;
+            }}
+
+            /* Pagination - more compact */
+            .dataTables_wrapper .dataTables_paginate {{
+                float: none !important;
+                text-align: center;
+                margin-top: 15px;
+            }}
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button {{
+                padding: 10px 14px;
+                margin: 0 1px;
+                font-size: 14px;
+                min-width: 44px; /* Touch-friendly */
+            }}
+
+            .dataTables_wrapper .dataTables_info {{
+                float: none !important;
+                text-align: center;
+                padding-top: 12px;
+            }}
+
+            /* Buttons */
+            .dt-buttons {{
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 12px;
+            }}
+
+            .dt-button {{
+                margin-right: 0 !important;
+                width: 100%;
+                padding: 12px 16px !important;
+                min-height: 44px;
+            }}
+
+            /* Badges - slightly smaller */
+            .badge {{
+                font-size: 0.75em;
+                padding: 3px 6px;
+            }}
+
+            /* Variable names - wrap on mobile */
+            .var-name {{
+                font-size: 0.8em;
+                word-break: break-all;
+            }}
+
+            /* Footer */
+            footer {{
+                padding: 15px;
+                font-size: 0.85em;
+            }}
+        }}
+
+        /* Tablet styles */
+        @media screen and (min-width: 769px) and (max-width: 1024px) {{
+            .container {{
+                max-width: 95%;
+            }}
+
+            .stats {{
+                grid-template-columns: repeat(2, 1fr);
+            }}
+
+            header h1 {{
+                font-size: 2.2em;
+            }}
+
+            table.dataTable {{
+                font-size: 0.85em;
+            }}
+        }}
+
+        /* Small mobile devices */
+        @media screen and (max-width: 480px) {{
+            header h1 {{
+                font-size: 1.5em;
+            }}
+
+            header p {{
+                font-size: 0.9em;
+            }}
+
+            .stat-card .number {{
+                font-size: 1.6em;
+            }}
+
+            table.dataTable {{
+                font-size: 0.8em;
+            }}
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button {{
+                padding: 8px 10px;
+                font-size: 12px;
+                min-width: 40px;
+            }}
+        }}
+
+        /* Landscape mode on mobile */
+        @media screen and (max-width: 768px) and (orientation: landscape) {{
+            header {{
+                padding: 15px;
+            }}
+
+            header h1 {{
+                font-size: 1.6em;
+            }}
+
+            .stats {{
+                grid-template-columns: repeat(3, 1fr);
+                padding: 12px;
+            }}
+
+            .stat-card {{
+                padding: 12px;
+            }}
+        }}
+
+        /* Touch device improvements */
+        @media (hover: none) and (pointer: coarse) {{
+            /* Increase touch targets */
+            .filter-group select,
+            .dataTables_wrapper .dataTables_filter input,
+            .dt-button,
+            .dataTables_wrapper .dataTables_paginate .paginate_button {{
+                min-height: 44px;
+                -webkit-tap-highlight-color: rgba(88, 166, 255, 0.2);
+            }}
+
+            /* Remove hover effects on touch devices */
+            table.dataTable tbody tr:hover {{
+                background: inherit !important;
+            }}
+
+            /* Add active/pressed state instead */
+            table.dataTable tbody tr:active {{
+                background: #161b22 !important;
+            }}
+
+            .dt-button:active {{
+                transform: scale(0.98);
+            }}
+
+            .paginate_button:active {{
+                transform: scale(0.95);
+            }}
+        }}
+
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {{
+            table.dataTable thead th,
+            table.dataTable tbody td {{
+                border-width: 0.5px;
+            }}
+        }}
+
+        /* Accessibility - Reduce motion */
+        @media (prefers-reduced-motion: reduce) {{
+            * {{
+                animation: none !important;
+                transition: none !important;
+            }}
+        }}
+
+        /* Print styles */
+        @media print {{
+            body {{
+                background: white;
+                padding: 0;
+            }}
+
+            .container {{
+                box-shadow: none;
+                border: none;
+            }}
+
+            .stats,
+            .filters,
+            .dt-buttons,
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_paginate {{
+                display: none;
+            }}
+
+            table.dataTable {{
+                border: 1px solid #000;
+            }}
+
+            table.dataTable thead th {{
+                background: #f0f0f0 !important;
+                color: #000 !important;
+                border: 1px solid #000 !important;
+            }}
+
+            table.dataTable tbody td {{
+                color: #000 !important;
+                background: white !important;
+                border: 1px solid #000 !important;
+            }}
         }}
     </style>
 </head>
@@ -350,25 +769,26 @@ def generate_html_documentation():
                 </div>
             </div>
 
-            <table id="registersTable" class="display" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Тип</th>
-                        <th>Секция</th>
-                        <th>Адрес</th>
-                        <th>Тип данных</th>
-                        <th>Переменная</th>
-                        <th>Описание</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table id="registersTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Тип</th>
+                            <th>Секция</th>
+                            <th>Адрес</th>
+                            <th>Тип данных</th>
+                            <th>Переменная</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <footer>
             <p>🤖 Автоматически сгенерировано из базы данных Modbus регистров</p>
-            <p>Последнее обновление: {Path(__file__).parent / 'db' / 'modbus_registers.db'} </p>
         </footer>
     </div>
 
