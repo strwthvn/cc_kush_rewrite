@@ -274,50 +274,155 @@ IF _xInitRequired THEN
 	// Установка всех сигналов в состояние "нет ошибок"
 	// ========================================
 
-	FOR b := 1 TO 3 BY 1 DO
-		// Вибропитатели (MotorVibFeeder[1..2])
-		FOR m := 1 TO 2 BY 1 DO
-			// ЧРП готовность
-			Bunker[b].MotorVibFeeder[m].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	// ========================================
+	// БУНКЕР 1
+	// ========================================
 
-			// Автоматический выключатель (QF)
-			Bunker[b].MotorVibFeeder[m].fbStateQF.ixSignal := TRUE;
+	// Вибропитатели (MotorVibFeeder[1..2])
+	// Вибропитатель 1
+	Bunker[1].MotorVibFeeder[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[1].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[1].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[1].fbStatorOverheat.ixSignal := TRUE;
 
-			// ЧРП ошибка - инвертированный сигнал (NC)
-			Bunker[b].MotorVibFeeder[m].VFD.fbStateFailure.ixSignal := TRUE;
+	// Вибропитатель 2
+	Bunker[1].MotorVibFeeder[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[2].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[2].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[1].MotorVibFeeder[2].fbStatorOverheat.ixSignal := TRUE;
 
-			// Перегрев статора - инвертированный сигнал (NC)
-			Bunker[b].MotorVibFeeder[m].fbStatorOverheat.ixSignal := TRUE;
-		END_FOR;
+	// Вибраторы (MotorVibrator[1..4])
+	Bunker[1].MotorVibrator[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[1].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[1].VFD.fbStateFailure.ixSignal := TRUE;
 
-		// Вибраторы (MotorVibrator[1..4])
-		FOR m := 1 TO 4 BY 1 DO
-			// ЧРП готовность
-			Bunker[b].MotorVibrator[m].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[2].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[2].VFD.fbStateFailure.ixSignal := TRUE;
 
-			// Автоматический выключатель (QF)
-			Bunker[b].MotorVibrator[m].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[3].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[3].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[3].VFD.fbStateFailure.ixSignal := TRUE;
 
-			// ЧРП ошибка - инвертированный сигнал (NC)
-			Bunker[b].MotorVibrator[m].VFD.fbStateFailure.ixSignal := TRUE;
-		END_FOR;
+	Bunker[1].MotorVibrator[4].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[4].fbStateQF.ixSignal := TRUE;
+	Bunker[1].MotorVibrator[4].VFD.fbStateFailure.ixSignal := TRUE;
 
-		// Люк бункера - закрыт (норма = 1)
-		Bunker[b].fbStateHatch.ixSignal := TRUE;
+	// Люк бункера - закрыт (норма = 1)
+	Bunker[1].fbStateHatch.ixSignal := TRUE;
 
-		// Кнопка аварийной остановки - инвертированный сигнал (NC)
-		Bunker[b].fbBtnEmergencyStop.ixSignal := TRUE;
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Bunker[1].fbBtnEmergencyStop.ixSignal := TRUE;
 
-		// Начальный вес бункера (симуляция заполненного бункера)
-		Bunker[b].rWeight := 100.0;
+	// Начальный вес бункера (симуляция заполненного бункера)
+	Bunker[1].rWeight := 100.0;
 
-		// Сброс веса под бункером
-		Bunker[b].rWeightUnderBunker := 0.0;
-		_rLocalWeightUnderBunker[b] := 0.0;
+	// Сброс веса под бункером
+	Bunker[1].rWeightUnderBunker := 0.0;
+	_rLocalWeightUnderBunker[1] := 0.0;
 
-		// Сброс дрейфа
-		_rDriftOffset[b] := 0.0;
-	END_FOR;
+	// Сброс дрейфа
+	_rDriftOffset[1] := 0.0;
+
+	// ========================================
+	// БУНКЕР 2
+	// ========================================
+
+	// Вибропитатели (MotorVibFeeder[1..2])
+	// Вибропитатель 1
+	Bunker[2].MotorVibFeeder[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[1].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[1].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[1].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибропитатель 2
+	Bunker[2].MotorVibFeeder[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[2].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[2].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[2].MotorVibFeeder[2].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибраторы (MotorVibrator[1..4])
+	Bunker[2].MotorVibrator[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[1].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[1].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[2].MotorVibrator[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[2].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[2].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[2].MotorVibrator[3].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[3].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[3].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[2].MotorVibrator[4].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[4].fbStateQF.ixSignal := TRUE;
+	Bunker[2].MotorVibrator[4].VFD.fbStateFailure.ixSignal := TRUE;
+
+	// Люк бункера - закрыт (норма = 1)
+	Bunker[2].fbStateHatch.ixSignal := TRUE;
+
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Bunker[2].fbBtnEmergencyStop.ixSignal := TRUE;
+
+	// Начальный вес бункера (симуляция заполненного бункера)
+	Bunker[2].rWeight := 100.0;
+
+	// Сброс веса под бункером
+	Bunker[2].rWeightUnderBunker := 0.0;
+	_rLocalWeightUnderBunker[2] := 0.0;
+
+	// Сброс дрейфа
+	_rDriftOffset[2] := 0.0;
+
+	// ========================================
+	// БУНКЕР 3
+	// ========================================
+
+	// Вибропитатели (MotorVibFeeder[1..2])
+	// Вибропитатель 1
+	Bunker[3].MotorVibFeeder[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[1].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[1].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[1].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибропитатель 2
+	Bunker[3].MotorVibFeeder[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[2].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[2].VFD.fbStateFailure.ixSignal := TRUE;
+	Bunker[3].MotorVibFeeder[2].fbStatorOverheat.ixSignal := TRUE;
+
+	// Вибраторы (MotorVibrator[1..4])
+	Bunker[3].MotorVibrator[1].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[1].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[1].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[3].MotorVibrator[2].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[2].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[2].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[3].MotorVibrator[3].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[3].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[3].VFD.fbStateFailure.ixSignal := TRUE;
+
+	Bunker[3].MotorVibrator[4].VFD.fbStateRdyToStart.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[4].fbStateQF.ixSignal := TRUE;
+	Bunker[3].MotorVibrator[4].VFD.fbStateFailure.ixSignal := TRUE;
+
+	// Люк бункера - закрыт (норма = 1)
+	Bunker[3].fbStateHatch.ixSignal := TRUE;
+
+	// Кнопка аварийной остановки - инвертированный сигнал (NC)
+	Bunker[3].fbBtnEmergencyStop.ixSignal := TRUE;
+
+	// Начальный вес бункера (симуляция заполненного бункера)
+	Bunker[3].rWeight := 100.0;
+
+	// Сброс веса под бункером
+	Bunker[3].rWeightUnderBunker := 0.0;
+	_rLocalWeightUnderBunker[3] := 0.0;
+
+	// Сброс дрейфа
+	_rDriftOffset[3] := 0.0;
 END_IF;
 
 // ========================================
