@@ -44,7 +44,22 @@ VAR
 	xCircuitBuilt : BOOL := FALSE;
 	xCircuitBuiltRotation : BOOL := FALSE;
 
+	// Защёлки потери готовности (сбрасываются только по команде Reset)
+	// TRUE = готовность потеряна, требуется сброс
+	xReadyLostLatch_Conveyor : BOOL := FALSE;
+	xReadyLostLatch_Rotation : BOOL := FALSE;
+	xReadyLostLatch_Sensors : BOOL := FALSE;
+
+	// Текущее состояние готовности (без защёлки) - для проверки при сбросе
+	xCurrentReadyConveyor : BOOL;
+	xCurrentReadyRotation : BOOL;
+	xCurrentReadySensors : BOOL;
+
 	simInit : BOOL;
+	
+	ftrig_motorConveyor_KM_Power : F_TRIG;
+	ftrig_motorRotation_KM_Power : F_TRIG;
+	
 END_VAR
 
 // ========================================
@@ -181,36 +196,66 @@ Dumper.xStateWarning := fbSensors.xWarningSafetySensors
 // Готовность = отсутствие ошибок по сенсорам + отсутствие ошибок моторов +
 //              готовность VFD (дискретный сигнал) + отсутствие ошибок VFD +
 //              автоматические выключатели включены (QF)
+//
+// ВАЖНО: Готовность работает с защёлкой - если готовность была потеряна,
+// она НЕ восстанавливается автоматически даже при исправлении проблемы.
+// Для восстановления готовности требуется команда Reset (xReset).
+// При сбросе проверяется, что проблема действительно устранена.
 
-// Готовность конвейера:
+// Текущее состояние готовности конвейера (без защёлки):
 // - Нет ошибок моторов конвейера (VFD failure)
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов конвейера включены (QF)
 // - Схема контакторов конвейера собрана (xCircuitBuilt)
 // - Отсутствие FAULT в блоке управления моторами конвейера
-xSectionReadyConveyor := NOT fbMotorErrors.xErrorMotorConv_Any
+xCurrentReadyConveyor := NOT fbMotorErrors.xErrorMotorConv_Any
                       AND fbMotorErrors.xVFD_ReadyConv_All
                       AND fbMotorErrors.xQF_OkConv_All
                       AND xCircuitBuilt
                       AND fbConveyorMotors.eStage <> E_StageActuator.FAULT;
 
-// Готовность поворота:
+// Текущее состояние готовности поворота (без защёлки):
 // - Нет ошибок моторов поворота (VFD failure)
 // - VFD моторов поворота готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов поворота включены (QF)
 // - Схема контакторов поворота собрана (xCircuitBuiltRotation)
 // - Отсутствие FAULT в блоке управления моторами поворота
-xSectionReadyRotation := NOT fbMotorErrors.xErrorMotorRot_Any
+xCurrentReadyRotation := NOT fbMotorErrors.xErrorMotorRot_Any
                       AND fbMotorErrors.xVFD_ReadyRot_All
                       AND fbMotorErrors.xQF_OkRot_All
                       AND xCircuitBuiltRotation
                       AND fbRotationMotors.eStage <> E_StageActuator.FAULT;
 
+// Текущее состояние готовности по датчикам (без защёлки)
+xCurrentReadySensors := NOT fbSensors.xErrorSafetySensors;
+
+// Управление защёлками потери готовности:
+// Защёлка устанавливается при потере текущей готовности
+// Защёлка сбрасывается ТОЛЬКО по команде Reset + текущая готовность OK
+IF NOT xCurrentReadyConveyor THEN
+	xReadyLostLatch_Conveyor := TRUE;
+END_IF;
+
+IF NOT xCurrentReadyRotation THEN
+	xReadyLostLatch_Rotation := TRUE;
+END_IF;
+
+IF NOT xCurrentReadySensors THEN
+	xReadyLostLatch_Sensors := TRUE;
+END_IF;
+
+// Готовность секции с учётом защёлки:
+// Готовность есть только если:
+// 1. Текущее состояние готовности OK
+// 2. Защёлка потери готовности НЕ установлена
+xSectionReadyConveyor := xCurrentReadyConveyor AND NOT xReadyLostLatch_Conveyor;
+xSectionReadyRotation := xCurrentReadyRotation AND NOT xReadyLostLatch_Rotation;
+
 // Общая готовность секции:
-// - Нет ошибок по датчикам безопасности
-// - Конвейер готов (включая схему и отсутствие FAULT)
-// - Поворот готов (включая схему и отсутствие FAULT)
-xSectionReady := NOT fbSensors.xErrorSafetySensors
+// - Нет ошибок по датчикам безопасности + защёлка не установлена
+// - Конвейер готов (включая схему и отсутствие FAULT) + защёлка не установлена
+// - Поворот готов (включая схему и отсутствие FAULT) + защёлка не установлена
+xSectionReady := xCurrentReadySensors AND NOT xReadyLostLatch_Sensors
               AND xSectionReadyConveyor
               AND xSectionReadyRotation;
 
@@ -221,6 +266,21 @@ xSectionReady := NOT fbSensors.xErrorSafetySensors
 // Сброс в начальное состояние
 IF xReset THEN
 	Dumper.xStateFailure := FALSE;
+
+	// Сброс защёлок потери готовности (только если текущее состояние OK)
+	// Это гарантирует, что готовность восстановится только при реальном
+	// исправлении проблемы, а не просто по команде Reset
+	IF xCurrentReadyConveyor THEN
+		xReadyLostLatch_Conveyor := FALSE;
+	END_IF;
+
+	IF xCurrentReadyRotation THEN
+		xReadyLostLatch_Rotation := FALSE;
+	END_IF;
+
+	IF xCurrentReadySensors THEN
+		xReadyLostLatch_Sensors := FALSE;
+	END_IF;
 END_IF
 
 // Штатная остановка - запускается при получении команды xStop
@@ -400,6 +460,8 @@ eStage := STAGE;
 // - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок по сенсорам и НЕ в ERROR
 // - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок по сенсорам или переходе в ERROR
 
+ftrig_motorConveyor_KM_Power(CLK:= (Dumper.MotorConveyor[1].fbStateKM.qxSignal AND Dumper.MotorConveyor[2].fbStateKM.qxSignal));
+
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы конвейера
 	// cmdBuildCircuitOn - собрать схему (включить контакторы)
@@ -418,14 +480,19 @@ ELSIF Dumper.eStateRemote = E_StateRemote.Auto THEN
 	// 2. Секция НЕ в стадии ERROR
 	IF NOT fbSensors.xErrorSafetySensors AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
 		xCircuitBuilt := TRUE;
-	ELSE
-		xCircuitBuilt := FALSE;
 	END_IF;
+END_IF;
+
+// Разобрать схему по сигналу заднего фронта контактора
+IF ftrig_motorConveyor_KM_Power.Q THEN
+	xCircuitBuilt := FALSE;
 END_IF;
 
 // Моторы конвейера - управление контакторами через состояние схемы
 Dumper.MotorConveyor[1].qxKM_Power := xCircuitBuilt;
 Dumper.MotorConveyor[2].qxKM_Power := xCircuitBuilt;
+
+ftrig_motorRotation_KM_Power(CLK:= (Dumper.MotorRotation[1].fbStateKM.qxSignal AND Dumper.MotorRotation[2].fbStateKM.qxSignal));
 
 IF Dumper.eStateRemote = E_StateRemote.Manual THEN
 	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы поворота
@@ -445,9 +512,11 @@ ELSIF Dumper.eStateRemote = E_StateRemote.Auto THEN
 	// 2. Секция НЕ в стадии ERROR
 	IF NOT fbSensors.xErrorSafetySensors AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
 		xCircuitBuiltRotation := TRUE;
-	ELSE
-		xCircuitBuiltRotation := FALSE;
 	END_IF;
+END_IF;
+
+IF ftrig_motorRotation_KM_Power.Q THEN
+	xCircuitBuiltRotation := FALSE;
 END_IF;
 
 // Моторы поворота - управление контакторами через состояние схемы

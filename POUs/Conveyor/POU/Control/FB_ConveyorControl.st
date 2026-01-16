@@ -37,7 +37,16 @@ VAR
 	// Состояние схемы контакторов (TRUE = схема собрана, FALSE = схема разобрана)
 	xCircuitBuilt : BOOL := FALSE;
 
+	// Защёлка потери готовности (сбрасывается только по команде Reset)
+	// TRUE = готовность потеряна, требуется сброс
+	xReadyLostLatch : BOOL := FALSE;
+
+	// Текущее состояние готовности (без защёлки) - для проверки при сбросе
+	xCurrentReady : BOOL;
+
 	simInit : BOOL;
+	
+	ftrig_motorConveyor_KM_Power : F_TRIG;
 END_VAR
 
 // ========================================
@@ -145,20 +154,38 @@ Conveyor.xStateWarning := fbSensors.xWarningSafetySensors
 // Готовность = отсутствие ошибок по сенсорам + отсутствие ошибок моторов +
 //              готовность VFD (дискретный сигнал) + отсутствие ошибок VFD +
 //              автоматические выключатели включены (QF)
+//
+// ВАЖНО: Готовность работает с защёлкой - если готовность была потеряна,
+// она НЕ восстанавливается автоматически даже при исправлении проблемы.
+// Для восстановления готовности требуется команда Reset (xReset).
+// При сбросе проверяется, что проблема действительно устранена.
 
-// Общая готовность секции:
+// Текущее состояние готовности секции (без защёлки):
 // - Нет ошибок по датчикам безопасности
 // - Нет ошибок моторов конвейера (VFD failure)
 // - VFD моторов конвейера готовы к пуску (fbStateRdyToStart)
 // - Автоматические выключатели моторов конвейера включены (QF)
 // - Схема контакторов собрана (xCircuitBuilt)
 // - Отсутствие FAULT в блоке управления моторами конвейера
-xSectionReady := NOT fbSensors.xErrorSafetySensors
+xCurrentReady := NOT fbSensors.xErrorSafetySensors
               AND NOT fbMotorErrors.xErrorMotorConv_Any
               AND fbMotorErrors.xVFD_ReadyConv_All
               AND fbMotorErrors.xQF_OkConv_All
               AND xCircuitBuilt
               AND fbConveyorMotors.eStage <> E_StageActuator.FAULT;
+
+// Управление защёлкой потери готовности:
+// Защёлка устанавливается при потере текущей готовности
+// Защёлка сбрасывается ТОЛЬКО по команде Reset + текущая готовность OK
+IF NOT xCurrentReady THEN
+	xReadyLostLatch := TRUE;
+END_IF;
+
+// Готовность секции с учётом защёлки:
+// Готовность есть только если:
+// 1. Текущее состояние готовности OK
+// 2. Защёлка потери готовности НЕ установлена
+xSectionReady := xCurrentReady AND NOT xReadyLostLatch;
 
 // ========================================
 // ОБРАБОТКА ОСТАНОВКИ И СБРОСА
@@ -167,6 +194,13 @@ xSectionReady := NOT fbSensors.xErrorSafetySensors
 // Сброс в начальное состояние
 IF xReset THEN
 	Conveyor.xStateFailure := FALSE;
+
+	// Сброс защёлки потери готовности (только если текущее состояние OK)
+	// Это гарантирует, что готовность восстановится только при реальном
+	// исправлении проблемы, а не просто по команде Reset
+	IF xCurrentReady THEN
+		xReadyLostLatch := FALSE;
+	END_IF;
 END_IF
 
 // ========================================
@@ -323,6 +357,8 @@ eStage := STAGE;
 // - Схема собирается АВТОМАТИЧЕСКИ при отсутствии ошибок по сенсорам и НЕ в ERROR
 // - Схема разбирается АВТОМАТИЧЕСКИ при появлении ошибок по сенсорам или переходе в ERROR
 
+ftrig_motorConveyor_KM_Power(CLK:= (Conveyor.MotorConveyor[1].fbStateKM.qxSignal AND Conveyor.MotorConveyor[2].fbStateKM.qxSignal));
+
 IF Conveyor.eStateRemote = E_StateRemote.Manual THEN
 	// РУЧНОЙ РЕЖИМ - Обработка импульсных команд сборки/разборки схемы
 	// cmdBuildCircuitOn - собрать схему (включить контакторы)
@@ -341,9 +377,11 @@ ELSIF Conveyor.eStateRemote = E_StateRemote.Auto THEN
 	// 2. Секция НЕ в стадии ERROR
 	IF NOT fbSensors.xErrorSafetySensors AND STAGE <> E_StageWithPreStartAlarm.ERROR THEN
 		xCircuitBuilt := TRUE;
-	ELSE
-		xCircuitBuilt := FALSE;
 	END_IF;
+END_IF;
+
+IF ftrig_motorConveyor_KM_Power.Q THEN
+	xCircuitBuilt := FALSE;
 END_IF;
 
 // Моторы конвейера - управление контакторами через состояние схемы
