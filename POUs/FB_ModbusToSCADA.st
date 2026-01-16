@@ -125,6 +125,19 @@ CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL := REAL_TO_TIME(rTempTime * 
 FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 188, rValue => rTempTime);
 CONVEYOR_PRESTART_ALARM_SETTINGS.TIME_SECOND_SIGNAL_PAUSE := REAL_TO_TIME(rTempTime * 1000);
 
+// Уставки времени для групп датчиков
+// КСЛ
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 190, rValue => rTempTime);
+TIME_DELAY_SENSOR_CONVEYOR_ZQ_ALARM := REAL_TO_TIME(rTempTime * 1000);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 192, rValue => rTempTime);
+TIME_DELAY_SENSOR_DUMPER_ZQ_ALARM := REAL_TO_TIME(rTempTime * 1000);
+
+//Заштыбовка
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 194, rValue => rTempTime);
+TIME_DELAY_SENSOR_CONVEYOR_GS := REAL_TO_TIME(rTempTime * 1000);
+FC_ModbusReadReal(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 196, rValue => rTempTime);
+TIME_DELAY_SENSOR_DUMPER_GS := REAL_TO_TIME(rTempTime * 1000);
+
 // Команды - Отвалообразователь (210-239)
 // Регистры 210-211: BOOL флаги управления отвалообразователем
 FC_ModbusReadBool(pRegisters := ADR(awModbusHoldingRegisters), iRegisterIndex := 210, iBitIndex := 0, xValue => stDumper.cmdStartConveyor);
